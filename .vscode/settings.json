@@ -1,0 +1,23 @@
+{
+  "peacock.remoteColor": "#07BE53",
+  "timewarp.blurImagePath": "assets/timewarp-terminal-avatar.svg",
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#09ef68",
+    "activityBar.background": "#09ef68",
+    "activityBar.foreground": "#15202b",
+    "activityBar.inactiveForeground": "#15202b99",
+    "activityBarBadge.background": "#a265f9",
+    "activityBarBadge.foreground": "#15202b",
+    "commandCenter.border": "#e7e7e799",
+    "sash.hoverBorder": "#09ef68",
+    "statusBar.background": "#07be53",
+    "statusBar.foreground": "#e7e7e7",
+    "statusBarItem.hoverBackground": "#09ef68",
+    "statusBarItem.remoteBackground": "#07be53",
+    "statusBarItem.remoteForeground": "#e7e7e7",
+    "titleBar.activeBackground": "#07be53",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveBackground": "#07be5399",
+    "titleBar.inactiveForeground": "#e7e7e799"
+  }
+}
