@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/source/">
+    <Project Path="source/timewarp-terminal/timewarp-terminal.csproj" />
+  </Folder>
+</Solution>
