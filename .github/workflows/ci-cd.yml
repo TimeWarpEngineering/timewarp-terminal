@@ -1,0 +1,59 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'source/**'
+      - 'tools/**'
+      - '.github/workflows/**'
+      - 'Directory.Build.props'
+      - 'Directory.Packages.props'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'source/**'
+      - 'tools/**'
+      - '.github/workflows/**'
+      - 'Directory.Build.props'
+      - 'Directory.Packages.props'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # Required for NuGet Trusted Publishing (OIDC)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for version detection
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: NuGet login (OIDC Trusted Publishing)
+        if: github.event_name == 'release'
+        uses: nuget/login@v1
+        with:
+          user: TimeWarp.Enterprises
+
+      - name: Run CI Pipeline
+        run: dotnet run --project tools/dev-cli/timewarp-terminal-dev-cli.csproj -- ci
+
+      - name: Upload Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Packages-${{ github.run_number }}
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: ignore
