@@ -6,18 +6,25 @@ Update all outdated NuGet packages identified by `dotnet outdated --pre-release 
 
 ## Checklist
 
-- [ ] Update Directory.Packages.props with new versions:
-  - [ ] TimeWarp.Nuru: 3.0.0-beta.22 → 3.0.0-beta.23
-  - [ ] TimeWarp.Amuru: 1.0.0-beta.13 → 1.0.0-beta.17
-  - [ ] Mediator.Abstractions: 3.0.1 → 3.1.0-preview.14
-  - [ ] Mediator.SourceGenerator: 3.0.1 → 3.1.0-preview.14
-  - [ ] Microsoft.CodeAnalysis.NetAnalyzers: 10.0.100 → 10.0.101
-  - [ ] Roslynator.Analyzers: 4.14.1 → 4.15.0
-  - [ ] Roslynator.CodeAnalysis.Analyzers: 4.14.1 → 4.15.0
-  - [ ] Roslynator.Formatting.Analyzers: 4.14.1 → 4.15.0
-- [ ] Remove `.UseTerminal(TimeWarpTerminal.Default)` from tools/dev-cli/program.cs (now default in Nuru)
-- [ ] Build solution to verify updates work
-- [ ] Run tests to ensure no regressions
+- [x] Update Directory.Packages.props with new versions:
+  - [x] TimeWarp.Nuru: 3.0.0-beta.22 → 3.0.0-beta.23
+  - [x] TimeWarp.Amuru: 1.0.0-beta.13 → 1.0.0-beta.17
+  - [x] Mediator.Abstractions: 3.0.1 → 3.1.0-preview.14
+  - [x] Mediator.SourceGenerator: 3.0.1 → 3.1.0-preview.14
+  - [x] Microsoft.CodeAnalysis.NetAnalyzers: 10.0.100 → 10.0.101
+  - [x] Roslynator.Analyzers: 4.14.1 → 4.15.0
+  - [x] Roslynator.CodeAnalysis.Analyzers: 4.14.1 → 4.15.0
+  - [x] Roslynator.Formatting.Analyzers: 4.14.1 → 4.15.0
+- [x] Remove `.UseTerminal(TimeWarpTerminal.Default)` from tools/dev-cli/program.cs (now default in Nuru)
+- [x] Build solution to verify updates work
+- [x] Run tests to ensure no regressions (no test projects in solution)
+
+## Results
+
+- **Build:** ✅ Succeeded with 0 warnings, 0 errors
+- **Tests:** N/A (no test projects in solution)
+- All 8 package versions updated in Directory.Packages.props
+- Removed `.UseTerminal()` call from program.cs (now default behavior)
 
 ## Notes
 
