@@ -191,7 +191,7 @@ internal sealed class CiCommand : ICommand<Unit>
         Terminal.WriteLine($"Packing {projectPath}...");
 
         int exitCode = await Shell.Builder("dotnet")
-          .WithArguments("pack", fullPath, "--configuration", "Release", "--output", artifactsDir, "--no-build")
+          .WithArguments("pack", fullPath, "--configuration", "Release", "--output", artifactsDir)
           .WithWorkingDirectory(repoRoot)
           .RunAsync();
 
