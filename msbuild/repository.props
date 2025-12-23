@@ -1,9 +1,9 @@
 <Project>
   <!-- Repository path definitions - can be imported standalone without build configuration -->
   <PropertyGroup Label="Repository Structure">
-    <RepositoryName>timewarp-nuru</RepositoryName>
+    <RepositoryName>timewarp-terminal</RepositoryName>
     <RepositoryRoot>$(MSBuildThisFileDirectory)../</RepositoryRoot>
-    <SolutionFile>$(RepositoryRoot)timewarp-nuru.slnx</SolutionFile>
+    <SolutionFile>$(RepositoryRoot)timewarp-terminal.slnx</SolutionFile>
     <SourceDirectory>$(RepositoryRoot)source/</SourceDirectory>
     <TestsDirectory>$(RepositoryRoot)tests/</TestsDirectory>
     <SamplesDirectory>$(RepositoryRoot)samples/</SamplesDirectory>
