@@ -29,9 +29,10 @@ internal static class GeneratedAttributedRoutes
   internal static readonly global::TimeWarp.Nuru.CompiledRoute __Route_CiCommand = new global::TimeWarp.Nuru.CompiledRouteBuilder()
     .WithLiteral("ci")
     .WithOption("mode", shortForm: "m", parameterName: "mode", expectsValue: true, parameterType: "string", parameterIsOptional: true, description: "CI mode: pr, merge, or release (auto-detected from GITHUB_EVENT_NAME if not specified)", isOptionalFlag: true)
+    .WithOption("api-key", shortForm: "k", parameterName: "apiKey", expectsValue: true, parameterType: "string", parameterIsOptional: true, description: "NuGet API key for publishing (required for release mode)", isOptionalFlag: true)
     .WithMessageType(global::TimeWarp.Nuru.MessageType.Command)
     .Build();
-  internal const string __Pattern_CiCommand = "ci --mode,-m {mode?}";
+  internal const string __Pattern_CiCommand = "ci --mode,-m {mode?} --api-key,-k {apiKey?}";
 
   internal static readonly global::TimeWarp.Nuru.CompiledRoute __Route_CleanCommand = new global::TimeWarp.Nuru.CompiledRouteBuilder()
     .WithLiteral("clean")
