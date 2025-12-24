@@ -1,0 +1,41 @@
+<Project>
+  <!-- Import parent Directory.Build.props -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <!-- Tests should not be packaged -->
+    <IsPackable>false</IsPackable>
+    <!-- Suppress warnings for test projects:
+         CA1303: Localization not needed in tests
+         CA1307: String comparison culture not critical in tests
+         CA2000: Dispose patterns less strict in tests
+         CA2007: ConfigureAwait not required in tests
+         CA1031: General exception catching acceptable in tests
+         CA1515: Type accessibility flexibility for tests
+         CA1050: Types in namespaces (test classes may be in global namespace)
+         CA1052: Static holder types flexibility
+         CA1707: Underscores in test method names allowed
+         CS0050: Inconsistent accessibility (test helpers)
+         RCS1046, RCS1102, RCS1110: Roslynator formatting flexibility for tests -->
+    <NoWarn>$(NoWarn);CA1303;CA1307;CA2000;CA2007;CA1031;CA1515;CA1050;CA1052;CA1707;CS0050;RCS1046;RCS1102;RCS1110</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Test framework packages -->
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="TimeWarp.Jaribu" />
+
+    <!-- Using directives for tests -->
+    <Using Include="Shouldly" />
+    <Using Include="System.Console" Static="true" />
+    <Using Include="System.Runtime.CompilerServices" />
+    <Using Include="TimeWarp.Jaribu" />
+    <Using Include="TimeWarp.Jaribu.TestRunner" Static="true" />
+    <Using Include="TimeWarp.Terminal" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Project reference to timewarp-terminal -->
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../source/timewarp-terminal/timewarp-terminal.csproj" />
+  </ItemGroup>
+</Project>
