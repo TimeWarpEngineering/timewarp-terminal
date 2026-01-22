@@ -205,6 +205,162 @@ public static class Terminal
   public static void WriteErrorLine(string format, params object?[] args)
     => Instance.WriteErrorLine(string.Format(CultureInfo.InvariantCulture, format, args));
 
+  // Widget Methods
+
+  /// <summary>
+  /// Writes a table configured via a builder action to the terminal.
+  /// </summary>
+  /// <param name="configure">An action to configure the table using a <see cref="TableBuilder"/>.</param>
+  /// <example>
+  /// <code>
+  /// Terminal.WriteTable(table => table
+  ///     .AddColumns("Package", "Downloads", "Version")
+  ///     .AddRow("Ardalis.GuardClauses", "12M", "5.0.0")
+  ///     .AddRow("Ardalis.Result", "8M", "10.0.0"));
+  /// </code>
+  /// </example>
+  public static void WriteTable(Action<TableBuilder> configure)
+  {
+    ArgumentNullException.ThrowIfNull(configure);
+
+    TableBuilder builder = new();
+    configure(builder);
+
+    Table table = builder.Build();
+    string[] lines = table.Render(WindowWidth);
+    foreach (string line in lines)
+      Instance.WriteLine(line);
+  }
+
+  /// <summary>
+  /// Writes a pre-configured <see cref="Table"/> to the terminal.
+  /// </summary>
+  /// <param name="table">The table to write.</param>
+  /// <example>
+  /// <code>
+  /// var table = new Table()
+  ///     .AddColumn("Name")
+  ///     .AddColumn("Value")
+  ///     .AddRow("Foo", "123");
+  /// Terminal.WriteTable(table);
+  /// </code>
+  /// </example>
+  public static void WriteTable(Table table)
+  {
+    ArgumentNullException.ThrowIfNull(table);
+
+    string[] lines = table.Render(WindowWidth);
+    foreach (string line in lines)
+      Instance.WriteLine(line);
+  }
+
+  /// <summary>
+  /// Writes a panel configured via a builder action to the terminal.
+  /// </summary>
+  /// <param name="configure">An action to configure the panel using a <see cref="PanelBuilder"/>.</param>
+  /// <example>
+  /// <code>
+  /// Terminal.WritePanel(panel => panel
+  ///     .Header("Configuration")
+  ///     .Content("Setting: value")
+  ///     .Border(BorderStyle.Rounded));
+  /// </code>
+  /// </example>
+  public static void WritePanel(Action<PanelBuilder> configure)
+  {
+    ArgumentNullException.ThrowIfNull(configure);
+
+    PanelBuilder builder = new();
+    configure(builder);
+
+    Panel panel = builder.Build();
+    string[] lines = panel.Render(WindowWidth);
+    foreach (string line in lines)
+      Instance.WriteLine(line);
+  }
+
+  /// <summary>
+  /// Writes a panel with content and optional header to the terminal.
+  /// </summary>
+  /// <param name="content">The content to display inside the panel.</param>
+  /// <param name="header">The header to display in the top border. Defaults to <c>null</c>.</param>
+  /// <example>
+  /// <code>
+  /// Terminal.WritePanel("This is important information");
+  /// Terminal.WritePanel("Content here", header: "Notice");
+  /// </code>
+  /// </example>
+  public static void WritePanel(string content, string? header = null)
+  {
+    Panel panel = new() { Content = content, Header = header };
+    string[] lines = panel.Render(WindowWidth);
+    foreach (string line in lines)
+      Instance.WriteLine(line);
+  }
+
+  /// <summary>
+  /// Writes a horizontal rule to the terminal.
+  /// </summary>
+  /// <param name="title">The title to display centered in the rule. Can include ANSI styling. Defaults to <c>null</c>.</param>
+  /// <example>
+  /// <code>
+  /// Terminal.WriteRule();
+  /// Terminal.WriteRule("Section Title");
+  /// </code>
+  /// </example>
+  public static void WriteRule(string? title = null)
+  {
+    Rule rule = new() { Title = title };
+    string rendered = rule.Render(WindowWidth);
+    Instance.WriteLine(rendered);
+  }
+
+  /// <summary>
+  /// Writes a horizontal rule configured via a builder action to the terminal.
+  /// </summary>
+  /// <param name="configure">An action to configure the rule using a <see cref="RuleBuilder"/>.</param>
+  /// <example>
+  /// <code>
+  /// Terminal.WriteRule(rule => rule
+  ///     .Title("Configuration")
+  ///     .Style(LineStyle.Doubled)
+  ///     .Color(AnsiColors.Cyan));
+  /// </code>
+  /// </example>
+  public static void WriteRule(Action<RuleBuilder> configure)
+  {
+    ArgumentNullException.ThrowIfNull(configure);
+
+    RuleBuilder builder = new();
+    configure(builder);
+
+    Rule rule = builder.Build();
+    string rendered = rule.Render(WindowWidth);
+    Instance.WriteLine(rendered);
+  }
+
+  /// <summary>
+  /// Writes a clickable hyperlink to the terminal using OSC 8 sequences.
+  /// </summary>
+  /// <param name="url">The URL to link to.</param>
+  /// <param name="text">The text to display (clickable in supported terminals).</param>
+  /// <example>
+  /// <code>
+  /// Terminal.WriteLink("https://github.com", "GitHub Repository");
+  /// </code>
+  /// </example>
+  // CA1054: OSC 8 hyperlinks use raw URL strings by design for ergonomic API
+#pragma warning disable CA1054
+  public static void WriteLink(string url, string text)
+#pragma warning restore CA1054
+  {
+    ArgumentNullException.ThrowIfNull(url);
+    ArgumentNullException.ThrowIfNull(text);
+
+    string link = AnsiHyperlinks.CreateLink(text, url);
+    Instance.Write(link);
+  }
+
   // Input Methods
 
   /// <summary>
