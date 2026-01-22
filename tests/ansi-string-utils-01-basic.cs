@@ -7,7 +7,7 @@
 return await RunAllTests();
 #endif
 
-namespace TimeWarp.Nuru.Tests.Core.AnsiStringUtils
+namespace TimeWarp.Terminal.Tests.Core.AnsiStringUtils
 {
 
 [TestTag("Widgets")]
@@ -268,4 +268,4 @@ public class AnsiStringUtilsTests
   }
 }
 
-} // namespace TimeWarp.Nuru.Tests.Core.AnsiStringUtils
+} // namespace TimeWarp.Terminal.Tests.Core.AnsiStringUtils

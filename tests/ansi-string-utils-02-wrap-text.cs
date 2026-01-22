@@ -7,7 +7,7 @@
 return await RunAllTests();
 #endif
 
-namespace TimeWarp.Nuru.Tests.Core.AnsiStringUtilsWrap
+namespace TimeWarp.Terminal.Tests.Core.AnsiStringUtilsWrap
 {
 
 [TestTag("Widgets")]
@@ -177,4 +177,4 @@ public class AnsiStringUtilsWrapTextTests
   }
 }
 
-} // namespace TimeWarp.Nuru.Tests.Core.AnsiStringUtilsWrap
+} // namespace TimeWarp.Terminal.Tests.Core.AnsiStringUtilsWrap
