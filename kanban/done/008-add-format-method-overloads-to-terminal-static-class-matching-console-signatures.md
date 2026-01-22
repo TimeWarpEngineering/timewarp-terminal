@@ -67,3 +67,38 @@ Console.WriteLine has these format signatures:
 - `WriteLine(string format, object? arg0, object? arg1)`
 - `WriteLine(string format, object? arg0, object? arg1, object? arg2)`
 - `WriteLine(string format, params object?[] args)`
+
+## Results
+
+### What Was Implemented
+Added 12 format method overloads to the `Terminal` static class that mirror `System.Console`'s signatures:
+- 4 `Write` overloads: `(string format, object? arg0)`, `(string format, object? arg0, object? arg1)`, `(string format, object? arg0, object? arg1, object? arg2)`, `(string format, params object?[] args)`
+- 4 `WriteLine` overloads: Same signature pattern as Write
+- 4 `WriteErrorLine` overloads: Same signature pattern as Write
+
+### Files Changed
+1. `/home/steventcramer/worktrees/github.com/TimeWarpEngineering/timewarp-terminal/Cramer-2025-12-22-dev/source/timewarp-terminal/terminal-static.cs`
+   - Added `using System.Globalization;` statement
+   - Added 12 format method implementations
+   - All methods include XML documentation
+
+2. `/home/steventcramer/worktrees/github.com/TimeWarpEngineering/timewarp-terminal/Cramer-2025-12-22-dev/tests/terminal-static-04-format.cs` (new file)
+   - 16 comprehensive unit tests covering all overloads
+
+### Key Decisions
+- Used `CultureInfo.InvariantCulture` for consistent formatting across locales (as specified)
+- Placed new methods in a "Format Overloads" section between WriteErrorLineAsync and Input Methods
+- All methods use expression-bodied syntax for conciseness
+- Params array version uses `object?[]` to match Console signatures
+
+### Test Outcomes
+All 16 tests pass successfully:
+- 4 Write format tests (single, two, three args, params)
+- 4 WriteLine format tests (single, two, three args, params)
+- 4 WriteErrorLine format tests (single, two, three args, params)
+- 2 Numeric formatting tests (D4 and F2 formats)
+- 2 Null argument tests
+
+### Verification
+- Build: Succeeded with 0 warnings, 0 errors
+- Tests: All 16 tests pass

@@ -1,5 +1,7 @@
 namespace TimeWarp.Terminal;
 
+using System.Globalization;
+
 /// <summary>
 /// Static facade providing a Console-compatible API for terminal operations.
 /// Routes all calls to the configurable <see cref="Instance"/>.
@@ -87,6 +89,121 @@ public static class Terminal
   /// <param name="message">The value to write. If null, only the line terminator is written.</param>
   /// <returns>A task that represents the asynchronous write operation.</returns>
   public static Task WriteErrorLineAsync(string? message = null) => Instance.WriteErrorLineAsync(message);
+
+  // Format Overloads
+
+  /// <summary>
+  /// Writes the specified string value to the standard output stream, using the specified format information.
+  /// </summary>
+  /// <param name="format">A composite format string.</param>
+  /// <param name="arg0">The object to format.</param>
+  public static void Write(string format, object? arg0)
+    => Instance.Write(string.Format(CultureInfo.InvariantCulture, format, arg0));
+
+  /// <summary>
+  /// Writes the specified string value to the standard output stream, using the specified format information.
+  /// </summary>
+  /// <param name="format">A composite format string.</param>
+  /// <param name="arg0">The first object to format.</param>
+  /// <param name="arg1">The second object to format.</param>
+  public static void Write(string format, object? arg0, object? arg1)
+    => Instance.Write(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1));
+
+  /// <summary>
+  /// Writes the specified string value to the standard output stream, using the specified format information.
+  /// </summary>
+  /// <param name="format">A composite format string.</param>
+  /// <param name="arg0">The first object to format.</param>
+  /// <param name="arg1">The second object to format.</param>
+  /// <param name="arg2">The third object to format.</param>
+  public static void Write(string format, object? arg0, object? arg1, object? arg2)
+    => Instance.Write(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1, arg2));
+
+  /// <summary>
+  /// Writes the specified string value to the standard output stream, using the specified format information.
+  /// </summary>
+  /// <param name="format">A composite format string.</param>
+  /// <param name="args">An array of objects to format.</param>
+  public static void Write(string format, params object?[] args)
+    => Instance.Write(string.Format(CultureInfo.InvariantCulture, format, args));
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard output stream, using the specified format information.
+  /// </summary>
+  /// <param name="format">A composite format string.</param>
+  /// <param name="arg0">The object to format.</param>
+  public static void WriteLine(string format, object? arg0)
+    => Instance.WriteLine(string.Format(CultureInfo.InvariantCulture, format, arg0));
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard output stream, using the specified format information.
+  /// </summary>
+  /// <param name="format">A composite format string.</param>
+  /// <param name="arg0">The first object to format.</param>
+  /// <param name="arg1">The second object to format.</param>
+  public static void WriteLine(string format, object? arg0, object? arg1)
+    => Instance.WriteLine(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1));
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard output stream, using the specified format information.
+  /// </summary>
+  /// <param name="format">A composite format string.</param>
+  /// <param name="arg0">The first object to format.</param>
+  /// <param name="arg1">The second object to format.</param>
+  /// <param name="arg2">The third object to format.</param>
+  public static void WriteLine(string format, object? arg0, object? arg1, object? arg2)
+    => Instance.WriteLine(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1, arg2));
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard output stream, using the specified format information.
+  /// </summary>
+  /// <param name="format">A composite format string.</param>
+  /// <param name="args">An array of objects to format.</param>
+  public static void WriteLine(string format, params object?[] args)
+    => Instance.WriteLine(string.Format(CultureInfo.InvariantCulture, format, args));
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard error stream, using the specified format information.
+  /// </summary>
+  /// <param name="format">A composite format string.</param>
+  /// <param name="arg0">The object to format.</param>
+  public static void WriteErrorLine(string format, object? arg0)
+    => Instance.WriteErrorLine(string.Format(CultureInfo.InvariantCulture, format, arg0));
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard error stream, using the specified format information.
+  /// </summary>
+  /// <param name="format">A composite format string.</param>
+  /// <param name="arg0">The first object to format.</param>
+  /// <param name="arg1">The second object to format.</param>
+  public static void WriteErrorLine(string format, object? arg0, object? arg1)
+    => Instance.WriteErrorLine(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1));
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard error stream, using the specified format information.
+  /// </summary>
+  /// <param name="format">A composite format string.</param>
+  /// <param name="arg0">The first object to format.</param>
+  /// <param name="arg1">The second object to format.</param>
+  /// <param name="arg2">The third object to format.</param>
+  public static void WriteErrorLine(string format, object? arg0, object? arg1, object? arg2)
+    => Instance.WriteErrorLine(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1, arg2));
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard error stream, using the specified format information.
+  /// </summary>
+  /// <param name="format">A composite format string.</param>
+  /// <param name="args">An array of objects to format.</param>
+  public static void WriteErrorLine(string format, params object?[] args)
+    => Instance.WriteErrorLine(string.Format(CultureInfo.InvariantCulture, format, args));
 
   // Input Methods
 
