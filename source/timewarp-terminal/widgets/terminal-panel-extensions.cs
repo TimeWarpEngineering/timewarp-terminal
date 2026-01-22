@@ -36,6 +36,22 @@ public static class TerminalPanelExtensions
   }
 
   /// <summary>
+  /// Writes a simple panel with content to the terminal with optional colors.
+  /// </summary>
+  /// <param name="terminal">The terminal to write to.</param>
+  /// <param name="content">The content to display inside the panel.</param>
+  /// <param name="border">The border style to use. Defaults to <see cref="BorderStyle.Rounded"/>.</param>
+  /// <param name="foregroundColor">The foreground color to apply to panel content. Defaults to <c>null</c>.</param>
+  /// <param name="backgroundColor">The background color to apply to panel content. Defaults to <c>null</c>.</param>
+  public static void WritePanel(this ITerminal terminal, string content, BorderStyle border, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
+  {
+    ArgumentNullException.ThrowIfNull(terminal);
+
+    Panel panel = new() { Content = content, Border = border };
+    WritePanel(terminal, panel, foregroundColor, backgroundColor);
+  }
+
+  /// <summary>
   /// Writes a panel with a header and content to the terminal.
   /// </summary>
   /// <param name="terminal">The terminal to write to.</param>
@@ -48,6 +64,23 @@ public static class TerminalPanelExtensions
 
     Panel panel = new() { Content = content, Header = header, Border = border };
     WritePanelInternal(terminal, panel);
+  }
+
+  /// <summary>
+  /// Writes a panel with a header and content to the terminal with optional colors.
+  /// </summary>
+  /// <param name="terminal">The terminal to write to.</param>
+  /// <param name="content">The content to display inside the panel.</param>
+  /// <param name="header">The header to display in the top border.</param>
+  /// <param name="border">The border style to use. Defaults to <see cref="BorderStyle.Rounded"/>.</param>
+  /// <param name="foregroundColor">The foreground color to apply to panel content. Defaults to <c>null</c>.</param>
+  /// <param name="backgroundColor">The background color to apply to panel content. Defaults to <c>null</c>.</param>
+  public static void WritePanel(this ITerminal terminal, string content, string header, BorderStyle border, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
+  {
+    ArgumentNullException.ThrowIfNull(terminal);
+
+    Panel panel = new() { Content = content, Header = header, Border = border };
+    WritePanel(terminal, panel, foregroundColor, backgroundColor);
   }
 
   /// <summary>
@@ -77,6 +110,25 @@ public static class TerminalPanelExtensions
   }
 
   /// <summary>
+  /// Writes a panel configured via a builder action to the terminal with optional colors.
+  /// </summary>
+  /// <param name="terminal">The terminal to write to.</param>
+  /// <param name="configure">An action to configure the panel using a <see cref="PanelBuilder"/>.</param>
+  /// <param name="foregroundColor">The foreground color to apply to panel content. Defaults to <c>null</c>.</param>
+  /// <param name="backgroundColor">The background color to apply to panel content. Defaults to <c>null</c>.</param>
+  public static void WritePanel(this ITerminal terminal, Action<PanelBuilder> configure, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
+  {
+    ArgumentNullException.ThrowIfNull(terminal);
+    ArgumentNullException.ThrowIfNull(configure);
+
+    PanelBuilder builder = new();
+    configure(builder);
+
+    Panel panel = builder.Build();
+    WritePanel(terminal, panel, foregroundColor, backgroundColor);
+  }
+
+  /// <summary>
   /// Writes a pre-configured <see cref="Panel"/> to the terminal.
   /// </summary>
   /// <param name="terminal">The terminal to write to.</param>
@@ -89,12 +141,47 @@ public static class TerminalPanelExtensions
     WritePanelInternal(terminal, panel);
   }
 
+  /// <summary>
+  /// Writes a pre-configured <see cref="Panel"/> to the terminal with optional colors.
+  /// </summary>
+  /// <param name="terminal">The terminal to write to.</param>
+  /// <param name="panel">The panel to write.</param>
+  /// <param name="foregroundColor">The foreground color to apply to panel content. Defaults to <c>null</c>.</param>
+  /// <param name="backgroundColor">The background color to apply to panel content. Defaults to <c>null</c>.</param>
+  public static void WritePanel(this ITerminal terminal, Panel panel, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
+  {
+    ArgumentNullException.ThrowIfNull(terminal);
+    ArgumentNullException.ThrowIfNull(panel);
+
+    string[] lines = panel.Render(terminal.WindowWidth);
+    WriteLinesWithColor(terminal, lines, foregroundColor, backgroundColor);
+  }
+
   private static void WritePanelInternal(ITerminal terminal, Panel panel)
   {
     string[] lines = panel.Render(terminal.WindowWidth);
     foreach (string line in lines)
     {
       terminal.WriteLine(line);
+    }
+  }
+
+  private static void WriteLinesWithColor(ITerminal terminal, string[] lines, ConsoleColor? foregroundColor, ConsoleColor? backgroundColor)
+  {
+    foreach (string line in lines)
+    {
+      if (foregroundColor.HasValue || backgroundColor.HasValue)
+      {
+        string coloredLine = (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
+                             (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +
+                             line +
+                             AnsiColors.Reset;
+        terminal.WriteLine(coloredLine);
+      }
+      else
+      {
+        terminal.WriteLine(line);
+      }
     }
   }
 }

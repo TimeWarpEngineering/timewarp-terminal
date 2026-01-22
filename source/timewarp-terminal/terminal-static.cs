@@ -68,6 +68,62 @@ public static class Terminal
   public static void WriteLine(string? message = null) => Instance.WriteLine(message);
 
   /// <summary>
+  /// Writes the specified string value to the standard output stream with the specified foreground color.
+  /// </summary>
+  /// <param name="message">The value to write. If null, an empty string is written.</param>
+  /// <param name="foregroundColor">The foreground color to apply.</param>
+  /// <example>
+  /// <code>
+  /// Terminal.Write("Error occurred!", ConsoleColor.Red);
+  /// Terminal.Write("Success!", ConsoleColor.Green);
+  /// </code>
+  /// </example>
+  public static void Write(string? message, ConsoleColor foregroundColor)
+  {
+    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
+    Instance.Write(coloredMessage);
+  }
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard output stream with the specified foreground color.
+  /// </summary>
+  /// <param name="message">The value to write. If null, only the line terminator is written.</param>
+  /// <param name="foregroundColor">The foreground color to apply.</param>
+  /// <example>
+  /// <code>
+  /// Terminal.WriteLine("Error occurred!", ConsoleColor.Red);
+  /// Terminal.WriteLine("Success!", ConsoleColor.Green);
+  /// </code>
+  /// </example>
+  public static void WriteLine(string? message, ConsoleColor foregroundColor)
+  {
+    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
+    Instance.WriteLine(coloredMessage);
+  }
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard output stream with the specified foreground and background colors.
+  /// </summary>
+  /// <param name="message">The value to write. If null, only the line terminator is written.</param>
+  /// <param name="foregroundColor">The foreground color to apply.</param>
+  /// <param name="backgroundColor">The background color to apply.</param>
+  /// <example>
+  /// <code>
+  /// Terminal.WriteLine("Highlighted text", ConsoleColor.Black, ConsoleColor.Yellow);
+  /// </code>
+  /// </example>
+  public static void WriteLine(string? message, ConsoleColor foregroundColor, ConsoleColor backgroundColor)
+  {
+    string coloredMessage = AnsiColors.GetForeground(foregroundColor) +
+                            AnsiColors.GetBackground(backgroundColor) +
+                            (message ?? string.Empty) +
+                            AnsiColors.Reset;
+    Instance.WriteLine(coloredMessage);
+  }
+
+  /// <summary>
   /// Asynchronously writes the specified string value, followed by the current line terminator,
   /// to the standard output stream.
   /// </summary>
@@ -81,6 +137,23 @@ public static class Terminal
   /// </summary>
   /// <param name="message">The value to write. If null, only the line terminator is written.</param>
   public static void WriteErrorLine(string? message = null) => Instance.WriteErrorLine(message);
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard error stream with the specified foreground color.
+  /// </summary>
+  /// <param name="message">The value to write. If null, only the line terminator is written.</param>
+  /// <param name="foregroundColor">The foreground color to apply.</param>
+  /// <example>
+  /// <code>
+  /// Terminal.WriteErrorLine("Error: File not found", ConsoleColor.Red);
+  /// </code>
+  /// </example>
+  public static void WriteErrorLine(string? message, ConsoleColor foregroundColor)
+  {
+    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
+    Instance.WriteErrorLine(coloredMessage);
+  }
 
   /// <summary>
   /// Asynchronously writes the specified string value, followed by the current line terminator,
@@ -255,6 +328,68 @@ public static class Terminal
   }
 
   /// <summary>
+  /// Writes a table configured via a builder action to the terminal with optional colors.
+  /// </summary>
+  /// <param name="configure">An action to configure the table using a <see cref="TableBuilder"/>.</param>
+  /// <param name="foregroundColor">The foreground color to apply to table content. Defaults to <c>null</c> (no color).</param>
+  /// <param name="backgroundColor">The background color to apply to table content. Defaults to <c>null</c> (no color).</param>
+  /// <example>
+  /// <code>
+  /// Terminal.WriteTable(table => table
+  ///     .AddColumns("Package", "Version")
+  ///     .AddRow("TimeWarp", "1.0.0"),
+  ///     ConsoleColor.White, ConsoleColor.DarkBlue);
+  /// </code>
+  /// </example>
+  public static void WriteTable(Action<TableBuilder> configure, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
+  {
+    ArgumentNullException.ThrowIfNull(configure);
+
+    TableBuilder builder = new();
+    configure(builder);
+
+    Table table = builder.Build();
+    WriteTable(table, foregroundColor, backgroundColor);
+  }
+
+  /// <summary>
+  /// Writes a pre-configured <see cref="Table"/> to the terminal with optional colors.
+  /// </summary>
+  /// <param name="table">The table to write.</param>
+  /// <param name="foregroundColor">The foreground color to apply to table content. Defaults to <c>null</c> (no color).</param>
+  /// <param name="backgroundColor">The background color to apply to table content. Defaults to <c>null</c> (no color).</param>
+  /// <example>
+  /// <code>
+  /// var table = new Table()
+  ///     .AddColumn("Name")
+  ///     .AddColumn("Value")
+  ///     .AddRow("Foo", "123");
+  /// Terminal.WriteTable(table, ConsoleColor.White, ConsoleColor.DarkBlue);
+  /// </code>
+  /// </example>
+  public static void WriteTable(Table table, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
+  {
+    ArgumentNullException.ThrowIfNull(table);
+
+    string[] lines = table.Render(WindowWidth);
+    foreach (string line in lines)
+    {
+      if (foregroundColor.HasValue || backgroundColor.HasValue)
+      {
+        string coloredLine = (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
+                             (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +
+                             line +
+                             AnsiColors.Reset;
+        Instance.WriteLine(coloredLine);
+      }
+      else
+      {
+        Instance.WriteLine(line);
+      }
+    }
+  }
+
+  /// <summary>
   /// Writes a panel configured via a builder action to the terminal.
   /// </summary>
   /// <param name="configure">An action to configure the panel using a <see cref="PanelBuilder"/>.</param>
@@ -296,6 +431,84 @@ public static class Terminal
     string[] lines = panel.Render(WindowWidth);
     foreach (string line in lines)
       Instance.WriteLine(line);
+  }
+
+  /// <summary>
+  /// Writes a panel configured via a builder action to the terminal with optional colors.
+  /// </summary>
+  /// <param name="configure">An action to configure the panel using a <see cref="PanelBuilder"/>.</param>
+  /// <param name="foregroundColor">The foreground color to apply to panel content. Defaults to <c>null</c> (no color).</param>
+  /// <param name="backgroundColor">The background color to apply to panel content. Defaults to <c>null</c> (no color).</param>
+  /// <example>
+  /// <code>
+  /// Terminal.WritePanel(panel => panel
+  ///     .Header("Configuration")
+  ///     .Content("Setting: value"),
+  ///     ConsoleColor.White, ConsoleColor.DarkBlue);
+  /// </code>
+  /// </example>
+  public static void WritePanel(Action<PanelBuilder> configure, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
+  {
+    ArgumentNullException.ThrowIfNull(configure);
+
+    PanelBuilder builder = new();
+    configure(builder);
+
+    Panel panel = builder.Build();
+    WritePanel(panel, foregroundColor, backgroundColor);
+  }
+
+  /// <summary>
+  /// Writes a panel with content and optional header to the terminal with optional colors.
+  /// </summary>
+  /// <param name="content">The content to display inside the panel.</param>
+  /// <param name="header">The header to display in the top border. Defaults to <c>null</c>.</param>
+  /// <param name="foregroundColor">The foreground color to apply to panel content. Defaults to <c>null</c> (no color).</param>
+  /// <param name="backgroundColor">The background color to apply to panel content. Defaults to <c>null</c> (no color).</param>
+  /// <example>
+  /// <code>
+  /// Terminal.WritePanel("This is important information", header: "Notice",
+  ///     foregroundColor: ConsoleColor.White, backgroundColor: ConsoleColor.DarkBlue);
+  /// </code>
+  /// </example>
+  public static void WritePanel(string content, string? header = null, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
+  {
+    Panel panel = new() { Content = content, Header = header };
+    WritePanel(panel, foregroundColor, backgroundColor);
+  }
+
+  /// <summary>
+  /// Writes a pre-configured <see cref="Panel"/> to the terminal with optional colors.
+  /// </summary>
+  /// <param name="panel">The panel to write.</param>
+  /// <param name="foregroundColor">The foreground color to apply to panel content. Defaults to <c>null</c> (no color).</param>
+  /// <param name="backgroundColor">The background color to apply to panel content. Defaults to <c>null</c> (no color).</param>
+  /// <example>
+  /// <code>
+  /// var panel = new Panel() { Content = "Content here", Header = "Notice" };
+  /// Terminal.WritePanel(panel, ConsoleColor.White, ConsoleColor.DarkBlue);
+  /// </code>
+  /// </example>
+  public static void WritePanel(Panel panel, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
+  {
+    ArgumentNullException.ThrowIfNull(panel);
+
+    string[] lines = panel.Render(WindowWidth);
+    foreach (string line in lines)
+    {
+      if (foregroundColor.HasValue || backgroundColor.HasValue)
+      {
+        string coloredLine = (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
+                             (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +
+                             line +
+                             AnsiColors.Reset;
+        Instance.WriteLine(coloredLine);
+      }
+      else
+      {
+        Instance.WriteLine(line);
+      }
+    }
   }
 
   /// <summary>

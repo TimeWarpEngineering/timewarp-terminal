@@ -245,6 +245,45 @@ terminal.WriteLine("Inverted".Black().OnWhite());
 
 `OnBlack()`, `OnRed()`, `OnGreen()`, `OnYellow()`, `OnBlue()`, `OnMagenta()`, `OnCyan()`, `OnWhite()`
 
+## ConsoleColor Support
+
+Use `ConsoleColor` enum values for color output without needing ANSI escape codes directly. This provides a Console-compatible API for colored output.
+
+```csharp
+// Single foreground color
+Terminal.WriteLine("Error!", ConsoleColor.Red);
+Terminal.WriteLine("Success!", ConsoleColor.Green);
+Terminal.WriteLine("Warning!", ConsoleColor.Yellow);
+
+// Foreground and background colors
+Terminal.WriteLine("Highlighted", ConsoleColor.Black, ConsoleColor.Yellow);
+Terminal.WriteLine("Inverted", ConsoleColor.White, ConsoleColor.Black);
+
+// Error output with color
+Terminal.WriteErrorLine("Error: File not found", ConsoleColor.Red);
+
+// Write without newline
+Terminal.Write("Loading...", ConsoleColor.Cyan);
+
+// Widgets with colors
+Terminal.WriteTable(table => table
+    .AddColumn("Name")
+    .AddColumn("Value")
+    .AddRow("Status", "OK"),
+  ConsoleColor.White, ConsoleColor.DarkBlue);
+
+Terminal.WritePanel("Important content", "Notice",
+  ConsoleColor.White, ConsoleColor.DarkBlue);
+```
+
+### Supported Colors
+
+All `ConsoleColor` values are mapped to their ANSI equivalents:
+
+**Foreground:** `Black`, `Red`, `Green`, `Yellow`, `Blue`, `Magenta`, `Cyan`, `White`, `Gray`, `DarkGray`, `DarkRed`, `DarkGreen`, `DarkYellow`, `DarkBlue`, `DarkMagenta`, `DarkCyan`
+
+**Background:** Maps to corresponding ANSI background codes (`BgBlack`, `BgRed`, etc.)
+
 ## Hyperlinks
 
 OSC 8 hyperlinks for supported terminals (Windows Terminal, iTerm2, VS Code, etc.).
