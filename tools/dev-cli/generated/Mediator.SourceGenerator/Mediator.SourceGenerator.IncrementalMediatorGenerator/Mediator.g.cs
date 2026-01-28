@@ -69,8 +69,6 @@ namespace Microsoft.Extensions.DependencyInjection
             services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::Mediator.Internals.CommandHandlerWrapper<global::DevCli.Commands.VerifySamplesCommand, global::Mediator.Unit>), typeof(global::Mediator.Internals.CommandHandlerWrapper<global::DevCli.Commands.VerifySamplesCommand, global::Mediator.Unit>), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton));
             services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::Mediator.IRequestHandler<global::TimeWarp.Nuru.DelegateRequest, global::TimeWarp.Nuru.DelegateResponse>), typeof(global::TimeWarp.Nuru.DelegateRequestHandler), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton));
             services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::Mediator.Internals.RequestHandlerWrapper<global::TimeWarp.Nuru.DelegateRequest, global::TimeWarp.Nuru.DelegateResponse>), typeof(global::Mediator.Internals.RequestHandlerWrapper<global::TimeWarp.Nuru.DelegateRequest, global::TimeWarp.Nuru.DelegateResponse>), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton));
-            services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::Mediator.IQueryHandler<global::TimeWarp.Nuru.Generated.Capabilities_Generated_Query, global::Mediator.Unit>), typeof(global::TimeWarp.Nuru.Generated.Capabilities_Generated_Query.Handler), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton));
-            services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::Mediator.Internals.QueryHandlerWrapper<global::TimeWarp.Nuru.Generated.Capabilities_Generated_Query, global::Mediator.Unit>), typeof(global::Mediator.Internals.QueryHandlerWrapper<global::TimeWarp.Nuru.Generated.Capabilities_Generated_Query, global::Mediator.Unit>), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton));
 
             // Register the notification publisher that was configured
             services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::Mediator.ForeachAwaitPublisher), typeof(global::Mediator.ForeachAwaitPublisher), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton));
@@ -691,8 +689,6 @@ namespace Mediator.Internals
         public readonly global::Mediator.Internals.CommandHandlerWrapper<global::DevCli.Commands.TestCommand, global::Mediator.Unit> Wrapper_For_DevCli_Commands_TestCommand;
         public readonly global::Mediator.Internals.CommandHandlerWrapper<global::DevCli.Commands.VerifySamplesCommand, global::Mediator.Unit> Wrapper_For_DevCli_Commands_VerifySamplesCommand;
 
-        public readonly global::Mediator.Internals.QueryHandlerWrapper<global::TimeWarp.Nuru.Generated.Capabilities_Generated_Query, global::Mediator.Unit> Wrapper_For_TimeWarp_Nuru_Generated_Capabilities_Generated_Query;
-
         public readonly global::Mediator.ForeachAwaitPublisher NotificationPublisher;
 
         public ContainerMetadata(global::System.IServiceProvider sp)
@@ -703,7 +699,7 @@ namespace Mediator.Internals
 
             var requestHandlerTypes = new global::System.Collections.Generic.Dictionary<global::System.Type, object>(1);
             var commandHandlerTypes = new global::System.Collections.Generic.Dictionary<global::System.Type, object>(6);
-            var queryHandlerTypes = new global::System.Collections.Generic.Dictionary<global::System.Type, object>(1);
+            var queryHandlerTypes = new global::System.Collections.Generic.Dictionary<global::System.Type, object>(0);
             requestHandlerTypes.Add(typeof(global::TimeWarp.Nuru.DelegateRequest), sp.GetRequiredService<global::Mediator.Internals.RequestHandlerWrapper<global::TimeWarp.Nuru.DelegateRequest, global::TimeWarp.Nuru.DelegateResponse>>().Init(this, sp));
             commandHandlerTypes.Add(typeof(global::DevCli.Commands.BuildCommand), sp.GetRequiredService<global::Mediator.Internals.CommandHandlerWrapper<global::DevCli.Commands.BuildCommand, global::Mediator.Unit>>().Init(this, sp));
             commandHandlerTypes.Add(typeof(global::DevCli.Commands.CheckVersionCommand), sp.GetRequiredService<global::Mediator.Internals.CommandHandlerWrapper<global::DevCli.Commands.CheckVersionCommand, global::Mediator.Unit>>().Init(this, sp));
@@ -711,7 +707,6 @@ namespace Mediator.Internals
             commandHandlerTypes.Add(typeof(global::DevCli.Commands.CleanCommand), sp.GetRequiredService<global::Mediator.Internals.CommandHandlerWrapper<global::DevCli.Commands.CleanCommand, global::Mediator.Unit>>().Init(this, sp));
             commandHandlerTypes.Add(typeof(global::DevCli.Commands.TestCommand), sp.GetRequiredService<global::Mediator.Internals.CommandHandlerWrapper<global::DevCli.Commands.TestCommand, global::Mediator.Unit>>().Init(this, sp));
             commandHandlerTypes.Add(typeof(global::DevCli.Commands.VerifySamplesCommand), sp.GetRequiredService<global::Mediator.Internals.CommandHandlerWrapper<global::DevCli.Commands.VerifySamplesCommand, global::Mediator.Unit>>().Init(this, sp));
-            queryHandlerTypes.Add(typeof(global::TimeWarp.Nuru.Generated.Capabilities_Generated_Query), sp.GetRequiredService<global::Mediator.Internals.QueryHandlerWrapper<global::TimeWarp.Nuru.Generated.Capabilities_Generated_Query, global::Mediator.Unit>>().Init(this, sp));
             RequestHandlerWrappers = global::System.Collections.Frozen.FrozenDictionary.ToFrozenDictionary(requestHandlerTypes);
             CommandHandlerWrappers = global::System.Collections.Frozen.FrozenDictionary.ToFrozenDictionary(commandHandlerTypes);
             QueryHandlerWrappers = global::System.Collections.Frozen.FrozenDictionary.ToFrozenDictionary(queryHandlerTypes);
@@ -734,8 +729,6 @@ namespace Mediator.Internals
             Wrapper_For_DevCli_Commands_CleanCommand = sp.GetRequiredService<global::Mediator.Internals.CommandHandlerWrapper<global::DevCli.Commands.CleanCommand, global::Mediator.Unit>>().Init(this, sp);
             Wrapper_For_DevCli_Commands_TestCommand = sp.GetRequiredService<global::Mediator.Internals.CommandHandlerWrapper<global::DevCli.Commands.TestCommand, global::Mediator.Unit>>().Init(this, sp);
             Wrapper_For_DevCli_Commands_VerifySamplesCommand = sp.GetRequiredService<global::Mediator.Internals.CommandHandlerWrapper<global::DevCli.Commands.VerifySamplesCommand, global::Mediator.Unit>>().Init(this, sp);
-
-            Wrapper_For_TimeWarp_Nuru_Generated_Capabilities_Generated_Query = sp.GetRequiredService<global::Mediator.Internals.QueryHandlerWrapper<global::TimeWarp.Nuru.Generated.Capabilities_Generated_Query, global::Mediator.Unit>>().Init(this, sp);
         }
     }
 }
@@ -795,7 +788,7 @@ namespace Mediator
         /// <summary>
         /// The total number of Mediator messages that were discovered.
         /// </summary>
-        public const int TotalMessages = 8;
+        public const int TotalMessages = 7;
 
         /// <summary>
         /// Constructor for DI, should not be used by consumer.
@@ -980,22 +973,6 @@ namespace Mediator
         {
             ThrowIfNull(command, nameof(command));
             return _containerMetadata.Value.Wrapper_For_DevCli_Commands_VerifySamplesCommand.Handle(command, cancellationToken);
-        }
-
-        /// <summary>
-        /// Send a query of type global::TimeWarp.Nuru.Generated.Capabilities_Generated_Query.
-        /// Throws <see cref="global::System.ArgumentNullException"/> if query is null.
-        /// </summary>
-        /// <param name="query">Incoming query</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Awaitable task</returns>
-        public global::System.Threading.Tasks.ValueTask<global::Mediator.Unit> Send(
-            global::TimeWarp.Nuru.Generated.Capabilities_Generated_Query query,
-            global::System.Threading.CancellationToken cancellationToken = default
-        )
-        {
-            ThrowIfNull(query, nameof(query));
-            return _containerMetadata.Value.Wrapper_For_TimeWarp_Nuru_Generated_Capabilities_Generated_Query.Handle(query, cancellationToken);
         }
 
         /// <summary>
@@ -1224,23 +1201,8 @@ namespace Mediator
             global::System.Threading.CancellationToken cancellationToken = default
         )
         {
-            switch (query)
-            {
-                case global::TimeWarp.Nuru.Generated.Capabilities_Generated_Query r:
-                {
-                    if (typeof(TResponse) == typeof(global::Mediator.Unit))
-                    {
-                        var task = Send(r, cancellationToken);
-                        return global::System.Runtime.CompilerServices.Unsafe.As<global::System.Threading.Tasks.ValueTask<global::Mediator.Unit>, global::System.Threading.Tasks.ValueTask<TResponse>>(ref task);
-                    }
-                    return SendAsync(query, cancellationToken);
-                }
-                default:
-                {
-                    ThrowInvalidQuery(query, nameof(query));
-                    return default;
-                }
-            }
+            ThrowInvalidQuery(query, nameof(query));
+            return default;
         }
 
         private async global::System.Threading.Tasks.ValueTask<TResponse> SendAsync<TResponse>(
@@ -1248,19 +1210,8 @@ namespace Mediator
             global::System.Threading.CancellationToken cancellationToken = default
         )
         {
-            switch (query)
-            {
-                case global::TimeWarp.Nuru.Generated.Capabilities_Generated_Query r:
-                {
-                    var response = await Send(r, cancellationToken);
-                    return global::System.Runtime.CompilerServices.Unsafe.As<global::Mediator.Unit, TResponse>(ref response);
-                }
-                default:
-                {
-                    ThrowInvalidQuery(query, nameof(query));
-                    return default!;
-                }
-            }
+            ThrowInvalidQuery(query, nameof(query));
+            return default!;
         }
 
         /// <summary>
@@ -1325,7 +1276,6 @@ namespace Mediator
                 case global::Mediator.IBaseQuery query:
                     switch (query)
                     {
-                        case global::TimeWarp.Nuru.Generated.Capabilities_Generated_Query r: return await Send(r, cancellationToken);
                         default:
                         {
                             ThrowInvalidQuery(query, nameof(query));
