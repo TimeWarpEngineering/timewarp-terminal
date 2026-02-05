@@ -201,4 +201,54 @@ public static class AnsiColors
   public const string Reverse = "\x1b[7m";
   public const string Hidden = "\x1b[8m";
   public const string Strikethrough = "\x1b[9m";
+
+  /// <summary>
+  /// Converts a <see cref="ConsoleColor"/> to its corresponding ANSI foreground code.
+  /// </summary>
+  /// <param name="color">The ConsoleColor to convert.</param>
+  /// <returns>The ANSI escape code for the specified foreground color.</returns>
+  public static string GetForeground(ConsoleColor color) => color switch
+  {
+    ConsoleColor.Black => Black,
+    ConsoleColor.Red => Red,
+    ConsoleColor.Green => Green,
+    ConsoleColor.Yellow => Yellow,
+    ConsoleColor.Blue => Blue,
+    ConsoleColor.Magenta => Magenta,
+    ConsoleColor.Cyan => Cyan,
+    ConsoleColor.White => White,
+    ConsoleColor.Gray or ConsoleColor.DarkGray => Gray,
+    ConsoleColor.DarkRed => Red,
+    ConsoleColor.DarkGreen => Green,
+    ConsoleColor.DarkYellow => Yellow,
+    ConsoleColor.DarkBlue => Blue,
+    ConsoleColor.DarkMagenta => Magenta,
+    ConsoleColor.DarkCyan => Cyan,
+    _ => White
+  };
+
+  /// <summary>
+  /// Converts a <see cref="ConsoleColor"/> to its corresponding ANSI background code.
+  /// </summary>
+  /// <param name="color">The ConsoleColor to convert.</param>
+  /// <returns>The ANSI escape code for the specified background color.</returns>
+  public static string GetBackground(ConsoleColor color) => color switch
+  {
+    ConsoleColor.Black => BgBlack,
+    ConsoleColor.Red => BgRed,
+    ConsoleColor.Green => BgGreen,
+    ConsoleColor.Yellow => BgYellow,
+    ConsoleColor.Blue => BgBlue,
+    ConsoleColor.Magenta => BgMagenta,
+    ConsoleColor.Cyan => BgCyan,
+    ConsoleColor.White => BgWhite,
+    ConsoleColor.Gray or ConsoleColor.DarkGray => BgBrightBlack,
+    ConsoleColor.DarkRed => BgRed,
+    ConsoleColor.DarkGreen => BgGreen,
+    ConsoleColor.DarkYellow => BgYellow,
+    ConsoleColor.DarkBlue => BgBlue,
+    ConsoleColor.DarkMagenta => BgMagenta,
+    ConsoleColor.DarkCyan => BgCyan,
+    _ => BgBlack
+  };
 }

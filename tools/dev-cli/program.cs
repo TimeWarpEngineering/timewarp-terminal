@@ -26,7 +26,6 @@
 // ===============================================================================
 
 NuruCoreApp app = NuruApp.CreateBuilder(args)
-  .UseTerminal(TimeWarpTerminal.Default)
   .ConfigureServices(services => services.AddMediator())
   .AddAutoHelp()
   .WithMetadata("dev", "Development CLI for TimeWarp.Terminal")

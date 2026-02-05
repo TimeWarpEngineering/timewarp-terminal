@@ -8,7 +8,7 @@ namespace Mediator
     /// Provide options for the Mediator source generator.
     /// </summary>
     [global::System.AttributeUsage(global::System.AttributeTargets.Assembly, AllowMultiple = false)]
-    [global::System.CodeDom.Compiler.GeneratedCode("Mediator.SourceGenerator", "3.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCode("Mediator.SourceGenerator", "3.1.0.0")]
     public sealed class MediatorOptionsAttribute : global::System.Attribute
     {
         /// <summary>
@@ -29,5 +29,12 @@ namespace Mediator
         /// </summary>
         public global::Microsoft.Extensions.DependencyInjection.ServiceLifetime ServiceLifetime { get; set; } =
             global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton;
+
+        /// <summary>
+        /// The caching mode for Mediator initialization.
+        /// When set to <see cref="global::Mediator.CachingMode.Eager" /> (default), all initialization is done on first Mediator access.
+        /// When set to <see cref="global::Mediator.CachingMode.Lazy" />, initialization is done on demand as messages are processed.
+        /// </summary>
+        public global::Mediator.CachingMode CachingMode { get; set; } = global::Mediator.CachingMode.Eager;
     }
 }

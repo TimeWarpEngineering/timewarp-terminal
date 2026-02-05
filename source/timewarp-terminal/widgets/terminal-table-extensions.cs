@@ -45,6 +45,60 @@ public static class TerminalTableExtensions
   }
 
   /// <summary>
+  /// Writes a table configured via a builder action to the terminal with optional colors.
+  /// </summary>
+  /// <param name="terminal">The terminal to write to.</param>
+  /// <param name="configure">An action to configure the table using a <see cref="TableBuilder"/>.</param>
+  /// <param name="foregroundColor">The foreground color to apply to table content. Defaults to <c>null</c>.</param>
+  /// <param name="backgroundColor">The background color to apply to table content. Defaults to <c>null</c>.</param>
+  public static void WriteTable(this ITerminal terminal, Action<TableBuilder> configure, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
+  {
+    ArgumentNullException.ThrowIfNull(terminal);
+    ArgumentNullException.ThrowIfNull(configure);
+
+    TableBuilder builder = new();
+    configure(builder);
+
+    Table table = builder.Build();
+    WriteTable(terminal, table, foregroundColor, backgroundColor);
+  }
+
+  /// <summary>
+  /// Writes a pre-configured <see cref="Table"/> to the terminal with optional colors.
+  /// </summary>
+  /// <param name="terminal">The terminal to write to.</param>
+  /// <param name="table">The table to write.</param>
+  /// <param name="foregroundColor">The foreground color to apply to table content. Defaults to <c>null</c>.</param>
+  /// <param name="backgroundColor">The background color to apply to table content. Defaults to <c>null</c>.</param>
+  public static void WriteTable(this ITerminal terminal, Table table, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
+  {
+    ArgumentNullException.ThrowIfNull(terminal);
+    ArgumentNullException.ThrowIfNull(table);
+
+    string[] lines = table.Render(terminal.WindowWidth);
+    WriteLinesWithColor(terminal, lines, foregroundColor, backgroundColor);
+  }
+
+  private static void WriteLinesWithColor(ITerminal terminal, string[] lines, ConsoleColor? foregroundColor, ConsoleColor? backgroundColor)
+  {
+    foreach (string line in lines)
+    {
+      if (foregroundColor.HasValue || backgroundColor.HasValue)
+      {
+        string coloredLine = (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
+                             (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +
+                             line +
+                             AnsiColors.Reset;
+        terminal.WriteLine(coloredLine);
+      }
+      else
+      {
+        terminal.WriteLine(line);
+      }
+    }
+  }
+
+  /// <summary>
   /// Writes a pre-configured <see cref="Table"/> to the terminal.
   /// </summary>
   /// <param name="terminal">The terminal to write to.</param>
