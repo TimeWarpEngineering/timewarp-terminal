@@ -7,29 +7,25 @@ namespace TimeWarp.Terminal;
 /// <example>
 /// <code>
 /// // Simple panel
-/// var panel = new Panel { Content = "Hello World" };
+/// terminal.WritePanel("Hello World");
 ///
 /// // Panel with header
-/// var panel = new Panel
-/// {
-///     Header = "Notice",
-///     Content = "Important information here",
-///     Border = BorderStyle.Rounded
-/// };
+/// terminal.WritePanel(p => p
+///     .Header("Notice")
+///     .Content("Important information here")
+///     .Border(BorderStyle.Rounded));
 ///
 /// // Panel with styling and padding
-/// var panel = new Panel
-/// {
-///     Header = "Results".Cyan().Bold(),
-///     Content = "Line 1\nLine 2",
-///     Border = BorderStyle.Double,
-///     PaddingHorizontal = 2,
-///     PaddingVertical = 1
-/// };
+/// terminal.WritePanel(p => p
+///     .Header("Results".Cyan().Bold())
+///     .Content("Line 1\nLine 2")
+///     .Border(BorderStyle.Doubled)
+///     .Padding(2, 1));
 /// </code>
 /// </example>
 public sealed class Panel
 {
+  internal Panel() { }
   /// <summary>
   /// Gets or sets the optional header to display in the top border.
   /// Can include ANSI color codes.
@@ -249,7 +245,7 @@ public sealed class Panel
 /// </example>
 public sealed class PanelBuilder : IBuilder<Panel>
 {
-  private readonly Panel _panel = new();
+  private readonly Panel Panel = new();
 
   /// <summary>
   /// Sets the header for the panel.
@@ -258,7 +254,7 @@ public sealed class PanelBuilder : IBuilder<Panel>
   /// <returns>This builder for method chaining.</returns>
   public PanelBuilder Header(string header)
   {
-    _panel.Header = header;
+    Panel.Header = header;
     return this;
   }
 
@@ -269,7 +265,7 @@ public sealed class PanelBuilder : IBuilder<Panel>
   /// <returns>This builder for method chaining.</returns>
   public PanelBuilder Content(string content)
   {
-    _panel.Content = content;
+    Panel.Content = content;
     return this;
   }
 
@@ -280,7 +276,7 @@ public sealed class PanelBuilder : IBuilder<Panel>
   /// <returns>This builder for method chaining.</returns>
   public PanelBuilder Border(BorderStyle style)
   {
-    _panel.Border = style;
+    Panel.Border = style;
     return this;
   }
 
@@ -291,7 +287,7 @@ public sealed class PanelBuilder : IBuilder<Panel>
   /// <returns>This builder for method chaining.</returns>
   public PanelBuilder BorderColor(string color)
   {
-    _panel.BorderColor = color;
+    Panel.BorderColor = color;
     return this;
   }
 
@@ -303,8 +299,8 @@ public sealed class PanelBuilder : IBuilder<Panel>
   /// <returns>This builder for method chaining.</returns>
   public PanelBuilder Padding(int horizontal, int vertical)
   {
-    _panel.PaddingHorizontal = horizontal;
-    _panel.PaddingVertical = vertical;
+    Panel.PaddingHorizontal = horizontal;
+    Panel.PaddingVertical = vertical;
     return this;
   }
 
@@ -315,7 +311,7 @@ public sealed class PanelBuilder : IBuilder<Panel>
   /// <returns>This builder for method chaining.</returns>
   public PanelBuilder PaddingHorizontal(int padding)
   {
-    _panel.PaddingHorizontal = padding;
+    Panel.PaddingHorizontal = padding;
     return this;
   }
 
@@ -326,7 +322,7 @@ public sealed class PanelBuilder : IBuilder<Panel>
   /// <returns>This builder for method chaining.</returns>
   public PanelBuilder PaddingVertical(int padding)
   {
-    _panel.PaddingVertical = padding;
+    Panel.PaddingVertical = padding;
     return this;
   }
 
@@ -337,7 +333,7 @@ public sealed class PanelBuilder : IBuilder<Panel>
   /// <returns>This builder for method chaining.</returns>
   public PanelBuilder Width(int width)
   {
-    _panel.Width = width;
+    Panel.Width = width;
     return this;
   }
 
@@ -348,7 +344,7 @@ public sealed class PanelBuilder : IBuilder<Panel>
   /// <returns>This builder for method chaining.</returns>
   public PanelBuilder WordWrap(bool wrap)
   {
-    _panel.WordWrap = wrap;
+    Panel.WordWrap = wrap;
     return this;
   }
 
@@ -356,7 +352,7 @@ public sealed class PanelBuilder : IBuilder<Panel>
   /// Builds the configured <see cref="Panel"/> instance.
   /// </summary>
   /// <returns>The configured panel.</returns>
-  public Panel Build() => _panel;
+  public Panel Build() => Panel;
 
   /// <summary>
   /// Converts the builder to a <see cref="Panel"/>.

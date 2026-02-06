@@ -1,5 +1,12 @@
 namespace TimeWarp.Terminal;
 
+#region Design
+// AddRow uses params string[] because rows are ordered, homogeneous positional data
+// that maps 1:1 to already-defined columns. A row builder (.AddRow(r => r.Cell("x")))
+// would add ceremony with no benefit — same positional semantics, more typing,
+// no new information. Use params for filling slots, builder methods for named configuration.
+#endregion
+
 /// <summary>
 /// Fluent builder for creating <see cref="Table"/> instances.
 /// </summary>
@@ -15,7 +22,7 @@ namespace TimeWarp.Terminal;
 /// </example>
 public sealed class TableBuilder : IBuilder<Table>
 {
-  private readonly Table _table = new();
+  private readonly Table Table = new();
 
   /// <summary>
   /// Adds a column with the specified header.
@@ -24,7 +31,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddColumn(string header)
   {
-    _table.AddColumn(header);
+    Table.AddColumn(header);
     return this;
   }
 
@@ -36,7 +43,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddColumn(string header, Alignment alignment)
   {
-    _table.AddColumn(header, alignment);
+    Table.AddColumn(header, alignment);
     return this;
   }
 
@@ -47,7 +54,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddColumn(TableColumn column)
   {
-    _table.AddColumn(column);
+    Table.AddColumn(column);
     return this;
   }
 
@@ -58,7 +65,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddColumns(params string[] headers)
   {
-    _table.AddColumns(headers);
+    Table.AddColumns(headers);
     return this;
   }
 
@@ -69,7 +76,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddRow(params string[] cells)
   {
-    _table.AddRow(cells);
+    Table.AddRow(cells);
     return this;
   }
 
@@ -80,7 +87,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder Border(BorderStyle style)
   {
-    _table.Border = style;
+    Table.Border = style;
     return this;
   }
 
@@ -91,7 +98,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder BorderColor(string color)
   {
-    _table.BorderColor = color;
+    Table.BorderColor = color;
     return this;
   }
 
@@ -101,7 +108,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder HideHeaders()
   {
-    _table.ShowHeaders = false;
+    Table.ShowHeaders = false;
     return this;
   }
 
@@ -111,7 +118,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder ShowRowSeparators()
   {
-    _table.ShowRowSeparators = true;
+    Table.ShowRowSeparators = true;
     return this;
   }
 
@@ -121,7 +128,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder Expand()
   {
-    _table.Expand = true;
+    Table.Expand = true;
     return this;
   }
 
@@ -134,7 +141,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder Shrink(bool value = true)
   {
-    _table.Shrink = value;
+    Table.Shrink = value;
     return this;
   }
 
@@ -142,7 +149,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// Builds the configured <see cref="Table"/> instance.
   /// </summary>
   /// <returns>The configured table.</returns>
-  public Table Build() => _table;
+  public Table Build() => Table;
 
   /// <summary>
   /// Converts the builder to a <see cref="Table"/>.

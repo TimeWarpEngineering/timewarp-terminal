@@ -14,43 +14,40 @@ terminal.WriteLine("==================\n");
 terminal.WriteLine("1. Basic Table");
 terminal.WriteLine("--------------");
 
-Table basicTable = new Table()
+terminal.WriteTable(t => t
   .AddColumn("Name")
   .AddColumn("Value")
   .AddRow("Host", "localhost")
   .AddRow("Port", "8080")
-  .AddRow("Protocol", "HTTP/2");
+  .AddRow("Protocol", "HTTP/2"));
 
-terminal.WriteTable(basicTable);
 terminal.WriteLine();
 
 // Example 2: Table with alignment
 terminal.WriteLine("2. Table with Column Alignment");
 terminal.WriteLine("-------------------------------");
 
-Table alignedTable = new Table()
+terminal.WriteTable(t => t
   .AddColumn("Package")
   .AddColumn("Downloads", Alignment.Right)
   .AddColumn("Version", Alignment.Center)
   .AddRow("Ardalis.GuardClauses", "12,543,210", "5.0.0")
   .AddRow("Ardalis.Result", "8,234,567", "10.0.0")
-  .AddRow("TimeWarp.Nuru", "42,000", "3.0.0");
+  .AddRow("TimeWarp.Nuru", "42,000", "3.0.0"));
 
-terminal.WriteTable(alignedTable);
 terminal.WriteLine();
 
 // Example 3: Table with styled content
 terminal.WriteLine("3. Table with Styled Content");
 terminal.WriteLine("----------------------------");
 
-Table styledTable = new Table()
+terminal.WriteTable(t => t
   .AddColumn("Test")
   .AddColumn("Status")
   .AddRow("Unit Tests", $"{AnsiColors.Green}PASSED{AnsiColors.Reset}")
   .AddRow("Integration Tests", $"{AnsiColors.Green}PASSED{AnsiColors.Reset}")
-  .AddRow("E2E Tests", $"{AnsiColors.Red}FAILED{AnsiColors.Reset}");
+  .AddRow("E2E Tests", $"{AnsiColors.Red}FAILED{AnsiColors.Reset}"));
 
-terminal.WriteTable(styledTable);
 terminal.WriteLine();
 
 // Example 4: Different border styles
@@ -63,12 +60,11 @@ BorderStyle[] borderStyles = [BorderStyle.Square, BorderStyle.Rounded, BorderSty
 for (int i = 0; i < borderStyles.Length; i++)
 {
   terminal.WriteLine($"\n{borderNames[i]} Border:");
-  Table borderTable = new Table()
+  terminal.WriteTable(t => t
     .AddColumn("A")
     .AddColumn("B")
-    .AddRow("1", "2");
-  borderTable.Border = borderStyles[i];
-  terminal.WriteTable(borderTable);
+    .AddRow("1", "2")
+    .Border(borderStyles[i]));
 }
 terminal.WriteLine();
 
@@ -76,61 +72,57 @@ terminal.WriteLine();
 terminal.WriteLine("5. Colored Border");
 terminal.WriteLine("-----------------");
 
-Table coloredBorderTable = new Table()
+terminal.WriteTable(t => t
   .AddColumn("Project")
   .AddColumn("Status")
   .AddRow("Backend", "Running")
-  .AddRow("Frontend", "Building");
-coloredBorderTable.BorderColor = AnsiColors.Cyan;
-coloredBorderTable.Border = BorderStyle.Rounded;
+  .AddRow("Frontend", "Building")
+  .BorderColor(AnsiColors.Cyan)
+  .Border(BorderStyle.Rounded));
 
-terminal.WriteTable(coloredBorderTable);
 terminal.WriteLine();
 
 // Example 6: Headerless table
 terminal.WriteLine("6. Headerless Table");
 terminal.WriteLine("-------------------");
 
-Table headerlessTable = new Table()
+terminal.WriteTable(t => t
   .AddColumn("Key")
   .AddColumn("Value")
   .AddRow("API_KEY", "sk-abc123...")
   .AddRow("DB_HOST", "database.example.com")
-  .AddRow("CACHE_TTL", "3600");
-headerlessTable.ShowHeaders = false;
+  .AddRow("CACHE_TTL", "3600")
+  .HideHeaders());
 
-terminal.WriteTable(headerlessTable);
 terminal.WriteLine();
 
 // Example 7: Table with row separators
 terminal.WriteLine("7. Table with Row Separators");
 terminal.WriteLine("----------------------------");
 
-Table separatorsTable = new Table()
+terminal.WriteTable(t => t
   .AddColumn("Time")
   .AddColumn("Event")
   .AddRow("09:00", "Meeting started")
   .AddRow("10:30", "Coffee break")
-  .AddRow("11:00", "Presentation");
-separatorsTable.ShowRowSeparators = true;
+  .AddRow("11:00", "Presentation")
+  .ShowRowSeparators());
 
-terminal.WriteTable(separatorsTable);
 terminal.WriteLine();
 
 // Example 8: Expanded table
 terminal.WriteLine("8. Expanded Table (fills terminal width)");
 terminal.WriteLine("-----------------------------------------");
 
-Table expandedTable = new Table()
+terminal.WriteTable(t => t
   .AddColumn("Name")
   .AddColumn("Description")
   .AddRow("table", "Renders columnar data")
   .AddRow("panel", "Renders bordered boxes")
-  .AddRow("rule", "Renders horizontal dividers");
-expandedTable.Expand = true;
-expandedTable.Border = BorderStyle.Rounded;
+  .AddRow("rule", "Renders horizontal dividers")
+  .Expand()
+  .Border(BorderStyle.Rounded));
 
-terminal.WriteTable(expandedTable);
 terminal.WriteLine();
 
 // Example 9: Fluent builder pattern
@@ -150,19 +142,18 @@ terminal.WriteLine();
 terminal.WriteLine("10. Shrink to Fit Terminal Width (default)");
 terminal.WriteLine("-------------------------------------------");
 
-Table shrinkTable = new Table()
+terminal.WriteTable(t => t
   .AddColumn("Repository")
   .AddColumn(new TableColumn("Worktree Path") { TruncateMode = TruncateMode.Start })
   .AddColumn("Branch")
   .AddRow("timewarp-nuru", "/home/user/worktrees/github.com/TimeWarpEngineering/timewarp-nuru/feature-branch-name", "feature-xyz")
-  .AddRow("timewarp-state", "/home/user/worktrees/github.com/TimeWarpEngineering/timewarp-state/main", "main");
-shrinkTable.Border = BorderStyle.Rounded;
+  .AddRow("timewarp-state", "/home/user/worktrees/github.com/TimeWarpEngineering/timewarp-state/main", "main")
+  .Border(BorderStyle.Rounded));
 
-terminal.WriteTable(shrinkTable);
 terminal.WriteLine();
 
 terminal.WriteLine("Note: Path column uses TruncateMode.Start to show the end of paths.");
-terminal.WriteLine("Use table.Shrink = false or .Shrink(false) to disable shrinking.");
+terminal.WriteLine("Use .Shrink(false) to disable shrinking.");
 terminal.WriteLine();
 
 // Example 12: TruncateMode options
@@ -171,15 +162,14 @@ terminal.WriteLine("------------------------");
 
 string longText = "This-is-a-very-long-text-that-will-be-truncated-differently";
 
-Table truncateModeTable = new Table()
+terminal.WriteTable(t => t
   .AddColumn(new TableColumn("Mode") { MaxWidth = 8 })
   .AddColumn(new TableColumn("End (default)") { MaxWidth = 25, TruncateMode = TruncateMode.End })
   .AddColumn(new TableColumn("Start") { MaxWidth = 25, TruncateMode = TruncateMode.Start })
   .AddColumn(new TableColumn("Middle") { MaxWidth = 25, TruncateMode = TruncateMode.Middle })
-  .AddRow("Result", longText, longText, longText);
-truncateModeTable.Border = BorderStyle.Rounded;
+  .AddRow("Result", longText, longText, longText)
+  .Border(BorderStyle.Rounded));
 
-terminal.WriteTable(truncateModeTable);
 terminal.WriteLine();
 
 terminal.WriteLine("TruncateMode.End:    'long text...'  - Shows beginning (default)");

@@ -145,14 +145,18 @@ terminal.WritePanel("This is important information");
 terminal.WritePanel("Content here", "Notice");
 
 // Fluent builder with full options
-terminal.WritePanel(panel => panel
+terminal.WritePanel
+( 
+  panel => 
+    panel
     .Header("Configuration".Cyan().Bold())
     .Content("Setting: value")
     .Border(BorderStyle.Rounded)
     .BorderColor(AnsiColors.Cyan)
     .Padding(2, 1)
     .Width(60)
-    .WordWrap(true));
+    .WordWrap(true)
+);
 ```
 
 **Border Styles:** `Rounded`, `Square`, `Doubled`, `Heavy`, `None`
@@ -163,25 +167,25 @@ Formatted table with columns, alignment, and styling.
 
 ```csharp
 // Simple table
-terminal.WriteTable(t => t
+terminal.WriteTable
+( 
+  t => t
     .AddColumn("Name")
     .AddColumn("Value", Alignment.Right)
     .AddRow("CPU", "45%")
-    .AddRow("Memory", "2.1 GB"));
+    .AddRow("Memory", "2.1 GB")
+);
 
 // Full-featured table
-Table table = new Table()
+terminal.WriteTable(t => t
     .AddColumn("Package")
     .AddColumn("Downloads", Alignment.Right)
     .AddColumn(new TableColumn("Path") { TruncateMode = TruncateMode.Start })
-    .AddRow("GuardClauses", "12M", "/home/user/packages/guard");
-
-table.Border = BorderStyle.Rounded;
-table.BorderColor = AnsiColors.Cyan;
-table.Expand = true;  // Fill terminal width
-table.Shrink = true;  // Shrink to fit (default)
-table.ShowHeaders = true;
-table.ShowRowSeparators = false;
+    .AddRow("GuardClauses", "12M", "/home/user/packages/guard")
+    .Border(BorderStyle.Rounded)
+    .BorderColor(AnsiColors.Cyan)
+    .Expand()
+    .Shrink());
 
 terminal.WriteTable(table);
 ```

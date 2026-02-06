@@ -64,15 +64,12 @@ terminal.WriteRule(rule => rule
     .Color(AnsiColors.Red));
 terminal.WriteLine();
 
-// Pre-configured rule
-terminal.WriteLine("7. Pre-configured Rule object:");
-Rule customRule = new()
-{
-  Title = "Custom Configuration",
-  Style = LineStyle.Heavy,
-  Color = AnsiColors.Magenta
-};
-terminal.WriteRule(customRule);
+// Pre-configured rule via builder
+terminal.WriteLine("7. Pre-configured Rule via builder:");
+terminal.WriteRule(rule => rule
+    .Title("Custom Configuration")
+    .Style(LineStyle.Heavy)
+    .Color(AnsiColors.Magenta));
 terminal.WriteLine();
 
 // Practical example

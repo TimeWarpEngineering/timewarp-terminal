@@ -113,18 +113,15 @@ terminal.WritePanel(panel => panel
     .Padding(2, 1));
 terminal.WriteLine();
 
-// Pre-configured panel
-terminal.WriteLine("9. Pre-configured Panel object:");
-Panel customPanel = new()
-{
-  Header = "Configuration",
-  Content = "Environment: Production\nDebug: false\nVersion: 1.0.0",
-  Border = BorderStyle.Doubled,
-  BorderColor = AnsiColors.Magenta,
-  PaddingHorizontal = 2,
-  PaddingVertical = 1
-};
-terminal.WritePanel(customPanel);
+// Pre-configured panel via builder
+terminal.WriteLine("9. Pre-configured Panel via builder:");
+terminal.WritePanel(panel => panel
+    .Header("Configuration")
+    .Content("Environment: Production\nDebug: false\nVersion: 1.0.0")
+    .Border(BorderStyle.Doubled)
+    .BorderColor(AnsiColors.Magenta)
+    .PaddingHorizontal(2)
+    .PaddingVertical(1));
 terminal.WriteLine();
 
 // Practical example

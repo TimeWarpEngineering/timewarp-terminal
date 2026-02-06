@@ -57,10 +57,11 @@ public class TerminalStaticWidgetTests
 
     try
     {
-      Table table = new Table()
+      Table table = new TableBuilder()
           .AddColumn("Name")
           .AddColumn("Value")
-          .AddRow("Foo", "123");
+          .AddRow("Foo", "123")
+          .Build();
 
       // Act
       Terminal.WriteTable(table);

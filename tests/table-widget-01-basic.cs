@@ -19,11 +19,12 @@ public class TableWidgetBasicTests
   public static async Task Should_render_basic_table_with_two_columns_and_two_rows()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Name")
       .AddColumn("Value")
       .AddRow("Foo", "123")
-      .AddRow("Bar", "456");
+      .AddRow("Bar", "456")
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -59,11 +60,12 @@ public class TableWidgetBasicTests
   public static async Task Should_render_right_aligned_column()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Item")
       .AddColumn("Count", Alignment.Right)
       .AddRow("Apples", "5")
-      .AddRow("Oranges", "123");
+      .AddRow("Oranges", "123")
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -81,10 +83,11 @@ public class TableWidgetBasicTests
   public static async Task Should_render_center_aligned_column()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Status", Alignment.Center)
       .AddRow("OK")
-      .AddRow("Error");
+      .AddRow("Error")
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -100,9 +103,10 @@ public class TableWidgetBasicTests
   public static async Task Should_render_multi_column_table()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumns("A", "B", "C", "D", "E")
-      .AddRow("1", "2", "3", "4", "5");
+      .AddRow("1", "2", "3", "4", "5")
+      .Build();
 
     // Act
     string[] lines = table.Render(80);
@@ -120,12 +124,13 @@ public class TableWidgetBasicTests
   public static async Task Should_render_headerless_table()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Col1")
       .AddColumn("Col2")
       .AddRow("A", "B")
-      .AddRow("C", "D");
-    table.ShowHeaders = false;
+      .AddRow("C", "D")
+      .HideHeaders()
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -145,21 +150,19 @@ public class TableWidgetBasicTests
   public static async Task Should_render_row_separators()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Name")
       .AddRow("Alice")
       .AddRow("Bob")
-      .AddRow("Carol");
-    table.ShowRowSeparators = true;
+      .AddRow("Carol")
+      .ShowRowSeparators()
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
 
     // Assert
     // top + header + header-sep + data1 + sep + data2 + sep + data3 + bottom = 9
-    // Actually: top + header + header-sep + data1 + sep + data2 + sep + data3 + bottom
-    // But separators are only between data rows, not after last
-    // top(1) + header(1) + header-sep(1) + data1(1) + sep(1) + data2(1) + sep(1) + data3(1) + bottom(1) = 9
     lines.Length.ShouldBe(9);
 
     await Task.CompletedTask;
@@ -168,9 +171,10 @@ public class TableWidgetBasicTests
   public static async Task Should_render_empty_table_with_headers_only()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Name")
-      .AddColumn("Age");
+      .AddColumn("Age")
+      .Build();
     // No rows added
 
     // Act
@@ -188,7 +192,8 @@ public class TableWidgetBasicTests
   public static async Task Should_return_empty_array_when_no_columns()
   {
     // Arrange
-    Table table = new();
+    Table table = new TableBuilder()
+      .Build();
 
     // Act
     string[] lines = table.Render(40);

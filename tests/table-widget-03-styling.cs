@@ -20,9 +20,10 @@ public class TableWidgetStylingTests
   {
     // Arrange
     string styledValue = $"{AnsiColors.Red}Error{AnsiColors.Reset}";
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Status")
-      .AddRow(styledValue);
+      .AddRow(styledValue)
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -41,9 +42,10 @@ public class TableWidgetStylingTests
     // Arrange
     // "Error" is 5 visible characters, but with ANSI codes the string is longer
     string styledValue = $"{AnsiColors.Red}Error{AnsiColors.Reset}";
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Status") // 6 chars
-      .AddRow(styledValue); // 5 visible chars
+      .AddRow(styledValue) // 5 visible chars
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -68,9 +70,10 @@ public class TableWidgetStylingTests
     {
       HeaderColor = AnsiColors.Yellow
     };
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn(column)
-      .AddRow("Value");
+      .AddRow("Value")
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -88,10 +91,11 @@ public class TableWidgetStylingTests
     // Arrange
     string green = $"{AnsiColors.Green}OK{AnsiColors.Reset}";
     string red = $"{AnsiColors.Red}FAIL{AnsiColors.Reset}";
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Test 1")
       .AddColumn("Test 2")
-      .AddRow(green, red);
+      .AddRow(green, red)
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -113,9 +117,10 @@ public class TableWidgetStylingTests
     {
       MaxWidth = 10
     };
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn(column)
-      .AddRow("This is a very long description that should be truncated");
+      .AddRow("This is a very long description that should be truncated")
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -133,11 +138,12 @@ public class TableWidgetStylingTests
   public static async Task Should_handle_empty_cells()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("A")
       .AddColumn("B")
       .AddColumn("C")
-      .AddRow("1", "", "3");
+      .AddRow("1", "", "3")
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -153,11 +159,12 @@ public class TableWidgetStylingTests
   public static async Task Should_handle_fewer_cells_than_columns()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("A")
       .AddColumn("B")
       .AddColumn("C")
-      .AddRow("1"); // Only one cell for three columns
+      .AddRow("1") // Only one cell for three columns
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -172,10 +179,11 @@ public class TableWidgetStylingTests
   public static async Task Should_handle_null_cell_values()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("A")
       .AddColumn("B")
-      .AddRow("1", null!);
+      .AddRow("1", null!)
+      .Build();
 
     // Act
     string[] lines = table.Render(40);

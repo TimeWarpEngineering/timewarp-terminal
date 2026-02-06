@@ -5,31 +5,31 @@ namespace TimeWarp.Terminal;
 /// </summary>
 /// <example>
 /// <code>
-/// // Simple table
-/// var table = new Table()
+/// // Simple table via builder
+/// terminal.WriteTable(t => t
 ///     .AddColumn("Name")
 ///     .AddColumn("Stars", Alignment.Right)
 ///     .AddColumn("Description")
 ///     .AddRow("CleanArchitecture", "16.5k", "Clean Architecture template")
-///     .AddRow("GuardClauses", "3.2k", "Guard clause library");
-///
-/// terminal.WriteTable(table);
+///     .AddRow("GuardClauses", "3.2k", "Guard clause library"));
 /// </code>
 /// </example>
 public sealed class Table
 {
-  private readonly List<TableColumn> _columns = [];
-  private readonly List<string[]> _rows = [];
+  internal Table() { }
+
+  private readonly List<TableColumn> ColumnsList = [];
+  private readonly List<string[]> RowsList = [];
 
   /// <summary>
   /// Gets the columns defined for this table.
   /// </summary>
-  public IReadOnlyList<TableColumn> Columns => _columns;
+  public IReadOnlyList<TableColumn> Columns => ColumnsList;
 
   /// <summary>
   /// Gets the data rows in this table.
   /// </summary>
-  public IReadOnlyList<string[]> Rows => _rows;
+  public IReadOnlyList<string[]> Rows => RowsList;
 
   /// <summary>
   /// Gets or sets the border style for the table.
@@ -74,9 +74,9 @@ public sealed class Table
   /// </summary>
   /// <param name="header">The column header text.</param>
   /// <returns>This table for method chaining.</returns>
-  public Table AddColumn(string header)
+  internal Table AddColumn(string header)
   {
-    _columns.Add(new TableColumn(header));
+    ColumnsList.Add(new TableColumn(header));
     return this;
   }
 
@@ -86,9 +86,9 @@ public sealed class Table
   /// <param name="header">The column header text.</param>
   /// <param name="alignment">The column alignment.</param>
   /// <returns>This table for method chaining.</returns>
-  public Table AddColumn(string header, Alignment alignment)
+  internal Table AddColumn(string header, Alignment alignment)
   {
-    _columns.Add(new TableColumn(header, alignment));
+    ColumnsList.Add(new TableColumn(header, alignment));
     return this;
   }
 
@@ -97,10 +97,10 @@ public sealed class Table
   /// </summary>
   /// <param name="column">The column to add.</param>
   /// <returns>This table for method chaining.</returns>
-  public Table AddColumn(TableColumn column)
+  internal Table AddColumn(TableColumn column)
   {
     ArgumentNullException.ThrowIfNull(column);
-    _columns.Add(column);
+    ColumnsList.Add(column);
     return this;
   }
 
@@ -109,13 +109,13 @@ public sealed class Table
   /// </summary>
   /// <param name="headers">The column header texts.</param>
   /// <returns>This table for method chaining.</returns>
-  public Table AddColumns(params string[] headers)
+  internal Table AddColumns(params string[] headers)
   {
     ArgumentNullException.ThrowIfNull(headers);
 
     foreach (string header in headers)
     {
-      _columns.Add(new TableColumn(header));
+      ColumnsList.Add(new TableColumn(header));
     }
 
     return this;
@@ -130,9 +130,9 @@ public sealed class Table
   /// If fewer cells are provided than columns, remaining cells will be empty.
   /// If more cells are provided than columns, extra cells are ignored.
   /// </remarks>
-  public Table AddRow(params string[] cells)
+  internal Table AddRow(params string[] cells)
   {
-    _rows.Add(cells);
+    RowsList.Add(cells);
     return this;
   }
 
@@ -143,7 +143,7 @@ public sealed class Table
   /// <returns>The rendered table lines.</returns>
   public string[] Render(int terminalWidth = 80)
   {
-    if (_columns.Count == 0)
+    if (ColumnsList.Count == 0)
       return [];
 
     int[] columnWidths = CalculateColumnWidths(terminalWidth);
@@ -158,18 +158,18 @@ public sealed class Table
 
   private int[] CalculateColumnWidths(int terminalWidth)
   {
-    int[] widths = new int[_columns.Count];
+    int[] widths = new int[ColumnsList.Count];
 
     // Calculate natural width for each column (max of header and all cell values)
-    for (int i = 0; i < _columns.Count; i++)
+    for (int i = 0; i < ColumnsList.Count; i++)
     {
-      TableColumn column = _columns[i];
+      TableColumn column = ColumnsList[i];
 
       // Start with header width
       int maxWidth = AnsiStringUtils.GetVisibleLength(column.Header);
 
       // Check all cell values in this column
-      foreach (string[] row in _rows)
+      foreach (string[] row in RowsList)
       {
         if (i < row.Length)
         {
@@ -190,8 +190,8 @@ public sealed class Table
     // Calculate overhead: borders + padding + separators
     // │ cell │ cell │ = 2 outer borders + (n-1) inner separators + 2*n padding spaces
     int overhead = Border != BorderStyle.None
-      ? 2 + (_columns.Count - 1) + (2 * _columns.Count)
-      : (_columns.Count - 1) * 2; // Borderless: just column separators
+      ? 2 + (ColumnsList.Count - 1) + (2 * ColumnsList.Count)
+      : (ColumnsList.Count - 1) * 2; // Borderless: just column separators
 
     int contentWidth = widths.Sum();
     int totalWidth = overhead + contentWidth;
@@ -200,10 +200,10 @@ public sealed class Table
     if (Expand && Border != BorderStyle.None && totalWidth < terminalWidth)
     {
       int extraWidth = terminalWidth - totalWidth;
-      int perColumn = extraWidth / _columns.Count;
-      int remainder = extraWidth % _columns.Count;
+      int perColumn = extraWidth / ColumnsList.Count;
+      int remainder = extraWidth % ColumnsList.Count;
 
-      for (int i = 0; i < _columns.Count; i++)
+      for (int i = 0; i < ColumnsList.Count; i++)
       {
         widths[i] += perColumn;
         if (i < remainder)
@@ -221,16 +221,16 @@ public sealed class Table
       if (availableContentWidth > 0)
       {
         // Get minimum widths for each column (default 4 for ellipsis)
-        int[] minWidths = new int[_columns.Count];
-        for (int i = 0; i < _columns.Count; i++)
+        int[] minWidths = new int[ColumnsList.Count];
+        for (int i = 0; i < ColumnsList.Count; i++)
         {
-          minWidths[i] = _columns[i].MinWidth ?? 4;
+          minWidths[i] = ColumnsList[i].MinWidth ?? 4;
         }
 
         // Calculate how much each column can shrink (width above minimum)
-        int[] shrinkableAmounts = new int[_columns.Count];
+        int[] shrinkableAmounts = new int[ColumnsList.Count];
         int totalShrinkable = 0;
-        for (int i = 0; i < _columns.Count; i++)
+        for (int i = 0; i < ColumnsList.Count; i++)
         {
           shrinkableAmounts[i] = Math.Max(0, widths[i] - minWidths[i]);
           totalShrinkable += shrinkableAmounts[i];
@@ -241,7 +241,7 @@ public sealed class Table
           // Shrink proportionally based on shrinkable amount (wider columns shrink more)
           int remainingExcess = Math.Min(excessWidth, totalShrinkable);
 
-          for (int i = 0; i < _columns.Count; i++)
+          for (int i = 0; i < ColumnsList.Count; i++)
           {
             if (shrinkableAmounts[i] > 0)
             {
@@ -269,11 +269,11 @@ public sealed class Table
     // Render header row if enabled
     if (ShowHeaders)
     {
-      lines.Add(RenderDataRow([.. _columns.Select(c => c.Header)], columnWidths, isHeader: true));
+      lines.Add(RenderDataRow([.. ColumnsList.Select(c => c.Header)], columnWidths, isHeader: true));
     }
 
     // Render data rows
-    foreach (string[] row in _rows)
+    foreach (string[] row in RowsList)
     {
       lines.Add(RenderDataRow(row, columnWidths, isHeader: false));
     }
@@ -303,19 +303,19 @@ public sealed class Table
     // Header row if enabled
     if (ShowHeaders)
     {
-      lines.Add(RenderCellRow([.. _columns.Select(c => c.Header)], columnWidths, vertical, isHeader: true));
+      lines.Add(RenderCellRow([.. ColumnsList.Select(c => c.Header)], columnWidths, vertical, isHeader: true));
 
       // Header separator
       lines.Add(RenderHorizontalBorder(columnWidths, horizontal, leftT, rightT, cross));
     }
 
     // Data rows
-    for (int i = 0; i < _rows.Count; i++)
+    for (int i = 0; i < RowsList.Count; i++)
     {
-      lines.Add(RenderCellRow(_rows[i], columnWidths, vertical, isHeader: false));
+      lines.Add(RenderCellRow(RowsList[i], columnWidths, vertical, isHeader: false));
 
       // Row separator (except after last row)
-      if (ShowRowSeparators && i < _rows.Count - 1)
+      if (ShowRowSeparators && i < RowsList.Count - 1)
       {
         lines.Add(RenderHorizontalBorder(columnWidths, horizontal, leftT, rightT, cross));
       }
@@ -366,7 +366,7 @@ public sealed class Table
     for (int i = 0; i < columnWidths.Length; i++)
     {
       string cellValue = i < cells.Length ? cells[i] ?? "" : "";
-      TableColumn column = _columns[i];
+      TableColumn column = ColumnsList[i];
 
       // Apply header color if this is a header and the column has a header color
       if (isHeader && !string.IsNullOrEmpty(column.HeaderColor))
@@ -402,7 +402,7 @@ public sealed class Table
     for (int i = 0; i < columnWidths.Length; i++)
     {
       string cellValue = i < cells.Length ? cells[i] ?? "" : "";
-      TableColumn column = _columns[i];
+      TableColumn column = ColumnsList[i];
 
       // Apply header color if this is a header and the column has a header color
       if (isHeader && !string.IsNullOrEmpty(column.HeaderColor))
