@@ -8,93 +8,94 @@ using TimeWarp.Terminal;
 // Get a terminal instance
 ITerminal terminal = TimeWarpTerminal.Default;
 
-terminal.WriteLine();
-terminal.WriteLine("Rule Widget Demo".Cyan().Bold());
-terminal.WriteLine("Demonstrates horizontal divider lines with optional centered text");
-terminal.WriteLine();
+terminal
+  .WriteLine()
+  .WriteLine("Rule Widget Demo".Cyan().Bold())
+  .WriteLine("Demonstrates horizontal divider lines with optional centered text")
+  .WriteLine();
 
 // Simple horizontal line
-terminal.WriteLine("1. Simple Rule (no title):");
-terminal.WriteRule();
-terminal.WriteLine();
+terminal
+  .WriteLine("1. Simple Rule (no title):")
+  .WriteRule()
+  .WriteLine();
 
 // Rule with centered title
-terminal.WriteLine("2. Rule with centered title:");
-terminal.WriteRule("Section Title");
-terminal.WriteLine();
+terminal
+  .WriteLine("2. Rule with centered title:")
+  .WriteRule("Section Title")
+  .WriteLine();
 
 // Rule with styled title
-terminal.WriteLine("3. Rule with styled title:");
-terminal.WriteRule("Results".Cyan().Bold());
-terminal.WriteLine();
+terminal
+  .WriteLine("3. Rule with styled title:")
+  .WriteRule("Results".Cyan().Bold())
+  .WriteLine();
 
 // Different line styles
-terminal.WriteLine("4. Different line styles:");
-terminal.WriteLine();
-terminal.WriteLine("   Thin (default):");
-terminal.WriteRule("Thin Style", LineStyle.Thin);
-terminal.WriteLine();
-terminal.WriteLine("   Doubled:");
-terminal.WriteRule("Doubled Style", LineStyle.Doubled);
-terminal.WriteLine();
-terminal.WriteLine("   Heavy:");
-terminal.WriteRule("Heavy Style", LineStyle.Heavy);
-terminal.WriteLine();
+terminal
+  .WriteLine("4. Different line styles:")
+  .WriteLine()
+  .WriteLine("   Thin (default):")
+  .WriteRule("Thin Style", LineStyle.Thin)
+  .WriteLine()
+  .WriteLine("   Doubled:")
+  .WriteRule("Doubled Style", LineStyle.Doubled)
+  .WriteLine()
+  .WriteLine("   Heavy:")
+  .WriteRule("Heavy Style", LineStyle.Heavy)
+  .WriteLine();
 
 // Fluent builder API
-terminal.WriteLine("5. Fluent builder API:");
-terminal.WriteRule(rule => rule
+terminal
+  .WriteLine("5. Fluent builder API:")
+  .WriteRule(rule => rule
     .Title("Configuration")
     .Style(LineStyle.Doubled)
-    .Color(AnsiColors.Cyan));
-terminal.WriteLine();
+    .Color(AnsiColors.Cyan))
+  .WriteLine();
 
 // Colored rules
-terminal.WriteLine("6. Colored rules:");
-terminal.WriteRule(rule => rule
+terminal
+  .WriteLine("6. Colored rules:")
+  .WriteRule(rule => rule
     .Title("Success".Green())
-    .Color(AnsiColors.Green));
-
-terminal.WriteRule(rule => rule
+    .Color(AnsiColors.Green))
+  .WriteRule(rule => rule
     .Title("Warning".Yellow())
-    .Color(AnsiColors.Yellow));
-
-terminal.WriteRule(rule => rule
+    .Color(AnsiColors.Yellow))
+  .WriteRule(rule => rule
     .Title("Error".Red())
-    .Color(AnsiColors.Red));
-terminal.WriteLine();
+    .Color(AnsiColors.Red))
+  .WriteLine();
 
-// Pre-configured rule
-terminal.WriteLine("7. Pre-configured Rule object:");
-Rule customRule = new()
-{
-  Title = "Custom Configuration",
-  Style = LineStyle.Heavy,
-  Color = AnsiColors.Magenta
-};
-terminal.WriteRule(customRule);
-terminal.WriteLine();
+// Pre-configured rule via builder
+terminal
+  .WriteLine("7. Pre-configured Rule via builder:")
+  .WriteRule(rule => rule
+    .Title("Custom Configuration")
+    .Style(LineStyle.Heavy)
+    .Color(AnsiColors.Magenta))
+  .WriteLine();
 
-// Practical example
-terminal.WriteLine("8. Practical example - CLI output sections:");
-terminal.WriteLine();
-
-terminal.WriteRule("Build Output");
-terminal.WriteLine("  Compiling project...");
-terminal.WriteLine("  Build succeeded.");
-terminal.WriteLine();
-
-terminal.WriteRule("Test Results", LineStyle.Doubled);
-terminal.WriteLine("  ✓ 42 tests passed");
-terminal.WriteLine("  ✗ 0 tests failed");
-terminal.WriteLine();
-
-terminal.WriteRule(rule => rule
+// Practical example — fluent chaining
+terminal
+  .WriteLine("8. Practical example - fluent chaining:")
+  .WriteLine()
+  .WriteRule("Build Output")
+  .WriteLine("  Compiling project...")
+  .WriteLine("  Build succeeded.")
+  .WriteLine()
+  .WriteRule("Test Results", LineStyle.Doubled)
+  .WriteLine("  ✓ 42 tests passed")
+  .WriteLine("  ✗ 0 tests failed")
+  .WriteLine()
+  .WriteRule(rule => rule
     .Title("Summary".Bold())
     .Style(LineStyle.Heavy)
-    .Color(AnsiColors.BrightGreen));
-terminal.WriteLine("  Total time: 1.23s");
-terminal.WriteLine("  Status: " + "SUCCESS".Green().Bold());
-terminal.WriteLine();
+    .Color(AnsiColors.BrightGreen))
+  .WriteLine("  Total time: 1.23s")
+  .WriteLine("  Status: " + "SUCCESS".Green().Bold())
+  .WriteLine();
 
 return 0;

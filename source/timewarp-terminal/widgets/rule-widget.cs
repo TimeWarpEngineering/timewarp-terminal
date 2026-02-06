@@ -7,22 +7,21 @@ namespace TimeWarp.Terminal;
 /// <example>
 /// <code>
 /// // Simple rule
-/// var rule = new Rule();
+/// terminal.WriteRule();
 ///
 /// // Rule with title
-/// var rule = new Rule { Title = "Section" };
+/// terminal.WriteRule("Section");
 ///
 /// // Rule with styling
-/// var rule = new Rule
-/// {
-///     Title = "Results",
-///     Style = LineStyle.Doubled,
-///     Color = AnsiColors.Cyan
-/// };
+/// terminal.WriteRule(r => r
+///     .Title("Results")
+///     .Style(LineStyle.Doubled)
+///     .Color(AnsiColors.Cyan));
 /// </code>
 /// </example>
 public sealed class Rule
 {
+  internal Rule() { }
   /// <summary>
   /// Gets or sets the optional title to display centered in the rule.
   /// Can include ANSI color codes.
@@ -130,7 +129,7 @@ public sealed class Rule
 /// </example>
 public sealed class RuleBuilder : IBuilder<Rule>
 {
-  private readonly Rule _rule = new();
+  private readonly Rule Rule = new();
 
   /// <summary>
   /// Sets the title for the rule.
@@ -139,7 +138,7 @@ public sealed class RuleBuilder : IBuilder<Rule>
   /// <returns>This builder for method chaining.</returns>
   public RuleBuilder Title(string title)
   {
-    _rule.Title = title;
+    Rule.Title = title;
     return this;
   }
 
@@ -150,7 +149,7 @@ public sealed class RuleBuilder : IBuilder<Rule>
   /// <returns>This builder for method chaining.</returns>
   public RuleBuilder Style(LineStyle style)
   {
-    _rule.Style = style;
+    Rule.Style = style;
     return this;
   }
 
@@ -161,7 +160,7 @@ public sealed class RuleBuilder : IBuilder<Rule>
   /// <returns>This builder for method chaining.</returns>
   public RuleBuilder Color(string color)
   {
-    _rule.Color = color;
+    Rule.Color = color;
     return this;
   }
 
@@ -172,7 +171,7 @@ public sealed class RuleBuilder : IBuilder<Rule>
   /// <returns>This builder for method chaining.</returns>
   public RuleBuilder Width(int width)
   {
-    _rule.Width = width;
+    Rule.Width = width;
     return this;
   }
 
@@ -180,7 +179,7 @@ public sealed class RuleBuilder : IBuilder<Rule>
   /// Builds the configured <see cref="Rule"/> instance.
   /// </summary>
   /// <returns>The configured rule.</returns>
-  public Rule Build() => _rule;
+  public Rule Build() => Rule;
 
   /// <summary>
   /// Converts the builder to a <see cref="Rule"/>.

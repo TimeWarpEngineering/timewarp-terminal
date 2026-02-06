@@ -19,11 +19,12 @@ public class TableWidgetExpandTests
   public static async Task Should_expand_table_to_terminal_width()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Name")
       .AddColumn("Value")
-      .AddRow("A", "1");
-    table.Expand = true;
+      .AddRow("A", "1")
+      .Expand()
+      .Build();
 
     // Act
     string[] lines = table.Render(80);
@@ -36,14 +37,14 @@ public class TableWidgetExpandTests
     await Task.CompletedTask;
   }
 
-  public static async Task Should_not_expand_when_expand_is_false()
+  public static async Task Should_not_expand_when_expand_is_not_set()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Name")
       .AddColumn("Value")
-      .AddRow("A", "1");
-    table.Expand = false;
+      .AddRow("A", "1")
+      .Build();
 
     // Act
     string[] lines = table.Render(80);
@@ -59,11 +60,12 @@ public class TableWidgetExpandTests
   public static async Task Should_distribute_extra_width_evenly_across_columns()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("A") // natural width: 1
       .AddColumn("B") // natural width: 1
-      .AddRow("1", "2");
-    table.Expand = true;
+      .AddRow("1", "2")
+      .Expand()
+      .Build();
 
     // Act - render to 50 chars
     // Natural width: 2 borders + 1 separator + 4 padding spaces + 2 content = 9
@@ -80,12 +82,13 @@ public class TableWidgetExpandTests
   public static async Task Should_not_expand_borderless_table()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Name")
       .AddColumn("Value")
-      .AddRow("A", "1");
-    table.Expand = true;
-    table.Border = BorderStyle.None;
+      .AddRow("A", "1")
+      .Expand()
+      .Border(BorderStyle.None)
+      .Build();
 
     // Act
     string[] lines = table.Render(80);

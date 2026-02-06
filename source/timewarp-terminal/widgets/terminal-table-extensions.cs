@@ -23,6 +23,7 @@ public static class TerminalTableExtensions
   /// </summary>
   /// <param name="terminal">The terminal to write to.</param>
   /// <param name="configure">An action to configure the table using a <see cref="TableBuilder"/>.</param>
+  /// <returns>The terminal instance for fluent chaining.</returns>
   /// <example>
   /// <code>
   /// terminal.WriteTable(table => table
@@ -32,7 +33,7 @@ public static class TerminalTableExtensions
   ///     .Border(BorderStyle.Rounded));
   /// </code>
   /// </example>
-  public static void WriteTable(this ITerminal terminal, Action<TableBuilder> configure)
+  public static ITerminal WriteTable(this ITerminal terminal, Action<TableBuilder> configure)
   {
     ArgumentNullException.ThrowIfNull(terminal);
     ArgumentNullException.ThrowIfNull(configure);
@@ -42,6 +43,7 @@ public static class TerminalTableExtensions
 
     Table table = builder.Build();
     WriteTableInternal(terminal, table);
+    return terminal;
   }
 
   /// <summary>
@@ -51,7 +53,8 @@ public static class TerminalTableExtensions
   /// <param name="configure">An action to configure the table using a <see cref="TableBuilder"/>.</param>
   /// <param name="foregroundColor">The foreground color to apply to table content. Defaults to <c>null</c>.</param>
   /// <param name="backgroundColor">The background color to apply to table content. Defaults to <c>null</c>.</param>
-  public static void WriteTable(this ITerminal terminal, Action<TableBuilder> configure, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
+  /// <returns>The terminal instance for fluent chaining.</returns>
+  public static ITerminal WriteTable(this ITerminal terminal, Action<TableBuilder> configure, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
   {
     ArgumentNullException.ThrowIfNull(terminal);
     ArgumentNullException.ThrowIfNull(configure);
@@ -60,7 +63,8 @@ public static class TerminalTableExtensions
     configure(builder);
 
     Table table = builder.Build();
-    WriteTable(terminal, table, foregroundColor, backgroundColor);
+    WriteLinesWithColor(terminal, table.Render(terminal.WindowWidth), foregroundColor, backgroundColor);
+    return terminal;
   }
 
   /// <summary>
@@ -70,13 +74,14 @@ public static class TerminalTableExtensions
   /// <param name="table">The table to write.</param>
   /// <param name="foregroundColor">The foreground color to apply to table content. Defaults to <c>null</c>.</param>
   /// <param name="backgroundColor">The background color to apply to table content. Defaults to <c>null</c>.</param>
-  public static void WriteTable(this ITerminal terminal, Table table, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
+  /// <returns>The terminal instance for fluent chaining.</returns>
+  public static ITerminal WriteTable(this ITerminal terminal, Table table, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
   {
     ArgumentNullException.ThrowIfNull(terminal);
     ArgumentNullException.ThrowIfNull(table);
 
-    string[] lines = table.Render(terminal.WindowWidth);
-    WriteLinesWithColor(terminal, lines, foregroundColor, backgroundColor);
+    WriteLinesWithColor(terminal, table.Render(terminal.WindowWidth), foregroundColor, backgroundColor);
+    return terminal;
   }
 
   private static void WriteLinesWithColor(ITerminal terminal, string[] lines, ConsoleColor? foregroundColor, ConsoleColor? backgroundColor)
@@ -103,12 +108,14 @@ public static class TerminalTableExtensions
   /// </summary>
   /// <param name="terminal">The terminal to write to.</param>
   /// <param name="table">The table to write.</param>
-  public static void WriteTable(this ITerminal terminal, Table table)
+  /// <returns>The terminal instance for fluent chaining.</returns>
+  public static ITerminal WriteTable(this ITerminal terminal, Table table)
   {
     ArgumentNullException.ThrowIfNull(terminal);
     ArgumentNullException.ThrowIfNull(table);
 
     WriteTableInternal(terminal, table);
+    return terminal;
   }
 
   private static void WriteTableInternal(ITerminal terminal, Table table)

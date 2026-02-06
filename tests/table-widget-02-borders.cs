@@ -19,11 +19,12 @@ public class TableWidgetBorderTests
   public static async Task Should_render_table_with_rounded_border()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("A")
       .AddColumn("B")
-      .AddRow("1", "2");
-    table.Border = BorderStyle.Rounded;
+      .AddRow("1", "2")
+      .Border(BorderStyle.Rounded)
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -43,11 +44,12 @@ public class TableWidgetBorderTests
   public static async Task Should_render_table_with_square_border()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("A")
       .AddColumn("B")
-      .AddRow("1", "2");
-    table.Border = BorderStyle.Square;
+      .AddRow("1", "2")
+      .Border(BorderStyle.Square)
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -71,11 +73,12 @@ public class TableWidgetBorderTests
   public static async Task Should_render_table_with_double_border()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("A")
       .AddColumn("B")
-      .AddRow("1", "2");
-    table.Border = BorderStyle.Doubled;
+      .AddRow("1", "2")
+      .Border(BorderStyle.Doubled)
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -101,11 +104,12 @@ public class TableWidgetBorderTests
   public static async Task Should_render_table_with_heavy_border()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("A")
       .AddColumn("B")
-      .AddRow("1", "2");
-    table.Border = BorderStyle.Heavy;
+      .AddRow("1", "2")
+      .Border(BorderStyle.Heavy)
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -131,12 +135,13 @@ public class TableWidgetBorderTests
   public static async Task Should_render_table_without_border_when_style_is_none()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Name")
       .AddColumn("Value")
       .AddRow("Foo", "123")
-      .AddRow("Bar", "456");
-    table.Border = BorderStyle.None;
+      .AddRow("Bar", "456")
+      .Border(BorderStyle.None)
+      .Build();
 
     // Act
     string[] lines = table.Render(40);
@@ -159,10 +164,11 @@ public class TableWidgetBorderTests
   public static async Task Should_render_table_with_border_color()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Name")
-      .AddRow("Test");
-    table.BorderColor = AnsiColors.Cyan;
+      .AddRow("Test")
+      .BorderColor(AnsiColors.Cyan)
+      .Build();
 
     // Act
     string[] lines = table.Render(40);

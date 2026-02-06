@@ -8,10 +8,9 @@ namespace TimeWarp.Terminal;
 /// Use this class in unit tests to verify console output without interacting with the real console.
 /// <example>
 /// <code>
-/// using TestConsole console = new("command1\nexit\n");
-/// NuruCoreApp app = NuruCoreApp.CreateBuilder()
-///     .Map("command1", () => "Hello!")
-///     .Build(console: console);
+/// using TestConsole console = new("line1\nline2\n");
+/// myService.Execute(console);
+///
 ///
 /// await app.RunAsync(["command1"]);
 ///
@@ -56,20 +55,29 @@ public sealed class TestConsole : IConsole, IDisposable
   public string AllOutput => Output + ErrorOutput;
 
   /// <inheritdoc />
-  public void Write(string message)
-    => OutputWriter.Write(message);
+  public IConsole Write(string message)
+  {
+    OutputWriter.Write(message);
+    return this;
+  }
 
   /// <inheritdoc />
-  public void WriteLine(string? message = null)
-    => OutputWriter.WriteLine(message ?? string.Empty);
+  public IConsole WriteLine(string? message = null)
+  {
+    OutputWriter.WriteLine(message ?? string.Empty);
+    return this;
+  }
 
   /// <inheritdoc />
   public async Task WriteLineAsync(string? message = null)
     => await OutputWriter.WriteLineAsync(message ?? string.Empty).ConfigureAwait(false);
 
   /// <inheritdoc />
-  public void WriteErrorLine(string? message = null)
-    => ErrorWriter.WriteLine(message ?? string.Empty);
+  public IConsole WriteErrorLine(string? message = null)
+  {
+    ErrorWriter.WriteLine(message ?? string.Empty);
+    return this;
+  }
 
   /// <inheritdoc />
   public async Task WriteErrorLineAsync(string? message = null)

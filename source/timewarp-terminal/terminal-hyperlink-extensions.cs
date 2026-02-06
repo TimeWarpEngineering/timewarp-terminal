@@ -33,7 +33,7 @@ public static class TerminalHyperlinkExtensions
   /// If the terminal does not support hyperlinks (<see cref="ITerminal.SupportsHyperlinks"/> is false),
   /// only the display text is written without the hyperlink escape sequences.
   /// </remarks>
-  public static void WriteLink(this ITerminal terminal, string url, string? displayText = null)
+  public static ITerminal WriteLink(this ITerminal terminal, string url, string? displayText = null)
   {
     ArgumentNullException.ThrowIfNull(terminal);
     ArgumentNullException.ThrowIfNull(url);
@@ -48,6 +48,8 @@ public static class TerminalHyperlinkExtensions
     {
       terminal.Write(text);
     }
+
+    return terminal;
   }
 
   /// <summary>
@@ -56,11 +58,12 @@ public static class TerminalHyperlinkExtensions
   /// <param name="terminal">The terminal to write to.</param>
   /// <param name="url">The URL to link to.</param>
   /// <param name="displayText">The text to display. If null, the URL is used as display text.</param>
+  /// <returns>The terminal instance for fluent chaining.</returns>
   /// <remarks>
   /// If the terminal does not support hyperlinks (<see cref="ITerminal.SupportsHyperlinks"/> is false),
   /// only the display text is written without the hyperlink escape sequences.
   /// </remarks>
-  public static void WriteLinkLine(this ITerminal terminal, string url, string? displayText = null)
+  public static ITerminal WriteLinkLine(this ITerminal terminal, string url, string? displayText = null)
   {
     ArgumentNullException.ThrowIfNull(terminal);
     ArgumentNullException.ThrowIfNull(url);
@@ -75,5 +78,7 @@ public static class TerminalHyperlinkExtensions
     {
       terminal.WriteLine(text);
     }
+
+    return terminal;
   }
 }

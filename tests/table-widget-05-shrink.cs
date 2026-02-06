@@ -19,10 +19,11 @@ public class TableWidgetShrinkTests
   public static async Task Should_shrink_table_to_fit_terminal_width()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Name")
       .AddColumn("Very Long Path That Exceeds Normal Width")
-      .AddRow("repo", "/home/user/worktrees/github.com/Organization/project-name/feature-branch");
+      .AddRow("repo", "/home/user/worktrees/github.com/Organization/project-name/feature-branch")
+      .Build();
 
     // Act - render to narrow terminal (60 chars)
     string[] lines = table.Render(60);
@@ -38,10 +39,11 @@ public class TableWidgetShrinkTests
   {
     // Arrange
     // Column A has 5 chars content, Column B has 50 chars content
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("A")
       .AddColumn("B")
-      .AddRow("Short", "This is a very long string that takes up lots of space");
+      .AddRow("Short", "This is a very long string that takes up lots of space")
+      .Build();
 
     // Act - render to 40 chars (forces shrinking)
     string[] lines = table.Render(40);
@@ -64,10 +66,11 @@ public class TableWidgetShrinkTests
     {
       MinWidth = 20
     };
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("ID")
       .AddColumn(columnWithMinWidth)
-      .AddRow("1", "This is a long description that would normally be truncated heavily");
+      .AddRow("1", "This is a long description that would normally be truncated heavily")
+      .Build();
 
     // Act - render to narrow terminal
     string[] lines = table.Render(40);
@@ -83,11 +86,12 @@ public class TableWidgetShrinkTests
   public static async Task Should_not_shrink_when_shrink_is_false()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Name")
       .AddColumn("Very Long Path That Exceeds Normal Width")
-      .AddRow("repo", "/home/user/worktrees/github.com/Organization/project-name/feature-branch");
-    table.Shrink = false;
+      .AddRow("repo", "/home/user/worktrees/github.com/Organization/project-name/feature-branch")
+      .Shrink(false)
+      .Build();
 
     // Act - render to narrow terminal (60 chars)
     string[] lines = table.Render(60);
@@ -102,11 +106,12 @@ public class TableWidgetShrinkTests
   public static async Task Should_use_default_min_width_of_4()
   {
     // Arrange - table with many columns that would need extreme shrinking
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Column One With Long Header")
       .AddColumn("Column Two With Long Header")
       .AddColumn("Column Three With Long Header")
-      .AddRow("Value 1", "Value 2", "Value 3");
+      .AddRow("Value 1", "Value 2", "Value 3")
+      .Build();
 
     // Act - render to very narrow terminal (30 chars)
     string[] lines = table.Render(30);
@@ -121,9 +126,10 @@ public class TableWidgetShrinkTests
   public static async Task Should_truncate_content_after_shrinking()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Path")
-      .AddRow("/home/steventcramer/worktrees/github.com/TimeWarpEngineering/timewarp-nuru/feature");
+      .AddRow("/home/steventcramer/worktrees/github.com/TimeWarpEngineering/timewarp-nuru/feature")
+      .Build();
 
     // Act - render to 30 chars
     string[] lines = table.Render(30);
@@ -140,10 +146,11 @@ public class TableWidgetShrinkTests
   public static async Task Should_handle_table_already_fits()
   {
     // Arrange - small table that already fits
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("A")
       .AddColumn("B")
-      .AddRow("1", "2");
+      .AddRow("1", "2")
+      .Build();
 
     // Act - render to wide terminal (80 chars)
     string[] lines = table.Render(80);
@@ -163,9 +170,10 @@ public class TableWidgetShrinkTests
   {
     // Arrange
     string coloredPath = $"{AnsiColors.Cyan}/home/user/very/long/path/that/needs/truncation{AnsiColors.Reset}";
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Path")
-      .AddRow(coloredPath);
+      .AddRow(coloredPath)
+      .Build();
 
     // Act - render to narrow terminal
     string[] lines = table.Render(30);
@@ -184,10 +192,11 @@ public class TableWidgetShrinkTests
 
     foreach (BorderStyle style in styles)
     {
-      Table table = new Table()
+      Table table = new TableBuilder()
         .AddColumn("Long Column Header Name")
-        .AddRow("Some content that is fairly long");
-      table.Border = style;
+        .AddRow("Some content that is fairly long")
+        .Border(style)
+        .Build();
 
       string[] lines = table.Render(30);
 
@@ -201,11 +210,12 @@ public class TableWidgetShrinkTests
   public static async Task Should_work_with_borderless_table()
   {
     // Arrange
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn("Long Column Header Name")
       .AddColumn("Another Long Column Header")
-      .AddRow("Content one", "Content two that is long");
-    table.Border = BorderStyle.None;
+      .AddRow("Content one", "Content two that is long")
+      .Border(BorderStyle.None)
+      .Build();
 
     // Act - render to narrow terminal
     string[] lines = table.Render(40);
@@ -261,9 +271,10 @@ public class TableWidgetShrinkTests
       TruncateMode = TruncateMode.Start,
       MaxWidth = 20
     };
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn(pathColumn)
-      .AddRow("/home/user/worktrees/github.com/TimeWarpEngineering/timewarp-nuru");
+      .AddRow("/home/user/worktrees/github.com/TimeWarpEngineering/timewarp-nuru")
+      .Build();
 
     // Act
     string[] lines = table.Render(30);
@@ -285,9 +296,10 @@ public class TableWidgetShrinkTests
       TruncateMode = TruncateMode.Middle,
       MaxWidth = 20
     };
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn(column)
-      .AddRow("beginning-of-text-middle-part-end-of-text");
+      .AddRow("beginning-of-text-middle-part-end-of-text")
+      .Build();
 
     // Act
     string[] lines = table.Render(30);
@@ -304,9 +316,10 @@ public class TableWidgetShrinkTests
   public static async Task Should_truncate_at_end_by_default()
   {
     // Arrange - default TruncateMode is End
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn(new TableColumn("Path") { MaxWidth = 20 })
-      .AddRow("/home/user/worktrees/github.com/TimeWarpEngineering/timewarp-nuru");
+      .AddRow("/home/user/worktrees/github.com/TimeWarpEngineering/timewarp-nuru")
+      .Build();
 
     // Act
     string[] lines = table.Render(30);
@@ -330,11 +343,12 @@ public class TableWidgetShrinkTests
     };
     TableColumn branchColumn = new("Branch");
 
-    Table table = new Table()
+    Table table = new TableBuilder()
       .AddColumn(repoColumn)
       .AddColumn(pathColumn)
       .AddColumn(branchColumn)
-      .AddRow("timewarp-nuru", "/home/user/worktrees/github.com/TimeWarpEngineering/timewarp-nuru/feature-branch-name", "feature-xyz");
+      .AddRow("timewarp-nuru", "/home/user/worktrees/github.com/TimeWarpEngineering/timewarp-nuru/feature-branch-name", "feature-xyz")
+      .Build();
 
     // Act - render to constrained width
     string[] lines = table.Render(80);

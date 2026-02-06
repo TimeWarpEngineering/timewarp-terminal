@@ -73,20 +73,38 @@ public sealed class TestTerminal : ITerminal, IDisposable
   /// </summary>
   public string AllOutput => Output + ErrorOutput;
   /// <inheritdoc />
-  public void Write(string message)
-    => OutputWriter.Write(message);
+  public ITerminal Write(string message)
+  {
+    OutputWriter.Write(message);
+    return this;
+  }
 
   /// <inheritdoc />
-  public void WriteLine(string? message = null)
-    => OutputWriter.WriteLine(message ?? string.Empty);
+  IConsole IConsole.Write(string message) => Write(message);
+
+  /// <inheritdoc />
+  public ITerminal WriteLine(string? message = null)
+  {
+    OutputWriter.WriteLine(message ?? string.Empty);
+    return this;
+  }
+
+  /// <inheritdoc />
+  IConsole IConsole.WriteLine(string? message) => WriteLine(message);
 
   /// <inheritdoc />
   public async Task WriteLineAsync(string? message = null)
     => await OutputWriter.WriteLineAsync(message ?? string.Empty).ConfigureAwait(false);
 
   /// <inheritdoc />
-  public void WriteErrorLine(string? message = null)
-    => ErrorWriter.WriteLine(message ?? string.Empty);
+  public ITerminal WriteErrorLine(string? message = null)
+  {
+    ErrorWriter.WriteLine(message ?? string.Empty);
+    return this;
+  }
+
+  /// <inheritdoc />
+  IConsole IConsole.WriteErrorLine(string? message) => WriteErrorLine(message);
 
   /// <inheritdoc />
   public async Task WriteErrorLineAsync(string? message = null)

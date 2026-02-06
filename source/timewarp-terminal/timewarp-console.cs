@@ -4,31 +4,40 @@ namespace TimeWarp.Terminal;
 /// Default implementation of <see cref="IConsole"/> that wraps <see cref="System.Console"/>.
 /// </summary>
 /// <remarks>
-/// This class provides the production console implementation for Nuru applications.
+/// This class provides the production console implementation for console applications.
 /// For testing scenarios, use <see cref="TestConsole"/> or create a custom implementation.
 /// </remarks>
-public sealed class NuruConsole : IConsole
+public sealed class TimeWarpConsole : IConsole
 {
   /// <summary>
-  /// Gets the default singleton instance of <see cref="NuruConsole"/>.
+  /// Gets the default singleton instance of <see cref="TimeWarpConsole"/>.
   /// </summary>
-  public static NuruConsole Default { get; } = new();
+  public static TimeWarpConsole Default { get; } = new();
 
   /// <inheritdoc />
-  public void Write(string message)
-    => Console.Write(message);
+  public IConsole Write(string message)
+  {
+    Console.Write(message);
+    return this;
+  }
 
   /// <inheritdoc />
-  public void WriteLine(string? message = null)
-    => Console.WriteLine(message ?? string.Empty);
+  public IConsole WriteLine(string? message = null)
+  {
+    Console.WriteLine(message ?? string.Empty);
+    return this;
+  }
 
   /// <inheritdoc />
   public Task WriteLineAsync(string? message = null)
     => Console.Out.WriteLineAsync(message);
 
   /// <inheritdoc />
-  public void WriteErrorLine(string? message = null)
-    => Console.Error.WriteLine(message ?? string.Empty);
+  public IConsole WriteErrorLine(string? message = null)
+  {
+    Console.Error.WriteLine(message ?? string.Empty);
+    return this;
+  }
 
   /// <inheritdoc />
   public Task WriteErrorLineAsync(string? message = null)

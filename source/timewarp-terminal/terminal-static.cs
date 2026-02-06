@@ -311,10 +311,11 @@ public static class Terminal
   /// <param name="table">The table to write.</param>
   /// <example>
   /// <code>
-  /// var table = new Table()
+  /// var table = new TableBuilder()
   ///     .AddColumn("Name")
   ///     .AddColumn("Value")
-  ///     .AddRow("Foo", "123");
+  ///     .AddRow("Foo", "123")
+  ///     .Build();
   /// Terminal.WriteTable(table);
   /// </code>
   /// </example>
@@ -360,10 +361,11 @@ public static class Terminal
   /// <param name="backgroundColor">The background color to apply to table content. Defaults to <c>null</c> (no color).</param>
   /// <example>
   /// <code>
-  /// var table = new Table()
+  /// var table = new TableBuilder()
   ///     .AddColumn("Name")
   ///     .AddColumn("Value")
-  ///     .AddRow("Foo", "123");
+  ///     .AddRow("Foo", "123")
+  ///     .Build();
   /// Terminal.WriteTable(table, ConsoleColor.White, ConsoleColor.DarkBlue);
   /// </code>
   /// </example>
@@ -485,7 +487,10 @@ public static class Terminal
   /// <param name="backgroundColor">The background color to apply to panel content. Defaults to <c>null</c> (no color).</param>
   /// <example>
   /// <code>
-  /// var panel = new Panel() { Content = "Content here", Header = "Notice" };
+  /// var panel = new PanelBuilder()
+  ///     .Content("Content here")
+  ///     .Header("Notice")
+  ///     .Build();
   /// Terminal.WritePanel(panel, ConsoleColor.White, ConsoleColor.DarkBlue);
   /// </code>
   /// </example>
