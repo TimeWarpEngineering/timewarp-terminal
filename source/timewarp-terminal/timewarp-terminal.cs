@@ -5,7 +5,7 @@ namespace TimeWarp.Terminal;
 /// with full interactive terminal capabilities.
 /// </summary>
 /// <remarks>
-/// This class provides the production terminal implementation for Nuru applications
+/// This class provides the production terminal implementation for console applications
 /// requiring interactive features such as REPL, tab completion, and arrow key navigation.
 /// For testing scenarios, use <see cref="TestTerminal"/> or create a custom implementation.
 /// </remarks>
@@ -17,20 +17,38 @@ public sealed class TimeWarpTerminal : ITerminal
   public static TimeWarpTerminal Default { get; } = new();
 
   /// <inheritdoc />
-  public void Write(string message)
-    => Console.Write(message);
+  public ITerminal Write(string message)
+  {
+    Console.Write(message);
+    return this;
+  }
 
   /// <inheritdoc />
-  public void WriteLine(string? message = null)
-    => Console.WriteLine(message ?? string.Empty);
+  IConsole IConsole.Write(string message) => Write(message);
+
+  /// <inheritdoc />
+  public ITerminal WriteLine(string? message = null)
+  {
+    Console.WriteLine(message ?? string.Empty);
+    return this;
+  }
+
+  /// <inheritdoc />
+  IConsole IConsole.WriteLine(string? message) => WriteLine(message);
 
   /// <inheritdoc />
   public Task WriteLineAsync(string? message = null)
     => Console.Out.WriteLineAsync(message);
 
   /// <inheritdoc />
-  public void WriteErrorLine(string? message = null)
-    => Console.Error.WriteLine(message ?? string.Empty);
+  public ITerminal WriteErrorLine(string? message = null)
+  {
+    Console.Error.WriteLine(message ?? string.Empty);
+    return this;
+  }
+
+  /// <inheritdoc />
+  IConsole IConsole.WriteErrorLine(string? message) => WriteErrorLine(message);
 
   /// <inheritdoc />
   public Task WriteErrorLineAsync(string? message = null)

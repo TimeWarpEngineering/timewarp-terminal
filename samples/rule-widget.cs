@@ -72,26 +72,25 @@ terminal.WriteRule(rule => rule
     .Color(AnsiColors.Magenta));
 terminal.WriteLine();
 
-// Practical example
-terminal.WriteLine("8. Practical example - CLI output sections:");
+// Practical example — fluent chaining
+terminal.WriteLine("8. Practical example - fluent chaining:");
 terminal.WriteLine();
 
-terminal.WriteRule("Build Output");
-terminal.WriteLine("  Compiling project...");
-terminal.WriteLine("  Build succeeded.");
-terminal.WriteLine();
-
-terminal.WriteRule("Test Results", LineStyle.Doubled);
-terminal.WriteLine("  ✓ 42 tests passed");
-terminal.WriteLine("  ✗ 0 tests failed");
-terminal.WriteLine();
-
-terminal.WriteRule(rule => rule
+terminal
+  .WriteRule("Build Output")
+  .WriteLine("  Compiling project...")
+  .WriteLine("  Build succeeded.")
+  .WriteLine()
+  .WriteRule("Test Results", LineStyle.Doubled)
+  .WriteLine("  ✓ 42 tests passed")
+  .WriteLine("  ✗ 0 tests failed")
+  .WriteLine()
+  .WriteRule(rule => rule
     .Title("Summary".Bold())
     .Style(LineStyle.Heavy)
-    .Color(AnsiColors.BrightGreen));
-terminal.WriteLine("  Total time: 1.23s");
-terminal.WriteLine("  Status: " + "SUCCESS".Green().Bold());
-terminal.WriteLine();
+    .Color(AnsiColors.BrightGreen))
+  .WriteLine("  Total time: 1.23s")
+  .WriteLine("  Status: " + "SUCCESS".Green().Bold())
+  .WriteLine();
 
 return 0;

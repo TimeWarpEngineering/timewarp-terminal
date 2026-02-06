@@ -2,7 +2,7 @@ namespace TimeWarp.Terminal;
 
 /// <summary>
 /// Provides an ambient context for <see cref="TestTerminal"/> that enables zero-configuration testing
-/// of Nuru CLI applications.
+/// of CLI applications.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -41,7 +41,7 @@ public static class TestTerminalContext
   /// </summary>
   /// <remarks>
   /// <para>
-  /// Setting this property to a non-null value causes all Nuru terminal resolution
+  /// Setting this property to a non-null value causes all terminal resolution
   /// to use the provided <see cref="TestTerminal"/> instead of the real terminal.
   /// </para>
   /// <para>

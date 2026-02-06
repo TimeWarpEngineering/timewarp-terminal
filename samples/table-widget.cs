@@ -188,4 +188,21 @@ terminal.WriteTable(t => t
   .Shrink(false));
 
 terminal.WriteLine();
+
+// Example 13: Fluent chaining across Write methods
+terminal.WriteLine("13. Fluent Chaining");
+terminal.WriteLine("-------------------");
+
+terminal
+  .WriteRule("Build Output")
+  .WriteTable(t => t
+    .AddColumn("Test")
+    .AddColumn("Status")
+    .AddRow("Unit", "PASSED".Green())
+    .AddRow("Integration", "PASSED".Green())
+    .AddRow("E2E", "FAILED".Red()))
+  .WriteRule()
+  .WriteLine("Done!");
+
+terminal.WriteLine();
 terminal.WriteLine("Demo complete!");

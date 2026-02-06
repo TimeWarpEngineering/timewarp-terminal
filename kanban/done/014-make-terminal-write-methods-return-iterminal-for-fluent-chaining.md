@@ -23,7 +23,7 @@ terminal
 - [ ] Update `TimeWarpTerminal` implementation
 - [ ] Update `TestTerminal` implementation
 - [ ] Update `TestConsole` implementation
-- [ ] Update `NuruConsole` implementation
+- [ ] Update `TimeWarpConsole` implementation
 - [ ] Change extension methods (`WriteTable`, `WritePanel`, `WriteRule`) to return `ITerminal`
 - [ ] Update `Terminal` static class methods
 - [ ] Update samples to show fluent chaining

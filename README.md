@@ -17,14 +17,16 @@ using TimeWarp.Terminal;
 Terminal.WriteLine("Hello, World!".Green());
 Terminal.WriteLine("Warning!".Yellow().Bold());
 
-// Or get a terminal instance
+// Or get a terminal instance — all Write methods return ITerminal for fluent chaining
 ITerminal terminal = TimeWarpTerminal.Default;
-terminal.WritePanel("Important message", "Notice");
-terminal.WriteRule("Section");
-terminal.WriteTable(t => t
+terminal
+  .WritePanel("Important message", "Notice")
+  .WriteRule("Section")
+  .WriteTable(t => t
     .AddColumn("Name")
     .AddColumn("Value")
-    .AddRow("Status", "OK".Green()));
+    .AddRow("Status", "OK".Green()))
+  .WriteLine("Done!");
 ```
 
 ## Static Terminal API
@@ -74,10 +76,10 @@ Basic console I/O abstraction for testable console applications.
 ```csharp
 public interface IConsole
 {
-    void Write(string message);
-    void WriteLine(string? message = null);
+    IConsole Write(string message);
+    IConsole WriteLine(string? message = null);
     Task WriteLineAsync(string? message = null);
-    void WriteErrorLine(string? message = null);
+    IConsole WriteErrorLine(string? message = null);
     Task WriteErrorLineAsync(string? message = null);
     string? ReadLine();
 }
@@ -90,6 +92,9 @@ Extended terminal interface with cursor control, colors, and hyperlinks.
 ```csharp
 public interface ITerminal : IConsole
 {
+    new ITerminal Write(string message);
+    new ITerminal WriteLine(string? message = null);
+    new ITerminal WriteErrorLine(string? message = null);
     ConsoleKeyInfo ReadKey(bool intercept);
     void SetCursorPosition(int left, int top);
     (int Left, int Top) GetCursorPosition();
@@ -106,7 +111,7 @@ public interface ITerminal : IConsole
 | Class | Description |
 |-------|-------------|
 | `TimeWarpTerminal` | Production `ITerminal` with full terminal capabilities |
-| `NuruConsole` | Production `IConsole` wrapping `System.Console` |
+| `TimeWarpConsole` | Production `IConsole` wrapping `System.Console` |
 | `TestTerminal` | Test implementation with captured output and scripted input |
 | `TestConsole` | Simpler test implementation for basic I/O testing |
 

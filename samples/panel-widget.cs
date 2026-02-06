@@ -124,18 +124,20 @@ terminal.WritePanel(panel => panel
     .PaddingVertical(1));
 terminal.WriteLine();
 
-// Practical example
-terminal.WriteLine("10. Practical example - CLI status display:");
+// Practical example — fluent chaining
+terminal.WriteLine("10. Practical example - fluent chaining:");
 terminal.WriteLine();
 
-terminal.WritePanel(panel => panel
+terminal
+  .WriteRule("Build Summary")
+  .WritePanel(panel => panel
     .Header("Build Status".Bold())
     .Content($"{"Project:".Gray()}  TimeWarp.Nuru\n" +
              $"{"Status:".Gray()}   {"✓ Success".Green()}\n" +
              $"{"Duration:".Gray()} 2.34s")
     .Border(BorderStyle.Rounded)
     .BorderColor(AnsiColors.BrightGreen)
-    .Padding(2, 1));
-terminal.WriteLine();
+    .Padding(2, 1))
+  .WriteLine();
 
 return 0;

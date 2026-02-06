@@ -19,14 +19,16 @@ public interface IConsole
   /// Writes the specified string value to the standard output stream.
   /// </summary>
   /// <param name="message">The value to write.</param>
-  void Write(string message);
+  /// <returns>This console instance for fluent chaining.</returns>
+  IConsole Write(string message);
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
   /// to the standard output stream.
   /// </summary>
   /// <param name="message">The value to write. If null, only the line terminator is written.</param>
-  void WriteLine(string? message = null);
+  /// <returns>This console instance for fluent chaining.</returns>
+  IConsole WriteLine(string? message = null);
 
   /// <summary>
   /// Asynchronously writes the specified string value, followed by the current line terminator,
@@ -41,7 +43,8 @@ public interface IConsole
   /// to the standard error stream.
   /// </summary>
   /// <param name="message">The value to write. If null, only the line terminator is written.</param>
-  void WriteErrorLine(string? message = null);
+  /// <returns>This console instance for fluent chaining.</returns>
+  IConsole WriteErrorLine(string? message = null);
 
   /// <summary>
   /// Asynchronously writes the specified string value, followed by the current line terminator,

@@ -16,6 +16,29 @@ namespace TimeWarp.Terminal;
 public interface ITerminal : IConsole
 {
   /// <summary>
+  /// Writes the specified string value to the standard output stream.
+  /// </summary>
+  /// <param name="message">The value to write.</param>
+  /// <returns>This terminal instance for fluent chaining.</returns>
+  new ITerminal Write(string message);
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard output stream.
+  /// </summary>
+  /// <param name="message">The value to write. If null, only the line terminator is written.</param>
+  /// <returns>This terminal instance for fluent chaining.</returns>
+  new ITerminal WriteLine(string? message = null);
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard error stream.
+  /// </summary>
+  /// <param name="message">The value to write. If null, only the line terminator is written.</param>
+  /// <returns>This terminal instance for fluent chaining.</returns>
+  new ITerminal WriteErrorLine(string? message = null);
+
+  /// <summary>
   /// Obtains the next character or function key pressed by the user.
   /// </summary>
   /// <param name="intercept">
