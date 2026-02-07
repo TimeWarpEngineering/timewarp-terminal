@@ -1,5 +1,17 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Simplified test double for IConsole applications without interactive features.
+// Captures output to StringWriter for assertion; provides scripted input via StringReader.
+#endregion
+
+#region Design
+// Lighter alternative to TestTerminal for tests needing only IConsole (line-based I/O).
+// Separate from TestTerminal: independent test doubles per interface, not inheritance.
+// IDisposable cleans up StringReader and StringWriter resources.
+// Helper methods (OutputContains, GetOutputLines) reduce boilerplate in test assertions.
+#endregion
+
 /// <summary>
 /// A testable implementation of <see cref="IConsole"/> that captures all output
 /// and provides scripted input for deterministic testing.

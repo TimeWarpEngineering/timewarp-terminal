@@ -1,5 +1,18 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Production implementation of ITerminal wrapping System.Console.
+// Provides singleton access via Default property for applications requiring interactive features.
+#endregion
+
+#region Design
+// Singleton pattern with public static Default property for convenient access.
+// Explicit interface implementations (IConsole.Write) hide base interface methods from public API.
+// IOExceptions silently swallowed because redirected output is a valid runtime scenario.
+// Hyperlink detection uses environment variable heuristics for major terminal emulators.
+// Color support respects NO_COLOR environment variable (de facto standard).
+#endregion
+
 /// <summary>
 /// Default implementation of <see cref="ITerminal"/> that wraps <see cref="System.Console"/>
 /// with full interactive terminal capabilities.

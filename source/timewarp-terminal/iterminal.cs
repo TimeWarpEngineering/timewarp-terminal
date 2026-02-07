@@ -1,5 +1,17 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Extends IConsole with interactive terminal capabilities for REPL and rich CLI applications.
+// Provides cursor control, key-by-key input, and terminal capability detection.
+#endregion
+
+#region Design
+// Uses 'new' modifier on sync Write methods to change return type from IConsole to ITerminal.
+// This enables fluent chaining while maintaining backward compatibility with IConsole consumers.
+// Async methods inherited from IConsole (returning Task) are not re-declared.
+// Capability properties (SupportsColor, SupportsHyperlinks) allow feature detection at runtime.
+#endregion
+
 /// <summary>
 /// Abstraction for interactive terminal operations.
 /// Extends <see cref="IConsole"/> with capabilities needed for REPL and interactive CLI features.

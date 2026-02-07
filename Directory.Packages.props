@@ -29,8 +29,6 @@
     <PackageVersion Include="TimeWarp.Build.Tasks" Version="1.0.0" />
     <PackageVersion Include="TimeWarp.OptionsValidation" Version="1.0.0-beta.4" />
     <PackageVersion Include="TimeWarp.Nuru" Version="3.0.0-beta.23" />
-    <PackageVersion Include="TimeWarp.Nuru.Parsing" Version="$(Version)" />
-    <PackageVersion Include="TimeWarp.Nuru.Analyzers" Version="$(Version)" />
   </ItemGroup>
   <ItemGroup Label="Mediator - martinothamar source-generator based">
     <PackageVersion Include="Mediator.Abstractions" Version="3.1.0-preview.14" />

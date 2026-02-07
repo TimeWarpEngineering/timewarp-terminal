@@ -1,5 +1,16 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Minimal abstraction for basic console I/O operations.
+// Enables testability by abstracting System.Console for dependency injection.
+#endregion
+
+#region Design
+// Return types are IConsole for fluent chaining across implementations.
+// Async methods return Task (not IConsole) since they cannot participate in fluent chains.
+// XML documentation emphasizes testability scenarios over implementation details.
+#endregion
+
 /// <summary>
 /// Abstraction for basic console I/O operations.
 /// Provides a testable interface for console input and output.
