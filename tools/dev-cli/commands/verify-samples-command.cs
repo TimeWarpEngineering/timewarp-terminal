@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // Verify sample compilation
 
-namespace DevCli.Commands;
+namespace DevCli;
 
 /// <summary>
 /// Verify sample compilation

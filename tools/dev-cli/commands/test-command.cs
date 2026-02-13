@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // Run CI test suite
 
-namespace DevCli.Commands;
+namespace DevCli;
 
 /// <summary>
 /// Run CI test suite

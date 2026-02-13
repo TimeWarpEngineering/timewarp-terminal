@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // AOT compiles and installs the dev CLI to ./bin
 
-namespace DevCli.Commands;
+namespace DevCli;
 
 /// <summary>
 /// AOT compile and install dev CLI to ./bin

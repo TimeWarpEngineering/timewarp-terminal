@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // Clean solution and artifacts
 
-namespace DevCli.Commands;
+namespace DevCli;
 
 /// <summary>
 /// Clean solution and artifacts

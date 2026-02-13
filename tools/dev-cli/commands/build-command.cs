@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // Build all TimeWarp.Terminal projects
 
-namespace DevCli.Commands;
+namespace DevCli;
 
 /// <summary>
 /// Build all TimeWarp.Terminal projects

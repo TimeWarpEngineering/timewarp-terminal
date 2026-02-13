@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // Check if version already published to NuGet
 
-namespace DevCli.Commands;
+namespace DevCli;
 
 /// <summary>
 /// Check if version already published
