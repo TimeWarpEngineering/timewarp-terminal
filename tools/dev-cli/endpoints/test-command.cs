@@ -22,11 +22,8 @@ internal sealed class TestCommand : ICommand<Unit>
 
     public async ValueTask<Unit> Handle(TestCommand command, CancellationToken ct)
     {
-      string repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
-      if (!File.Exists(Path.Combine(repoRoot, "timewarp-terminal.slnx")))
-      {
-        repoRoot = Path.GetFullPath(Directory.GetCurrentDirectory());
-      }
+      string? repoRoot = Git.FindRoot()
+        ?? throw new InvalidOperationException("Could not find git repository root");
 
       Terminal.WriteLine("Running tests...");
 
