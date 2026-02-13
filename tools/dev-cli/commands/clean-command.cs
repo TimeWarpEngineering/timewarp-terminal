@@ -1,14 +1,14 @@
-// ===============================================================================
+// ═══════════════════════════════════════════════════════════════════════════════
 // CLEAN COMMAND
-// ===============================================================================
-// Cleans the TimeWarp.Terminal solution and deletes all bin/obj directories.
+// ═══════════════════════════════════════════════════════════════════════════════
+// Clean solution and artifacts
 
 namespace DevCli.Commands;
 
 /// <summary>
-/// Clean the TimeWarp.Terminal solution and all build artifacts.
+/// Clean solution and artifacts
 /// </summary>
-[NuruRoute("clean", Description = "Clean solution and build artifacts")]
+[NuruRoute("clean", Description = "Clean solution and artifacts")]
 internal sealed class CleanCommand : ICommand<Unit>
 {
   internal sealed class Handler : ICommandHandler<CleanCommand, Unit>
@@ -22,55 +22,33 @@ internal sealed class CleanCommand : ICommand<Unit>
 
     public async ValueTask<Unit> Handle(CleanCommand command, CancellationToken ct)
     {
-      // Get repo root
       string repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
-
-      // Verify we're in the right place
       if (!File.Exists(Path.Combine(repoRoot, "timewarp-terminal.slnx")))
       {
         repoRoot = Path.GetFullPath(Directory.GetCurrentDirectory());
-        if (!File.Exists(Path.Combine(repoRoot, "timewarp-terminal.slnx")))
-        {
-          throw new InvalidOperationException("Could not find repository root (timewarp-terminal.slnx not found)");
-        }
       }
 
-      Terminal.WriteLine("Cleaning TimeWarp.Terminal solution...");
-      Terminal.WriteLine($"Working from: {repoRoot}");
+      Terminal.WriteLine("Cleaning solution...");
 
-      // Clean the solution with minimal verbosity
-      CommandResult cleanResult = DotNet.Clean()
-        .WithProject(Path.Combine(repoRoot, "timewarp-terminal.slnx"))
-        .WithVerbosity("minimal")
-        .Build();
-
-      int exitCode = await cleanResult.RunAsync();
+      int exitCode = await Shell.Builder("dotnet")
+        .WithArguments("clean", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-v", "q")
+        .WithWorkingDirectory(repoRoot)
+        .RunAsync();
 
       if (exitCode != 0)
       {
-        throw new InvalidOperationException("dotnet clean failed!");
+        throw new InvalidOperationException("Clean failed!");
       }
 
-      // Also delete obj and bin directories to ensure complete cleanup
-      Terminal.WriteLine("\nDeleting obj and bin directories...");
-      try
+      // Clean artifacts directory
+      string artifactsDir = Path.Combine(repoRoot, "artifacts");
+      if (Directory.Exists(artifactsDir))
       {
-        exitCode = await Shell.Builder("find")
-          .WithArguments(repoRoot, "-type", "d", "(", "-name", "obj", "-o", "-name", "bin", ")", "-exec", "rm", "-rf", "{}", "+")
-          .RunAsync();
-
-        if (exitCode == 0)
-        {
-          Terminal.WriteLine("Deleted all obj and bin directories");
-        }
-      }
-      catch (Exception ex)
-      {
-        Terminal.WriteLine($"Warning: Could not delete some directories: {ex.Message}");
-        // Don't fail on this - the dotnet clean succeeded
+        Directory.Delete(artifactsDir, recursive: true);
+        Terminal.WriteLine("Cleaned artifacts/");
       }
 
-      Terminal.WriteLine("\nClean completed successfully!");
+      Terminal.WriteLine("\n✓ Clean completed");
       return Unit.Value;
     }
   }

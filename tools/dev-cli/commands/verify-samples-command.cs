@@ -1,15 +1,14 @@
-// ===============================================================================
+// ═══════════════════════════════════════════════════════════════════════════════
 // VERIFY SAMPLES COMMAND
-// ===============================================================================
-// Builds all samples to verify they compile correctly.
-// TODO: Implement when samples are added to the repository.
+// ═══════════════════════════════════════════════════════════════════════════════
+// Verify sample compilation
 
 namespace DevCli.Commands;
 
 /// <summary>
-/// Build all samples to verify they compile.
+/// Verify sample compilation
 /// </summary>
-[NuruRoute("verify-samples", Description = "Verify all samples compile")]
+[NuruRoute("verify-samples", Description = "Verify sample compilation")]
 internal sealed class VerifySamplesCommand : ICommand<Unit>
 {
   internal sealed class Handler : ICommandHandler<VerifySamplesCommand, Unit>
@@ -21,54 +20,52 @@ internal sealed class VerifySamplesCommand : ICommand<Unit>
       Terminal = terminal;
     }
 
-    public ValueTask<Unit> Handle(VerifySamplesCommand command, CancellationToken ct)
+    public async ValueTask<Unit> Handle(VerifySamplesCommand command, CancellationToken ct)
     {
-      // Get repo root
       string repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
-
-      // Verify we're in the right place
       if (!File.Exists(Path.Combine(repoRoot, "timewarp-terminal.slnx")))
       {
         repoRoot = Path.GetFullPath(Directory.GetCurrentDirectory());
-        if (!File.Exists(Path.Combine(repoRoot, "timewarp-terminal.slnx")))
-        {
-          throw new InvalidOperationException("Could not find repository root (timewarp-terminal.slnx not found)");
-        }
       }
 
       string samplesDir = Path.Combine(repoRoot, "samples");
-
-      Terminal.WriteLine("=== Verifying Samples ===");
-      Terminal.WriteLine($"Samples directory: {samplesDir}");
-      Terminal.WriteLine("");
-
-      // TODO: Implement sample verification when samples are added
-      // Expected location: samples/ directory with *.cs runfiles or *.csproj projects
       if (!Directory.Exists(samplesDir))
       {
-        Terminal.WriteLine("WARNING: No samples directory found.");
-        Terminal.WriteLine("TODO: Add samples to the repository and update this command.");
-        Terminal.WriteLine("");
-        Terminal.WriteLine("Verify samples command completed (no samples to verify).");
-        return ValueTask.FromResult(Unit.Value);
+        Terminal.WriteLine("No samples directory found - skipping");
+        return Unit.Value;
       }
 
-      // Check for any sample files
-      bool hasRunfiles = Directory.EnumerateFiles(samplesDir, "*.cs", SearchOption.AllDirectories).Any();
-      bool hasProjects = Directory.EnumerateFiles(samplesDir, "*.csproj", SearchOption.AllDirectories).Any();
+      Terminal.WriteLine("Verifying sample projects...");
 
-      if (!hasRunfiles && !hasProjects)
+      // Find all .csproj files in samples directory
+      string[] sampleProjects = Directory.GetFiles(samplesDir, "*.csproj", SearchOption.AllDirectories);
+
+      if (sampleProjects.Length == 0)
       {
-        Terminal.WriteLine("WARNING: No samples found in samples directory.");
-        Terminal.WriteLine("TODO: Add samples to the repository.");
-        Terminal.WriteLine("");
-        Terminal.WriteLine("Verify samples command completed (no samples to verify).");
-        return ValueTask.FromResult(Unit.Value);
+        Terminal.WriteLine("No sample projects found");
+        return Unit.Value;
       }
 
-      Terminal.WriteLine("TODO: Sample verification not yet implemented.");
-      Terminal.WriteLine("Verify samples command completed.");
-      return ValueTask.FromResult(Unit.Value);
+      Terminal.WriteLine($"Found {sampleProjects.Length} sample project(s)");
+
+      foreach (string project in sampleProjects)
+      {
+        string projectName = Path.GetFileName(project);
+        Terminal.WriteLine($"\n  Building {projectName}...");
+
+        int exitCode = await Shell.Builder("dotnet")
+          .WithArguments("build", project, "-c", "Release", "--no-restore")
+          .WithWorkingDirectory(repoRoot)
+          .RunAsync();
+
+        if (exitCode != 0)
+        {
+          throw new InvalidOperationException($"Sample project failed to build: {projectName}");
+        }
+      }
+
+      Terminal.WriteLine($"\n✓ All {sampleProjects.Length} sample(s) verified successfully");
+      return Unit.Value;
     }
   }
 }

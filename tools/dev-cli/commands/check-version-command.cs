@@ -1,14 +1,14 @@
-// ===============================================================================
+// ═══════════════════════════════════════════════════════════════════════════════
 // CHECK VERSION COMMAND
-// ===============================================================================
-// Verifies that NuGet packages are not already published before release.
+// ═══════════════════════════════════════════════════════════════════════════════
+// Check if version already published to NuGet
 
 namespace DevCli.Commands;
 
 /// <summary>
-/// Check if NuGet packages are already published.
+/// Check if version already published
 /// </summary>
-[NuruRoute("check-version", Description = "Check if packages are already published on NuGet")]
+[NuruRoute("check-version", Description = "Check if version already published")]
 internal sealed class CheckVersionCommand : ICommand<Unit>
 {
   internal sealed class Handler : ICommandHandler<CheckVersionCommand, Unit>
@@ -22,76 +22,71 @@ internal sealed class CheckVersionCommand : ICommand<Unit>
 
     public async ValueTask<Unit> Handle(CheckVersionCommand command, CancellationToken ct)
     {
-      // Get repo root
       string repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
-
-      // Verify we're in the right place
       if (!File.Exists(Path.Combine(repoRoot, "timewarp-terminal.slnx")))
       {
         repoRoot = Path.GetFullPath(Directory.GetCurrentDirectory());
-        if (!File.Exists(Path.Combine(repoRoot, "timewarp-terminal.slnx")))
+      }
+
+      // Read version from Directory.Build.props
+      string propsPath = Path.Combine(repoRoot, "source", "timewarp-terminal", "timewarp-terminal.csproj");
+      if (!File.Exists(propsPath))
+      {
+        // Try alternative locations
+        propsPath = Path.Combine(repoRoot, "source", "Directory.Build.props");
+      }
+
+      string? version = null;
+      if (File.Exists(propsPath))
+      {
+        string content = await File.ReadAllTextAsync(propsPath, ct);
+        // Simple regex-like parsing for Version tag
+        int versionStart = content.IndexOf("<Version>");
+        if (versionStart > 0)
         {
-          throw new InvalidOperationException("Could not find repository root (timewarp-terminal.slnx not found)");
+          versionStart += "<Version>".Length;
+          int versionEnd = content.IndexOf("</Version>", versionStart);
+          if (versionEnd > versionStart)
+          {
+            version = content[versionStart..versionEnd];
+          }
         }
       }
-
-      // Read version from source/timewarp-terminal/timewarp-terminal.csproj
-      string csprojPath = Path.Combine(repoRoot, "source", "timewarp-terminal", "timewarp-terminal.csproj");
-
-      if (!File.Exists(csprojPath))
-      {
-        throw new FileNotFoundException($"Could not find {csprojPath}");
-      }
-
-      XDocument doc = XDocument.Load(csprojPath);
-      string? version = doc.Descendants("Version").FirstOrDefault()?.Value;
 
       if (string.IsNullOrEmpty(version))
       {
-        throw new InvalidOperationException("Could not find version in source/timewarp-terminal/timewarp-terminal.csproj");
+        throw new InvalidOperationException("Could not determine version from project files");
       }
 
-      Terminal.WriteLine($"Checking if packages with version {version} are already published on NuGet.org...");
+      Terminal.WriteLine($"Current version: {version}");
+      Terminal.WriteLine("Checking NuGet.org...");
 
-      // Packages to check
-      string[] packages =
-      [
-        "TimeWarp.Terminal"
-      ];
+      // Check if package exists on NuGet
+      using HttpClient client = new();
+      string packageId = "TimeWarp.Terminal";
+      string url = $"https://api.nuget.org/v3-flatcontainer/{packageId.ToLowerInvariant()}/{version}/{packageId.ToLowerInvariant()}.nuspec";
 
-      List<string> alreadyPublished = [];
-
-      foreach (string package in packages)
+      try
       {
-        Terminal.WriteLine($"\nChecking {package}...");
-
-        CommandOutput result = await DotNet.PackageSearch(package)
-          .WithExactMatch()
-          .WithPrerelease()
-          .WithSource("https://api.nuget.org/v3/index.json")
-          .Build()
-          .CaptureAsync();
-
-        // Check if the version appears in the output
-        if (result.Stdout.Contains($"| {version} |", StringComparison.Ordinal))
+        Uri uri = new(url);
+        HttpResponseMessage response = await client.GetAsync(uri, ct);
+        if (response.IsSuccessStatusCode)
         {
-          Terminal.WriteLine($"  WARNING: {package} {version} is already published to NuGet.org");
-          alreadyPublished.Add(package);
+          Terminal.WriteLine($"\n✗ Version {version} already exists on NuGet.org");
+          Terminal.WriteLine("  Cannot publish - version must be incremented");
+          throw new InvalidOperationException($"Version {version} already published");
         }
         else
         {
-          Terminal.WriteLine($"  OK: {package} {version} is not yet published");
+          Terminal.WriteLine($"\n✓ Version {version} is available for publishing");
         }
       }
-
-      if (alreadyPublished.Count > 0)
+      catch (HttpRequestException ex)
       {
-        throw new InvalidOperationException(
-          $"Package(s) already published: {string.Join(", ", alreadyPublished)}. " +
-          "Please increment the version in source/timewarp-terminal/timewarp-terminal.csproj");
+        Terminal.WriteLine($"\n⚠ Could not check NuGet: {ex.Message}");
+        Terminal.WriteLine("  Assuming version is available");
       }
 
-      Terminal.WriteLine("\nAll packages are ready to publish!");
       return Unit.Value;
     }
   }
