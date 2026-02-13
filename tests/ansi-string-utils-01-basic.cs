@@ -22,7 +22,7 @@ public class AnsiStringUtilsTests
     const string input = "\x1b[31mError\x1b[0m";
 
     // Act
-    string result = Terminal.AnsiStringUtils.StripAnsiCodes(input);
+    string result = TimeWarp.Terminal.AnsiStringUtils.StripAnsiCodes(input);
 
     // Assert
     result.ShouldBe("Error");
