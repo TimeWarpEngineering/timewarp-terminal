@@ -49,8 +49,9 @@ internal sealed class CiCommand : ICommand<Unit>
       return Unit.Value;
     }
 
-    private async Task RunPrWorkflowAsync(string repoRoot, CancellationToken ct)
+    private async Task RunPrWorkflowAsync(string repoRoot, CancellationToken cancellationToken)
     {
+      cancellationToken.ThrowIfCancellationRequested();
       Terminal.WriteLine("CI Pipeline: clean -> build -> verify-samples -> test");
       Terminal.WriteLine("");
 
@@ -187,7 +188,7 @@ internal sealed class CiCommand : ICommand<Unit>
         throw new InvalidOperationException("Pack failed!");
       }
 
-      Terminal.WriteLine($"\n✓ Release Pipeline completed successfully");
+      Terminal.WriteLine("\n✓ Release Pipeline completed successfully");
       Terminal.WriteLine($"  Packages created in: {artifactsDir}");
 
       // Push if api-key provided
