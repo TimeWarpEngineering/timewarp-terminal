@@ -5,7 +5,7 @@
 using TimeWarp.Terminal;
 
 // Create a terminal for colored output
-ITerminal terminal = new TimeWarpTerminal();
+TimeWarpTerminal terminal = new();
 
 terminal
   .WriteLine("Table Widget Demo")

@@ -6,7 +6,7 @@
 using TimeWarp.Terminal;
 
 // Get a terminal instance
-ITerminal terminal = TimeWarpTerminal.Default;
+TimeWarpTerminal terminal = TimeWarpTerminal.Default;
 
 terminal
   .WriteLine()
