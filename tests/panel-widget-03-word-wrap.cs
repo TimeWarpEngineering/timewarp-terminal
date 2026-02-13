@@ -1,5 +1,5 @@
 #!/usr/bin/dotnet --
-#:project ../../source/timewarp-terminal/timewarp-terminal.csproj
+#:project ../source/timewarp-terminal/timewarp-terminal.csproj
 
 // Test Panel widget word wrapping functionality
 
@@ -20,7 +20,7 @@ public class PanelWidgetWordWrapTests
   {
     // Arrange
     string longText = "Learn how to get started with building web products with ASP.NET Core. This course covers the fundamentals of ASP.NET Core web development.";
-    Panel panel = new() { Content = longText, Width = 80 };
+    Panel panel = new PanelBuilder().Content(longText).Width(80).Build();
 
     // Act
     string[] lines = panel.Render(80);
@@ -42,7 +42,7 @@ public class PanelWidgetWordWrapTests
   {
     // Arrange
     string styledText = $"{AnsiColors.Red}This is a very long red text that should wrap properly{AnsiColors.Reset} and continue with normal text that also needs wrapping.";
-    Panel panel = new() { Content = styledText, Width = 40 };
+    Panel panel = new PanelBuilder().Content(styledText).Width(40).Build();
 
     // Act
     string[] lines = panel.Render(40);
@@ -65,7 +65,7 @@ public class PanelWidgetWordWrapTests
   {
     // Arrange
     string longText = "This is a very long line that would normally wrap but WordWrap is disabled.";
-    Panel panel = new() { Content = longText, Width = 40, WordWrap = false };
+    Panel panel = new PanelBuilder().Content(longText).Width(40).WordWrap(false).Build();
 
     // Act
     string[] lines = panel.Render(40);
@@ -83,7 +83,7 @@ public class PanelWidgetWordWrapTests
   {
     // Arrange - OSC 8 hyperlink sequence
     string hyperlink = "\x1b]8;;https://example.com\x1b\\Click here for more details and information about this topic\x1b]8;;\x1b\\";
-    Panel panel = new() { Content = hyperlink, Width = 50 };
+    Panel panel = new PanelBuilder().Content(hyperlink).Width(50).Build();
 
     // Act
     string[] lines = panel.Render(50);
@@ -102,7 +102,7 @@ public class PanelWidgetWordWrapTests
   {
     // Arrange - A single word that's longer than the content area
     string longWord = "Supercalifragilisticexpialidocious";
-    Panel panel = new() { Content = longWord, Width = 20 };
+    Panel panel = new PanelBuilder().Content(longWord).Width(20).Build();
 
     // Act
     string[] lines = panel.Render(20);
@@ -124,7 +124,7 @@ public class PanelWidgetWordWrapTests
   {
     // Arrange
     string multilineText = "First paragraph with some long text that needs wrapping.\nSecond paragraph that also contains long text for wrapping.";
-    Panel panel = new() { Content = multilineText, Width = 40 };
+    Panel panel = new PanelBuilder().Content(multilineText).Width(40).Build();
 
     // Act
     string[] lines = panel.Render(40);
@@ -145,7 +145,7 @@ public class PanelWidgetWordWrapTests
   public static async Task Should_handle_empty_content_with_wrapping()
   {
     // Arrange
-    Panel panel = new() { Content = "", Width = 40, WordWrap = true };
+    Panel panel = new PanelBuilder().Content("").Width(40).WordWrap(true).Build();
 
     // Act
     string[] lines = panel.Render(40);
@@ -179,7 +179,7 @@ public class PanelWidgetWordWrapTests
   {
     // Arrange - Content that's exactly at the boundary
     string text = "Hello World! This is a test.";
-    Panel panel = new() { Content = text, Width = 20, PaddingHorizontal = 1 };
+    Panel panel = new PanelBuilder().Content(text).Width(20).PaddingHorizontal(1).Build();
 
     // Act
     string[] lines = panel.Render(20);

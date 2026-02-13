@@ -1,5 +1,5 @@
 #!/usr/bin/dotnet --
-#:project ../../source/timewarp-terminal/timewarp-terminal.csproj
+#:project ../source/timewarp-terminal/timewarp-terminal.csproj
 
 // Test Panel widget terminal extension methods
 
@@ -87,13 +87,12 @@ public class PanelTerminalExtensionTests
   {
     // Arrange
     using TestTerminal terminal = new() { WindowWidth = 40 };
-    Panel panel = new()
-    {
-      Header = "Test",
-      Content = "Content",
-      Border = BorderStyle.Heavy,
-      BorderColor = AnsiColors.Yellow
-    };
+    Panel panel = new PanelBuilder()
+      .Header("Test")
+      .Content("Content")
+      .Border(BorderStyle.Heavy)
+      .BorderColor(AnsiColors.Yellow)
+      .Build();
 
     // Act
     terminal.WritePanel(panel);

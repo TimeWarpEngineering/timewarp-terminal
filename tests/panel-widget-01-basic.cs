@@ -1,5 +1,5 @@
 #!/usr/bin/dotnet --
-#:project ../../source/timewarp-terminal/timewarp-terminal.csproj
+#:project ../source/timewarp-terminal/timewarp-terminal.csproj
 
 // Test Panel widget basic functionality
 
@@ -19,7 +19,7 @@ public class PanelWidgetBasicTests
   public static async Task Should_render_simple_panel_with_content()
   {
     // Arrange
-    Panel panel = new() { Content = "Hello World" };
+    Panel panel = new PanelBuilder().Content("Hello World").Build();
 
     // Act
     string[] lines = panel.Render(40);
@@ -39,7 +39,7 @@ public class PanelWidgetBasicTests
   public static async Task Should_render_panel_with_header()
   {
     // Arrange
-    Panel panel = new() { Header = "Notice", Content = "Important info" };
+    Panel panel = new PanelBuilder().Header("Notice").Content("Important info").Build();
 
     // Act
     string[] lines = panel.Render(40);
@@ -54,7 +54,7 @@ public class PanelWidgetBasicTests
   public static async Task Should_render_panel_with_square_border()
   {
     // Arrange
-    Panel panel = new() { Content = "Test", Border = BorderStyle.Square };
+    Panel panel = new PanelBuilder().Content("Test").Border(BorderStyle.Square).Build();
 
     // Act
     string[] lines = panel.Render(20);
@@ -71,7 +71,7 @@ public class PanelWidgetBasicTests
   public static async Task Should_render_panel_with_double_border()
   {
     // Arrange
-    Panel panel = new() { Content = "Test", Border = BorderStyle.Doubled };
+    Panel panel = new PanelBuilder().Content("Test").Border(BorderStyle.Doubled).Build();
 
     // Act
     string[] lines = panel.Render(20);
@@ -90,7 +90,7 @@ public class PanelWidgetBasicTests
   public static async Task Should_render_panel_with_heavy_border()
   {
     // Arrange
-    Panel panel = new() { Content = "Test", Border = BorderStyle.Heavy };
+    Panel panel = new PanelBuilder().Content("Test").Border(BorderStyle.Heavy).Build();
 
     // Act
     string[] lines = panel.Render(20);
@@ -109,7 +109,7 @@ public class PanelWidgetBasicTests
   public static async Task Should_render_multiline_content()
   {
     // Arrange
-    Panel panel = new() { Content = "Line 1\nLine 2\nLine 3" };
+    Panel panel = new PanelBuilder().Content("Line 1\nLine 2\nLine 3").Build();
 
     // Act
     string[] lines = panel.Render(40);
@@ -126,7 +126,7 @@ public class PanelWidgetBasicTests
   public static async Task Should_render_panel_with_vertical_padding()
   {
     // Arrange
-    Panel panel = new() { Content = "Content", PaddingVertical = 1 };
+    Panel panel = new PanelBuilder().Content("Content").PaddingVertical(1).Build();
 
     // Act
     string[] lines = panel.Render(40);
@@ -144,7 +144,7 @@ public class PanelWidgetBasicTests
   public static async Task Should_render_panel_with_horizontal_padding()
   {
     // Arrange
-    Panel panel = new() { Content = "Hi", PaddingHorizontal = 3 };
+    Panel panel = new PanelBuilder().Content("Hi").PaddingHorizontal(3).Build();
 
     // Act
     string[] lines = panel.Render(40);
@@ -159,7 +159,7 @@ public class PanelWidgetBasicTests
   public static async Task Should_render_panel_with_fixed_width()
   {
     // Arrange
-    Panel panel = new() { Content = "Test", Width = 20 };
+    Panel panel = new PanelBuilder().Content("Test").Width(20).Build();
 
     // Act
     string[] lines = panel.Render(80); // terminal width should be ignored
@@ -174,7 +174,7 @@ public class PanelWidgetBasicTests
   public static async Task Should_render_panel_with_border_color()
   {
     // Arrange
-    Panel panel = new() { Content = "Test", BorderColor = AnsiColors.Cyan };
+    Panel panel = new PanelBuilder().Content("Test").BorderColor(AnsiColors.Cyan).Build();
 
     // Act
     string[] lines = panel.Render(30);
@@ -191,7 +191,7 @@ public class PanelWidgetBasicTests
   public static async Task Should_render_panel_without_border_when_style_is_none()
   {
     // Arrange
-    Panel panel = new() { Content = "Line 1\nLine 2", Border = BorderStyle.None };
+    Panel panel = new PanelBuilder().Content("Line 1\nLine 2").Border(BorderStyle.None).Build();
 
     // Act
     string[] lines = panel.Render(40);
@@ -207,7 +207,7 @@ public class PanelWidgetBasicTests
   public static async Task Should_handle_empty_content()
   {
     // Arrange
-    Panel panel = new() { Content = "" };
+    Panel panel = new PanelBuilder().Content("").Build();
 
     // Act
     string[] lines = panel.Render(20);
@@ -221,7 +221,7 @@ public class PanelWidgetBasicTests
   public static async Task Should_handle_null_content()
   {
     // Arrange
-    Panel panel = new() { Content = null };
+    Panel panel = new PanelBuilder().Content((string?)null).Build();
 
     // Act
     string[] lines = panel.Render(20);

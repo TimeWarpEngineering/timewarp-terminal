@@ -1,5 +1,5 @@
 #!/usr/bin/dotnet --
-#:project ../../source/timewarp-terminal/timewarp-terminal.csproj
+#:project ../source/timewarp-terminal/timewarp-terminal.csproj
 
 // Test Rule widget basic functionality
 
@@ -19,7 +19,7 @@ public class RuleWidgetBasicTests
   public static async Task Should_render_simple_rule_at_specified_width()
   {
     // Arrange
-    Rule rule = new();
+    Rule rule = new RuleBuilder().Build();
 
     // Act
     string rendered = rule.Render(40);
@@ -34,7 +34,7 @@ public class RuleWidgetBasicTests
   public static async Task Should_render_rule_with_centered_title()
   {
     // Arrange
-    Rule rule = new() { Title = "Test" };
+    Rule rule = new RuleBuilder().Title("Test").Build();
 
     // Act
     string rendered = rule.Render(40);
@@ -54,7 +54,7 @@ public class RuleWidgetBasicTests
   public static async Task Should_render_rule_with_doubled_style()
   {
     // Arrange
-    Rule rule = new() { Style = LineStyle.Doubled };
+    Rule rule = new RuleBuilder().Style(LineStyle.Doubled).Build();
 
     // Act
     string rendered = rule.Render(20);
@@ -68,7 +68,7 @@ public class RuleWidgetBasicTests
   public static async Task Should_render_rule_with_heavy_style()
   {
     // Arrange
-    Rule rule = new() { Style = LineStyle.Heavy };
+    Rule rule = new RuleBuilder().Style(LineStyle.Heavy).Build();
 
     // Act
     string rendered = rule.Render(20);
@@ -82,7 +82,7 @@ public class RuleWidgetBasicTests
   public static async Task Should_render_rule_with_color()
   {
     // Arrange
-    Rule rule = new() { Color = AnsiColors.Cyan };
+    Rule rule = new RuleBuilder().Color(AnsiColors.Cyan).Build();
 
     // Act
     string rendered = rule.Render(20);
@@ -97,7 +97,7 @@ public class RuleWidgetBasicTests
   public static async Task Should_render_rule_with_fixed_width()
   {
     // Arrange
-    Rule rule = new() { Width = 30 };
+    Rule rule = new RuleBuilder().Width(30).Build();
 
     // Act
     string rendered = rule.Render(80); // Terminal width should be ignored
@@ -111,7 +111,7 @@ public class RuleWidgetBasicTests
   public static async Task Should_handle_title_longer_than_width()
   {
     // Arrange
-    Rule rule = new() { Title = "This is a very long title" };
+    Rule rule = new RuleBuilder().Title("This is a very long title").Build();
 
     // Act
     string rendered = rule.Render(20);
@@ -126,7 +126,7 @@ public class RuleWidgetBasicTests
   {
     // Arrange
     string styledTitle = "Test".Cyan();
-    Rule rule = new() { Title = styledTitle, Color = AnsiColors.Yellow };
+    Rule rule = new RuleBuilder().Title(styledTitle).Color(AnsiColors.Yellow).Build();
 
     // Act
     string rendered = rule.Render(40);
