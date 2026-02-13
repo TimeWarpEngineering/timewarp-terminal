@@ -45,8 +45,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Include command files in compilation -->
-    <Compile Include="commands/**/*.cs" />
+    <!-- Include endpoint files in compilation -->
+    <Compile Include="endpoints/**/*.cs" />
   </ItemGroup>
 
   <ItemGroup>
