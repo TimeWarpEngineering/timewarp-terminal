@@ -35,36 +35,40 @@ internal sealed class VerifySamplesCommand : ICommand<Unit>
         return Unit.Value;
       }
 
-      Terminal.WriteLine("Verifying sample projects...");
+      // Find all .cs runfiles in samples directory
+      string[] sampleFiles = Directory.GetFiles(samplesDir, "*.cs", SearchOption.TopDirectoryOnly);
 
-      // Find all .csproj files in samples directory
-      string[] sampleProjects = Directory.GetFiles(samplesDir, "*.csproj", SearchOption.AllDirectories);
-
-      if (sampleProjects.Length == 0)
+      if (sampleFiles.Length == 0)
       {
-        Terminal.WriteLine("No sample projects found");
+        Terminal.WriteLine("No sample files found");
         return Unit.Value;
       }
 
-      Terminal.WriteLine($"Found {sampleProjects.Length} sample project(s)");
+      Terminal.WriteLine($"Found {sampleFiles.Length} sample file(s)");
 
-      foreach (string project in sampleProjects)
+      foreach (string sampleFile in sampleFiles)
       {
-        string projectName = Path.GetFileName(project);
-        Terminal.WriteLine($"\n  Building {projectName}...");
+        string fileName = Path.GetFileName(sampleFile);
+        Terminal.WriteLine($"\n  Verifying {fileName}...");
 
+        // Run from samples directory so relative paths work
         int exitCode = await Shell.Builder("dotnet")
-          .WithArguments("build", project, "-c", "Release", "--no-restore")
-          .WithWorkingDirectory(repoRoot)
+          .WithArguments("run", sampleFile, "--", "--help")
+          .WithWorkingDirectory(samplesDir)
           .RunAsync();
 
         if (exitCode != 0)
         {
-          throw new InvalidOperationException($"Sample project failed to build: {projectName}");
+          Terminal.WriteLine($"    ⚠ {fileName} failed verification (exit code: {exitCode})");
+          Environment.Exit(1);
+        }
+        else
+        {
+          Terminal.WriteLine($"    ✓ {fileName} verified");
         }
       }
 
-      Terminal.WriteLine($"\n✓ All {sampleProjects.Length} sample(s) verified successfully");
+      Terminal.WriteLine($"\n✓ All {sampleFiles.Length} sample(s) verified successfully");
       return Unit.Value;
     }
   }

@@ -1,7 +1,7 @@
 #!/usr/bin/dotnet --
 // panel-widget-demo - Demonstrates the Panel widget for bordered boxes
 // GitHub Issue: https://github.com/TimeWarpEngineering/timewarp-terminal/issues/90
-#:project ../../source/timewarp-terminal/timewarp-terminal.csproj
+#:project ../source/timewarp-terminal/timewarp-terminal.csproj
 
 using TimeWarp.Terminal;
 

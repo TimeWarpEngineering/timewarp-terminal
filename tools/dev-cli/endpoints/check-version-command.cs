@@ -28,13 +28,8 @@ internal sealed class CheckVersionCommand : ICommand<Unit>
         repoRoot = Path.GetFullPath(Directory.GetCurrentDirectory());
       }
 
-      // Read version from Directory.Build.props
-      string propsPath = Path.Combine(repoRoot, "source", "timewarp-terminal", "timewarp-terminal.csproj");
-      if (!File.Exists(propsPath))
-      {
-        // Try alternative locations
-        propsPath = Path.Combine(repoRoot, "source", "Directory.Build.props");
-      }
+      // Read version from source/Directory.Build.props
+      string propsPath = Path.Combine(repoRoot, "source", "Directory.Build.props");
 
       string? version = null;
       if (File.Exists(propsPath))
@@ -74,7 +69,7 @@ internal sealed class CheckVersionCommand : ICommand<Unit>
         {
           Terminal.WriteLine($"\n✗ Version {version} already exists on NuGet.org");
           Terminal.WriteLine("  Cannot publish - version must be incremented");
-          throw new InvalidOperationException($"Version {version} already published");
+          Environment.Exit(1);
         }
         else
         {
