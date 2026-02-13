@@ -46,41 +46,9 @@ terminal
   .WriteRule("Heavy Style", LineStyle.Heavy)
   .WriteLine();
 
-// Fluent builder API
-terminal
-  .WriteLine("5. Fluent builder API:")
-  .WriteRule(rule => rule
-    .Title("Configuration")
-    .Style(LineStyle.Doubled)
-    .Color(AnsiColors.Cyan))
-  .WriteLine();
-
-// Colored rules
-terminal
-  .WriteLine("6. Colored rules:")
-  .WriteRule(rule => rule
-    .Title("Success".Green())
-    .Color(AnsiColors.Green))
-  .WriteRule(rule => rule
-    .Title("Warning".Yellow())
-    .Color(AnsiColors.Yellow))
-  .WriteRule(rule => rule
-    .Title("Error".Red())
-    .Color(AnsiColors.Red))
-  .WriteLine();
-
-// Pre-configured rule via builder
-terminal
-  .WriteLine("7. Pre-configured Rule via builder:")
-  .WriteRule(rule => rule
-    .Title("Custom Configuration")
-    .Style(LineStyle.Heavy)
-    .Color(AnsiColors.Magenta))
-  .WriteLine();
-
 // Practical example — fluent chaining
 terminal
-  .WriteLine("8. Practical example - fluent chaining:")
+  .WriteLine("5. Practical example - fluent chaining:")
   .WriteLine()
   .WriteRule("Build Output")
   .WriteLine("  Compiling project...")
@@ -89,13 +57,6 @@ terminal
   .WriteRule("Test Results", LineStyle.Doubled)
   .WriteLine("  ✓ 42 tests passed")
   .WriteLine("  ✗ 0 tests failed")
-  .WriteLine()
-  .WriteRule(rule => rule
-    .Title("Summary".Bold())
-    .Style(LineStyle.Heavy)
-    .Color(AnsiColors.BrightGreen))
-  .WriteLine("  Total time: 1.23s")
-  .WriteLine("  Status: " + "SUCCESS".Green().Bold())
   .WriteLine();
 
 return 0;
