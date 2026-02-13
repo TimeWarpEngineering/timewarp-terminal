@@ -46,9 +46,17 @@ terminal
   .WriteRule("Heavy Style", LineStyle.Heavy)
   .WriteLine();
 
+// Colored rules using styled text
+terminal
+  .WriteLine("5. Colored rules (using styled text):")
+  .WriteRule("Success".Green())
+  .WriteRule("Warning".Yellow())
+  .WriteRule("Error".Red())
+  .WriteLine();
+
 // Practical example — fluent chaining
 terminal
-  .WriteLine("5. Practical example - fluent chaining:")
+  .WriteLine("6. Practical example - fluent chaining:")
   .WriteLine()
   .WriteRule("Build Output")
   .WriteLine("  Compiling project...")
