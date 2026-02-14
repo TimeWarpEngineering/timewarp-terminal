@@ -20,34 +20,71 @@ Sample output showing the problem:
 
 `AnsiStringUtils.GetVisibleLength()` returns `StripAnsiCodes(text).Length` which counts .NET string length (UTF-16 code units), not terminal display columns. Emojis like `📍` take 2 terminal columns but `.Length` counts them as 1-2 characters, making borders too short.
 
-## Implementation Plan
+## Implementation
 
-Add a `UnicodeWidth` utility class that calculates terminal display width accounting for wide characters (emoji, CJK) and zero-width characters (combining marks, ZWJ). Update `GetVisibleLength()` to use it. No external dependencies — uses .NET 10 built-in `Rune`, `StringInfo`, and `UnicodeCategory` APIs (all AOT-compatible).
+Added `UnicodeWidth` utility class that calculates terminal display width accounting for wide characters (emoji, CJK) and zero-width characters (combining marks, ZWJ). Updated `GetVisibleLength()` to use it. No external dependencies — uses .NET 10 built-in `Rune`, `StringInfo`, and `UnicodeCategory` APIs (all AOT-compatible).
 
-### Steps
+### Wide character ranges covered (width 2)
 
-1. Create `source/timewarp-terminal/widgets/unicode-width.cs` — static `UnicodeWidth` class with `GetRuneWidth(Rune)` and `GetTextWidth(string)` methods
-2. Add `global using System.Globalization;` to `source/timewarp-terminal/global-usings.cs`
-3. Update `AnsiStringUtils.GetVisibleLength()` (line 60) to use `UnicodeWidth.GetTextWidth()` instead of `.Length`
-4. Update `AnsiStringUtils.WrapText()` to use display width and grapheme cluster iteration instead of `word.Length` and `foreach (char c in word)`
-5. Update `TruncateWithEllipsis` and `TruncateMiddle` in `table-widget.cs` to use display-width-aware slicing
+**Emoji and symbols:**
+- U+2300-U+23FF — Miscellaneous Technical (⌚⌛⏰⏳)
+- U+25A0-U+25FF — Geometric Shapes (▶◀▪▫)
+- U+2600-U+26FF — Miscellaneous Symbols (☀☁⚡♻)
+- U+2700-U+27BF — Dingbats (✅❌✂✈)
+- U+2B00-U+2BFF — Miscellaneous Symbols and Arrows (⬛⬜⭐⭕)
+- U+1F000-U+1FAFF, U+1FC00-U+1FFFF — Emoji blocks
+- U+1F1E0-U+1F1FF — Regional indicator symbols (flags)
 
-### Key Files
+**CJK:**
+- U+2E80-U+303E — CJK Radicals, Kangxi, Ideographic Description
+- U+3041-U+33BF — Hiragana, Katakana, Bopomofo, CJK Compatibility
+- U+3400-U+4DBF — CJK Extension A
+- U+4E00-U+9FFF — CJK Unified Ideographs
+- U+A000-U+A4CF — Yi Syllables and Radicals
+- U+AC00-U+D7A3 — Hangul Syllables
+- U+F900-U+FAFF — CJK Compatibility Ideographs
+- U+FE10-U+FE19 — Vertical Forms
+- U+FE30-U+FE6F — CJK Compatibility Forms
+- U+FF01-U+FF60, U+FFE0-U+FFE6 — Fullwidth forms
+- U+1100-U+115F — Hangul Jamo
+- U+2329-U+232A — Wide angle brackets
+- U+20000-U+2A6DF — CJK Extension B
+- U+2A700-U+2B73F — CJK Extension C
+- U+2B740-U+2B81F — CJK Extension D
+- U+2B820-U+2CEAF — CJK Extension E
+- U+2CEB0-U+2EBEF — CJK Extension F
+- U+2F800-U+2FA1F — CJK Compatibility Ideographs Supplement
+- U+30000-U+3134F — CJK Extension G
+- U+31350-U+323AF — CJK Extension H
+
+**Zero-width (width 0):**
+- Control characters
+- UnicodeCategory.NonSpacingMark, EnclosingMark, Format
+- U+00AD (soft hyphen), U+200B-U+200D (ZWSP, ZWNJ, ZWJ), U+2060 (WJ)
+- U+FE00-U+FE0F (variation selectors), U+E0100-U+E01EF (VS supplement)
+
+**Multi-codepoint grapheme clusters** (ZWJ sequences, flags, skin-tone) → width 2
+
+### Files changed
 
 - `source/timewarp-terminal/widgets/unicode-width.cs` (new)
-- `source/timewarp-terminal/widgets/ansi-string-utils.cs` (modify)
-- `source/timewarp-terminal/widgets/table-widget.cs` (modify)
-- `source/timewarp-terminal/global-usings.cs` (modify)
+- `source/timewarp-terminal/widgets/ansi-string-utils.cs` (modified)
+- `source/timewarp-terminal/widgets/table-widget.cs` (modified)
+- `source/timewarp-terminal/global-usings.cs` (modified)
+- `samples/emoji-table-widget.cs` (new)
+- `tests/unicode-width-01-basic.cs` (new)
+- `tests/ansi-string-utils-03-emoji-width.cs` (new)
+- `tests/table-widget-06-emoji.cs` (new)
 
 ## Checklist
 
 - [x] Investigate the table rendering code to understand how cell width calculations work
 - [x] Identify why emojis cause border misalignment (emoji display width vs character count)
 - [x] Research proper emoji width handling (full-width vs half-width emojis)
-- [ ] Implement UnicodeWidth utility class
-- [ ] Update GetVisibleLength to use display width
-- [ ] Update WrapText for grapheme-cluster-aware iteration
-- [ ] Update TruncateWithEllipsis for display-width-aware slicing
-- [ ] Add tests for UnicodeWidth, AnsiStringUtils emoji, and table emoji rendering
-- [ ] Verify tables without emojis still render correctly
-- [ ] Visually verify weather report table alignment
+- [x] Implement UnicodeWidth utility class with comprehensive ranges
+- [x] Update GetVisibleLength to use display width
+- [x] Update WrapText for grapheme-cluster-aware iteration
+- [x] Update TruncateWithEllipsis for display-width-aware slicing
+- [x] Add tests for UnicodeWidth, AnsiStringUtils emoji, and table emoji rendering
+- [x] Verify tables without emojis still render correctly (92 tests pass)
+- [x] Visually verify weather report table alignment

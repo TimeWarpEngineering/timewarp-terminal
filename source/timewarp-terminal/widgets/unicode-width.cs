@@ -41,69 +41,107 @@ public static class UnicodeWidth
     if (value is >= 0xE0100 and <= 0xE01EF) // Variation selectors supplement
       return 0;
 
-    // CJK Unified Ideographs and extensions
-    if (value is >= 0x4E00 and <= 0x9FFF)
-      return 2;
-    if (value is >= 0x3400 and <= 0x4DBF)
-      return 2;
-    if (value is >= 0x20000 and <= 0x2A6DF)
-      return 2;
-    if (value is >= 0x2A700 and <= 0x2B73F)
-      return 2;
-    if (value is >= 0x2B740 and <= 0x2B81F)
-      return 2;
+    // ── Emoji and symbol ranges (width 2 in modern terminals) ──
 
-    // CJK Compatibility Ideographs
-    if (value is >= 0xF900 and <= 0xFAFF)
+    // Miscellaneous Technical (⌚⌛⏰⏳⏩ etc.)
+    if (value is >= 0x2300 and <= 0x23FF)
       return 2;
-    if (value is >= 0x2F800 and <= 0x2FA1F)
+    // Geometric Shapes (▶◀▪▫ etc.)
+    if (value is >= 0x25A0 and <= 0x25FF)
       return 2;
-
-    // CJK Radicals, Kangxi, Ideographic Description
-    if (value is >= 0x2E80 and <= 0x303E)
+    // Miscellaneous Symbols (☀☁⚡♻ etc.)
+    if (value is >= 0x2600 and <= 0x26FF)
       return 2;
-
-    // Hiragana, Katakana, Bopomofo, CJK Compatibility
-    if (value is >= 0x3041 and <= 0x33BF)
+    // Dingbats (✅❌✂✈ etc.)
+    if (value is >= 0x2700 and <= 0x27BF)
       return 2;
-
-    // Fullwidth forms
-    if (value is >= 0xFF01 and <= 0xFF60)
+    // Miscellaneous Symbols and Arrows (⬛⬜⭐⭕⬆⬇ etc.)
+    if (value is >= 0x2B00 and <= 0x2BFF)
       return 2;
-    if (value is >= 0xFFE0 and <= 0xFFE6)
-      return 2;
-
-    // Hangul
-    if (value is >= 0xAC00 and <= 0xD7A3)
-      return 2;
-    if (value is >= 0x1100 and <= 0x115F)
-      return 2;
-
     // Wide angle brackets
     if (value is >= 0x2329 and <= 0x232A)
       return 2;
 
-    // Miscellaneous Symbols and Dingbats (✅❌⚡⭐☀⚽ etc.)
-    // Most render as width 2 in modern terminals
-    if (value is >= 0x2600 and <= 0x27BF)
+    // ── CJK ranges (width 2) ──
+
+    // CJK Radicals, Kangxi, Ideographic Description
+    if (value is >= 0x2E80 and <= 0x303E)
+      return 2;
+    // Hiragana, Katakana, Bopomofo, CJK Compatibility
+    if (value is >= 0x3041 and <= 0x33BF)
+      return 2;
+    // CJK Unified Ideographs Extension A
+    if (value is >= 0x3400 and <= 0x4DBF)
+      return 2;
+    // CJK Unified Ideographs
+    if (value is >= 0x4E00 and <= 0x9FFF)
+      return 2;
+    // Yi Syllables and Radicals
+    if (value is >= 0xA000 and <= 0xA4CF)
+      return 2;
+    // Hangul Syllables
+    if (value is >= 0xAC00 and <= 0xD7A3)
+      return 2;
+    // CJK Compatibility Ideographs
+    if (value is >= 0xF900 and <= 0xFAFF)
       return 2;
 
-    // Miscellaneous Technical emoji (⌚⌛⏰⏳ etc.)
-    if (value is >= 0x2300 and <= 0x23FF)
+    // ── CJK and Fullwidth forms ──
+
+    // Vertical Forms
+    if (value is >= 0xFE10 and <= 0xFE19)
+      return 2;
+    // CJK Compatibility Forms
+    if (value is >= 0xFE30 and <= 0xFE6F)
+      return 2;
+    // Fullwidth Latin, Punctuation, Katakana, Hangul
+    if (value is >= 0xFF01 and <= 0xFF60)
+      return 2;
+    // Fullwidth Signs
+    if (value is >= 0xFFE0 and <= 0xFFE6)
       return 2;
 
-    // Geometric Shapes with emoji presentation (▶◀ etc.)
-    if (value is >= 0x25A0 and <= 0x25FF)
+    // ── Hangul Jamo ──
+
+    if (value is >= 0x1100 and <= 0x115F)
       return 2;
 
-    // Emoji blocks
+    // ── Emoji blocks (Supplementary Multilingual Plane) ──
+
+    // Mahjong, Dominos, Playing Cards, Enclosed Alphanumerics Supplement
     if (value is >= 0x1F000 and <= 0x1FAFF)
       return 2;
     if (value is >= 0x1FC00 and <= 0x1FFFF)
       return 2;
-
     // Regional indicator symbols (flag emoji components)
     if (value is >= 0x1F1E0 and <= 0x1F1FF)
+      return 2;
+
+    // ── CJK Extensions in Supplementary Ideographic Plane ──
+
+    // CJK Extension B
+    if (value is >= 0x20000 and <= 0x2A6DF)
+      return 2;
+    // CJK Extension C
+    if (value is >= 0x2A700 and <= 0x2B73F)
+      return 2;
+    // CJK Extension D
+    if (value is >= 0x2B740 and <= 0x2B81F)
+      return 2;
+    // CJK Extension E
+    if (value is >= 0x2B820 and <= 0x2CEAF)
+      return 2;
+    // CJK Extension F
+    if (value is >= 0x2CEB0 and <= 0x2EBEF)
+      return 2;
+    // CJK Compatibility Ideographs Supplement
+    if (value is >= 0x2F800 and <= 0x2FA1F)
+      return 2;
+    // CJK Extension G
+    if (value is >= 0x30000 and <= 0x3134F)
+      return 2;
+    // CJK Extension H
+    if (value is >= 0x31350 and <= 0x323AF)
       return 2;
 
     return 1;
