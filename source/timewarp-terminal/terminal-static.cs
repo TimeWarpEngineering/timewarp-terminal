@@ -1,5 +1,18 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Static facade providing Console-compatible API while maintaining testability.
+// Routes all calls to configurable Instance property, enabling test doubles.
+#endregion
+
+#region Design
+// Static API mimics System.Console for easy migration from existing code.
+// Instance property allows swapping implementation for testing without DI container.
+// Dedicated format overloads for 1-3 args avoid array allocation (params variant for 4+).
+// Color methods use AnsiColors to wrap messages with ANSI escape sequences.
+// CA1054 suppressed for WriteLink: OSC 8 hyperlinks use raw URL strings by design.
+#endregion
+
 using System.Globalization;
 
 /// <summary>

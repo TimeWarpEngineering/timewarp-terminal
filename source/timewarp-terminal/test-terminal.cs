@@ -1,5 +1,18 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Test double implementation of ITerminal capturing output and scripting input.
+// Enables unit testing of REPL applications with simulated user interactions.
+#endregion
+
+#region Design
+// Captures output via StringWriter instances for both stdout and stderr.
+// Queues individual ConsoleKeyInfo for ReadKey — simulates real keystroke-by-keystroke REPL input.
+// Clear() writes "[CLEAR]" marker so tests can verify it was called without losing captured output.
+// IsInteractive defaults to false; SupportsColor defaults to true for color verification.
+// IDisposable cleans up StringReader and StringWriter resources.
+#endregion
+
 /// <summary>
 /// A testable implementation of <see cref="ITerminal"/> that captures all output
 /// and provides scripted input including key sequences for REPL testing.

@@ -142,7 +142,7 @@ public class TerminalStaticWidgetTests
     try
     {
       // Act
-      Terminal.WritePanel("Simple content");
+      Terminal.WritePanel("Simple content", header: null);
 
       // Assert
       testTerminal.Output.ShouldContain("Simple content");

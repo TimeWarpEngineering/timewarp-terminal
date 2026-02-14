@@ -57,7 +57,7 @@ public static partial class AnsiStringUtils
     if (string.IsNullOrEmpty(text))
       return 0;
 
-    return StripAnsiCodes(text).Length;
+    return UnicodeWidth.GetTextWidth(StripAnsiCodes(text));
   }
 
   /// <summary>
@@ -167,7 +167,7 @@ public static partial class AnsiStringUtils
 
         foreach (string word in words)
         {
-          int wordLength = word.Length;
+          int wordLength = UnicodeWidth.GetTextWidth(word);
 
           if (wordLength == 0)
             continue;
@@ -181,9 +181,13 @@ public static partial class AnsiStringUtils
           else if (currentLineWidth == 0)
           {
             // Word is longer than maxWidth, need to break it
-            foreach (char c in word)
+            TextElementEnumerator graphemeEnum = StringInfo.GetTextElementEnumerator(word);
+            while (graphemeEnum.MoveNext())
             {
-              if (currentLineWidth >= maxWidth)
+              string grapheme = graphemeEnum.GetTextElement();
+              int graphemeWidth = UnicodeWidth.GetTextWidth(grapheme);
+
+              if (currentLineWidth + graphemeWidth > maxWidth && currentLineWidth > 0)
               {
                 // Close current line with reset if we have active state
                 if (activeAnsiState.Length > 0)
@@ -196,8 +200,8 @@ public static partial class AnsiStringUtils
                 currentLineWidth = 0;
               }
 
-              currentLine.Append(c);
-              currentLineWidth++;
+              currentLine.Append(grapheme);
+              currentLineWidth += graphemeWidth;
             }
           }
           else
@@ -219,17 +223,21 @@ public static partial class AnsiStringUtils
               // Trim leading space if word starts with space
               string trimmedWord = word.TrimStart();
               currentLine.Append(trimmedWord);
-              currentLineWidth = trimmedWord.Length;
+              currentLineWidth = UnicodeWidth.GetTextWidth(trimmedWord);
             }
             else
             {
               // Word is longer than maxWidth, break it
-              foreach (char c in word)
+              TextElementEnumerator graphemeEnum = StringInfo.GetTextElementEnumerator(word);
+              while (graphemeEnum.MoveNext())
               {
-                if (c == ' ' && currentLineWidth == 0)
+                string grapheme = graphemeEnum.GetTextElement();
+                int graphemeWidth = UnicodeWidth.GetTextWidth(grapheme);
+
+                if (grapheme == " " && currentLineWidth == 0)
                   continue; // Skip leading spaces on new line
 
-                if (currentLineWidth >= maxWidth)
+                if (currentLineWidth + graphemeWidth > maxWidth && currentLineWidth > 0)
                 {
                   if (activeAnsiState.Length > 0)
                     currentLine.Append(AnsiColors.Reset);
@@ -240,8 +248,8 @@ public static partial class AnsiStringUtils
                   currentLineWidth = 0;
                 }
 
-                currentLine.Append(c);
-                currentLineWidth++;
+                currentLine.Append(grapheme);
+                currentLineWidth += graphemeWidth;
               }
             }
           }

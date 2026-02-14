@@ -452,28 +452,78 @@ public sealed class Table
     // Strip ANSI codes to get plain text
     string plainText = AnsiStringUtils.StripAnsiCodes(text);
 
-    if (plainText.Length <= maxWidth)
+    if (UnicodeWidth.GetTextWidth(plainText) <= maxWidth)
     {
       return text; // No truncation needed
     }
 
-    // Simple truncation (doesn't preserve ANSI codes perfectly, but works)
     return mode switch
     {
-      TruncateMode.Start => "..." + plainText[^(maxWidth - 3)..],
+      TruncateMode.Start => "..." + TakeGraphemesFromEnd(plainText, maxWidth - 3),
       TruncateMode.Middle => TruncateMiddle(plainText, maxWidth),
-      _ => plainText[..(maxWidth - 3)] + "..." // TruncateMode.End (default)
+      _ => TakeGraphemesFromStart(plainText, maxWidth - 3) + "..."
     };
   }
 
   private static string TruncateMiddle(string text, int maxWidth)
   {
-    // For middle truncation, show roughly equal parts from start and end
-    // "..." takes 3 chars, so we have (maxWidth - 3) chars to split
-    int availableChars = maxWidth - 3;
-    int startChars = (availableChars + 1) / 2; // Slightly favor start if odd
-    int endChars = availableChars - startChars;
+    int availableWidth = maxWidth - 3;
+    int startWidth = (availableWidth + 1) / 2;
+    int endWidth = availableWidth - startWidth;
 
-    return text[..startChars] + "..." + text[^endChars..];
+    return TakeGraphemesFromStart(text, startWidth) + "..." + TakeGraphemesFromEnd(text, endWidth);
+  }
+
+  private static string TakeGraphemesFromStart(string text, int maxColumns)
+  {
+    StringBuilder sb = new();
+    int width = 0;
+    TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(text);
+    while (enumerator.MoveNext())
+    {
+      string grapheme = enumerator.GetTextElement();
+      int gw = UnicodeWidth.GetTextWidth(grapheme);
+      if (width + gw > maxColumns)
+        break;
+      sb.Append(grapheme);
+      width += gw;
+    }
+
+    return sb.ToString();
+  }
+
+  private static string TakeGraphemesFromEnd(string text, int maxColumns)
+  {
+    // Collect all grapheme clusters, then take from end
+    List<string> graphemes = [];
+    TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(text);
+    while (enumerator.MoveNext())
+      graphemes.Add(enumerator.GetTextElement());
+
+    StringBuilder sb = new();
+    int width = 0;
+    for (int i = graphemes.Count - 1; i >= 0; i--)
+    {
+      int gw = UnicodeWidth.GetTextWidth(graphemes[i]);
+      if (width + gw > maxColumns)
+        break;
+      width += gw;
+    }
+
+    // Now collect from the correct starting position
+    int skipWidth = UnicodeWidth.GetTextWidth(text) - width;
+    int accumulated = 0;
+    sb.Clear();
+    enumerator = StringInfo.GetTextElementEnumerator(text);
+    while (enumerator.MoveNext())
+    {
+      string grapheme = enumerator.GetTextElement();
+      int gw = UnicodeWidth.GetTextWidth(grapheme);
+      accumulated += gw;
+      if (accumulated > skipWidth)
+        sb.Append(grapheme);
+    }
+
+    return sb.ToString();
   }
 }

@@ -1,11 +1,11 @@
 #!/usr/bin/dotnet --
-#:project ../../source/timewarp-terminal/timewarp-terminal.csproj
+#:project ../source/timewarp-terminal/timewarp-terminal.csproj
 
 // Demonstrates the Table widget for rendering columnar data
 using TimeWarp.Terminal;
 
 // Create a terminal for colored output
-ITerminal terminal = new TimeWarpTerminal();
+TimeWarpTerminal terminal = new();
 
 terminal
   .WriteLine("Table Widget Demo")

@@ -263,7 +263,7 @@ public sealed class PanelBuilder : IBuilder<Panel>
   /// </summary>
   /// <param name="content">The content to display inside the panel.</param>
   /// <returns>This builder for method chaining.</returns>
-  public PanelBuilder Content(string content)
+  public PanelBuilder Content(string? content)
   {
     Panel.Content = content;
     return this;

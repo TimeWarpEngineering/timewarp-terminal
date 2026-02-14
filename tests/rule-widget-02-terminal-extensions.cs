@@ -1,5 +1,5 @@
 #!/usr/bin/dotnet --
-#:project ../../source/timewarp-terminal/timewarp-terminal.csproj
+#:project ../source/timewarp-terminal/timewarp-terminal.csproj
 
 // Test Rule widget terminal extension methods
 
@@ -97,12 +97,11 @@ public class RuleTerminalExtensionTests
   {
     // Arrange
     using TestTerminal terminal = new() { WindowWidth = 40 };
-    Rule rule = new()
-    {
-      Title = "Test",
-      Style = LineStyle.Heavy,
-      Color = AnsiColors.Yellow
-    };
+    Rule rule = new RuleBuilder()
+      .Title("Test")
+      .Style(LineStyle.Heavy)
+      .Color(AnsiColors.Yellow)
+      .Build();
 
     // Act
     terminal.WriteRule(rule);
