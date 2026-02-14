@@ -18,58 +18,37 @@ terminal
     .Border(BorderStyle.Rounded))
   .WriteLine();
 
-// ── Miscellaneous Symbols U+2600-U+26FF and Dingbats U+2700-U+27BF ──
+// ── Emoji_Presentation=Yes (width 2 without VS16) ──
 terminal
-  .WriteRule("Misc Symbols + Dingbats")
+  .WriteRule("Default Emoji Presentation")
   .WriteTable(t => t
     .AddColumn("Symbol")
     .AddColumn("Name")
     .AddColumn("Range")
-    .AddRow("☀ Sun", "U+2600", "Misc Symbols")
     .AddRow("⚡ Zap", "U+26A1", "Misc Symbols")
-    .AddRow("♻ Recycle", "U+267B", "Misc Symbols")
     .AddRow("✅ Check", "U+2705", "Dingbats")
     .AddRow("❌ Cross", "U+274C", "Dingbats")
-    .AddRow("✈ Plane", "U+2708", "Dingbats")
+    .AddRow("⭐ Star", "U+2B50", "Misc Sym+Arrows")
+    .AddRow("⬛ Black", "U+2B1B", "Misc Sym+Arrows")
+    .AddRow("☔ Rain", "U+2614", "Misc Symbols")
+    .AddRow("⌚ Watch", "U+231A", "Misc Technical")
+    .AddRow("⏰ Alarm", "U+23F0", "Misc Technical")
+    .AddRow("➕ Plus", "U+2795", "Dingbats")
+    .AddRow("❗ Exclaim", "U+2757", "Dingbats")
     .Border(BorderStyle.Rounded))
   .WriteLine();
 
-// ── Miscellaneous Technical U+2300-U+23FF ──
+// ── Text presentation + VS16 (width 2 only with ️) ──
 terminal
-  .WriteRule("Misc Technical")
+  .WriteRule("Text Presentation + VS16")
   .WriteTable(t => t
-    .AddColumn("Symbol")
+    .AddColumn("With VS16")
     .AddColumn("Name")
-    .AddRow("⌚ Watch", "U+231A")
-    .AddRow("⌛ Hourglass", "U+231B")
-    .AddRow("⏰ Alarm", "U+23F0")
-    .AddRow("⏳ Timer", "U+23F3")
-    .Border(BorderStyle.Rounded))
-  .WriteLine();
-
-// ── Geometric Shapes U+25A0-U+25FF ──
-terminal
-  .WriteRule("Geometric Shapes")
-  .WriteTable(t => t
-    .AddColumn("Symbol")
-    .AddColumn("Name")
-    .AddRow("▶ Play", "U+25B6")
-    .AddRow("◀ Reverse", "U+25C0")
-    .AddRow("▪ Small Square", "U+25AA")
-    .AddRow("▫ White Square", "U+25AB")
-    .Border(BorderStyle.Rounded))
-  .WriteLine();
-
-// ── Misc Symbols and Arrows U+2B00-U+2BFF ──
-terminal
-  .WriteRule("Misc Symbols and Arrows")
-  .WriteTable(t => t
-    .AddColumn("Symbol")
-    .AddColumn("Name")
-    .AddRow("⬛ Black Square", "U+2B1B")
-    .AddRow("⬜ White Square", "U+2B1C")
-    .AddRow("⭐ Star", "U+2B50")
-    .AddRow("⭕ Circle", "U+2B55")
+    .AddRow("☀️ Sun", "U+2600 + U+FE0F")
+    .AddRow("♻️ Recycle", "U+267B + U+FE0F")
+    .AddRow("✈️ Plane", "U+2708 + U+FE0F")
+    .AddRow("▶️ Play", "U+25B6 + U+FE0F")
+    .AddRow("☁️ Cloud", "U+2601 + U+FE0F")
     .Border(BorderStyle.Rounded))
   .WriteLine();
 

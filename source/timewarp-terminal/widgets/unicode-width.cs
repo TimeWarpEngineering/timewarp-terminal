@@ -41,23 +41,34 @@ public static class UnicodeWidth
     if (value is >= 0xE0100 and <= 0xE01EF) // Variation selectors supplement
       return 0;
 
-    // ── Emoji and symbol ranges (width 2 in modern terminals) ──
+    // ── Emoji_Presentation=Yes code points (U+2000-U+2BFF) ──
+    // Source: Unicode 16.0 emoji-data.txt — only code points that render
+    // as width 2 without VS16. Text-presentation characters become width 2
+    // when combined with VS16 as multi-codepoint clusters (handled by GetTextWidth).
+    if (value is 0x231A or 0x231B                       // ⌚⌛
+        or (>= 0x23E9 and <= 0x23EC)                    // ⏩⏪⏫⏬
+        or 0x23F0 or 0x23F3                              // ⏰⏳
+        or 0x25FD or 0x25FE                              // ◽◾
+        or 0x2614 or 0x2615                              // ☔☕
+        or (>= 0x2648 and <= 0x2653)                     // ♈♉♊♋♌♍♎♏♐♑♒♓
+        or 0x267F or 0x2693 or 0x26A1                    // ♿⚓⚡
+        or 0x26AA or 0x26AB                              // ⚪⚫
+        or 0x26BD or 0x26BE                              // ⚽⚾
+        or 0x26C4 or 0x26C5 or 0x26CE                   // ⛄⛅⛎
+        or 0x26D4 or 0x26EA                              // ⛔⛪
+        or 0x26F2 or 0x26F3 or 0x26F5                    // ⛲⛳⛵
+        or 0x26FA or 0x26FD                              // ⛺⛽
+        or 0x2705                                        // ✅
+        or 0x270A or 0x270B                              // ✊✋
+        or 0x2728                                        // ✨
+        or 0x274C or 0x274E                              // ❌❎
+        or (>= 0x2753 and <= 0x2755) or 0x2757           // ❓❔❕❗
+        or (>= 0x2795 and <= 0x2797)                     // ➕➖➗
+        or 0x27B0 or 0x27BF                              // ➰➿
+        or 0x2B1B or 0x2B1C                              // ⬛⬜
+        or 0x2B50 or 0x2B55)                             // ⭐⭕
+      return 2;
 
-    // Miscellaneous Technical (⌚⌛⏰⏳⏩ etc.)
-    if (value is >= 0x2300 and <= 0x23FF)
-      return 2;
-    // Geometric Shapes (▶◀▪▫ etc.)
-    if (value is >= 0x25A0 and <= 0x25FF)
-      return 2;
-    // Miscellaneous Symbols (☀☁⚡♻ etc.)
-    if (value is >= 0x2600 and <= 0x26FF)
-      return 2;
-    // Dingbats (✅❌✂✈ etc.)
-    if (value is >= 0x2700 and <= 0x27BF)
-      return 2;
-    // Miscellaneous Symbols and Arrows (⬛⬜⭐⭕⬆⬇ etc.)
-    if (value is >= 0x2B00 and <= 0x2BFF)
-      return 2;
     // Wide angle brackets
     if (value is >= 0x2329 and <= 0x232A)
       return 2;

@@ -26,12 +26,21 @@ Added `UnicodeWidth` utility class that calculates terminal display width accoun
 
 ### Wide character ranges covered (width 2)
 
-**Emoji and symbols:**
-- U+2300-U+23FF — Miscellaneous Technical (⌚⌛⏰⏳)
-- U+25A0-U+25FF — Geometric Shapes (▶◀▪▫)
-- U+2600-U+26FF — Miscellaneous Symbols (☀☁⚡♻)
-- U+2700-U+27BF — Dingbats (✅❌✂✈)
-- U+2B00-U+2BFF — Miscellaneous Symbols and Arrows (⬛⬜⭐⭕)
+**Emoji_Presentation=Yes (BMP, from Unicode 16.0 emoji-data.txt):**
+- U+231A-231B ⌚⌛, U+23E9-23EC ⏩⏪⏫⏬, U+23F0 ⏰, U+23F3 ⏳
+- U+25FD-25FE ◽◾
+- U+2614-2615 ☔☕, U+2648-2653 ♈-♓, U+267F ♿, U+2693 ⚓, U+26A1 ⚡
+- U+26AA-26AB ⚪⚫, U+26BD-26BE ⚽⚾, U+26C4-26C5 ⛄⛅, U+26CE ⛎
+- U+26D4 ⛔, U+26EA ⛪, U+26F2-26F3 ⛲⛳, U+26F5 ⛵, U+26FA ⛺, U+26FD ⛽
+- U+2705 ✅, U+270A-270B ✊✋, U+2728 ✨, U+274C ❌, U+274E ❎
+- U+2753-2755 ❓❔❕, U+2757 ❗, U+2795-2797 ➕➖➗, U+27B0 ➰, U+27BF ➿
+- U+2B1B-2B1C ⬛⬜, U+2B50 ⭐, U+2B55 ⭕
+
+**Text-presentation characters (☀♻✈▶◀▪▫ etc.)** are width 1 as single
+runes. They become width 2 when combined with VS16 (U+FE0F) as
+multi-codepoint grapheme clusters, handled automatically by GetTextWidth.
+
+**Emoji blocks (SMP):**
 - U+1F000-U+1FAFF, U+1FC00-U+1FFFF — Emoji blocks
 - U+1F1E0-U+1F1FF — Regional indicator symbols (flags)
 
