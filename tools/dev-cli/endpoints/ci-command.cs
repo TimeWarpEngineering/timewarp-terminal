@@ -195,7 +195,22 @@ internal sealed class CiCommand : ICommand<Unit>
       if (!string.IsNullOrEmpty(apiKey))
       {
         Terminal.WriteLine("\nPushing packages to NuGet...");
-        Terminal.WriteLine("  (Push not yet implemented - manual push required)");
+        string[] packages = Directory.GetFiles(artifactsDir, "*.nupkg");
+        foreach (string package in packages)
+        {
+          string packageName = Path.GetFileName(package);
+          Terminal.WriteLine($"  Pushing {packageName}...");
+
+          exitCode = await DotNet.NuGet()
+            .Push(package)
+            .WithSource("https://api.nuget.org/v3/index.json")
+            .WithApiKey(apiKey)
+            .RunAsync(ct);
+
+          if (exitCode != 0) throw new InvalidOperationException($"NuGet push failed: {packageName}");
+        }
+
+        Terminal.WriteLine("✓ Packages pushed to NuGet.org");
       }
     }
   }
