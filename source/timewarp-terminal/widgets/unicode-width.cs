@@ -83,6 +83,19 @@ public static class UnicodeWidth
     if (value is >= 0x2329 and <= 0x232A)
       return 2;
 
+    // Miscellaneous Symbols and Dingbats (✅❌⚡⭐☀⚽ etc.)
+    // Most render as width 2 in modern terminals
+    if (value is >= 0x2600 and <= 0x27BF)
+      return 2;
+
+    // Miscellaneous Technical emoji (⌚⌛⏰⏳ etc.)
+    if (value is >= 0x2300 and <= 0x23FF)
+      return 2;
+
+    // Geometric Shapes with emoji presentation (▶◀ etc.)
+    if (value is >= 0x25A0 and <= 0x25FF)
+      return 2;
+
     // Emoji blocks
     if (value is >= 0x1F000 and <= 0x1FAFF)
       return 2;
