@@ -56,14 +56,6 @@ public sealed class Table
   public bool Expand { get; set; }
 
   /// <summary>
-  /// Gets or sets a value indicating whether the table should shrink columns to fit the terminal width.
-  /// When true, columns are proportionally reduced if the table would exceed terminal width.
-  /// Wider columns shrink more aggressively than narrower ones.
-  /// Defaults to <c>true</c>.
-  /// </summary>
-  public bool Shrink { get; set; } = true;
-
-  /// <summary>
   /// Gets or sets the ANSI color code for the border.
   /// If null, uses the terminal default color.
   /// </summary>
@@ -118,6 +110,18 @@ public sealed class Table
       ColumnsList.Add(new TableColumn(header));
     }
 
+    return this;
+  }
+
+  /// <summary>
+  /// Adds multiple pre-configured columns to the table.
+  /// </summary>
+  /// <param name="columns">The columns to add.</param>
+  /// <returns>This table for method chaining.</returns>
+  internal Table AddColumns(params TableColumn[] columns)
+  {
+    ArgumentNullException.ThrowIfNull(columns);
+    ColumnsList.AddRange(columns);
     return this;
   }
 
@@ -230,7 +234,7 @@ public sealed class Table
         // Not enough space — shrink fixed columns first, then grow columns
         int excessWidth = overhead + fixedContentWidth - terminalWidth;
 
-        if (excessWidth > 0 && Shrink)
+        if (excessWidth > 0)
         {
           int[] minWidths = new int[ColumnsList.Count];
           for (int i = 0; i < ColumnsList.Count; i++)
@@ -262,11 +266,11 @@ public sealed class Table
           }
         }
 
-        // Grow columns get minimum width (MinWidth or 4)
+        // Grow columns get zero width — fixed columns already consumed all available space
         for (int i = 0; i < ColumnsList.Count; i++)
         {
           if (ColumnsList[i].Grow)
-            widths[i] = ColumnsList[i].MinWidth ?? 4;
+            widths[i] = 0;
         }
       }
 
@@ -292,8 +296,8 @@ public sealed class Table
         }
       }
     }
-    // If Shrink is enabled and table exceeds terminal width, shrink columns
-    else if (Shrink && totalWidth > terminalWidth)
+    // If table exceeds terminal width, shrink columns to fit
+    else if (totalWidth > terminalWidth)
     {
       int excessWidth = totalWidth - terminalWidth;
       int availableContentWidth = terminalWidth - overhead;
@@ -308,12 +312,16 @@ public sealed class Table
         }
 
         // Calculate how much each column can shrink (width above minimum)
+        // Grow columns should NOT shrink - they keep their natural width
         int[] shrinkableAmounts = new int[ColumnsList.Count];
         int totalShrinkable = 0;
         for (int i = 0; i < ColumnsList.Count; i++)
         {
-          shrinkableAmounts[i] = Math.Max(0, widths[i] - minWidths[i]);
-          totalShrinkable += shrinkableAmounts[i];
+          if (!ColumnsList[i].Grow)
+          {
+            shrinkableAmounts[i] = Math.Max(0, widths[i] - minWidths[i]);
+            totalShrinkable += shrinkableAmounts[i];
+          }
         }
 
         if (totalShrinkable > 0)
@@ -418,12 +426,22 @@ public sealed class Table
 
     for (int i = 0; i < columnWidths.Length; i++)
     {
+      if (columnWidths[i] == 0) continue;
+
       // Each cell has padding (1 space on each side) plus content width
       sb.Append(horizontal, columnWidths[i] + 2);
 
       if (i < columnWidths.Length - 1)
       {
-        sb.Append(junction);
+        // Only add junction if the next non-zero column exists
+        bool hasNextNonZero = false;
+        for (int j = i + 1; j < columnWidths.Length; j++)
+        {
+          if (columnWidths[j] > 0) { hasNextNonZero = true; break; }
+        }
+
+        if (hasNextNonZero)
+          sb.Append(junction);
       }
     }
 
@@ -445,6 +463,8 @@ public sealed class Table
 
     for (int i = 0; i < columnWidths.Length; i++)
     {
+      if (columnWidths[i] == 0) continue;
+
       string cellValue = i < cells.Length ? cells[i] ?? "" : "";
       TableColumn column = ColumnsList[i];
 

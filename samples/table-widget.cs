@@ -147,25 +147,13 @@ terminal
     .Border(BorderStyle.Rounded))
   .WriteLine()
   .WriteLine("Note: Path column uses TruncateMode.Start to show the end of paths.")
-  .WriteLine("Use .Shrink(false) to disable shrinking.")
   .WriteLine();
 
-// Example 11: Disable shrinking (allow overflow)
-terminal
-  .WriteLine("11. Shrink Disabled (allows horizontal overflow)")
-  .WriteLine("------------------------------------------------")
-  .WriteTable(t => t
-    .AddColumn("Path")
-    .AddRow("/home/user/worktrees/github.com/TimeWarpEngineering/timewarp-terminal/very-long-feature-branch-name")
-    .Border(BorderStyle.Rounded)
-    .Shrink(false))
-  .WriteLine();
-
-// Example 12: TruncateMode options
+// Example 11: TruncateMode options
 string longText = "This-is-a-very-long-text-that-will-be-truncated-differently";
 
 terminal
-  .WriteLine("12. TruncateMode Options")
+  .WriteLine("11. TruncateMode Options")
   .WriteLine("------------------------")
   .WriteTable(t => t
     .AddColumn(new TableColumn("Mode") { MaxWidth = 8 })
@@ -180,9 +168,9 @@ terminal
   .WriteLine("TruncateMode.Middle: 'long...text'   - Shows both ends")
   .WriteLine();
 
-// Example 13: Fluent chaining across Write methods
+// Example 12: Fluent chaining across Write methods
 terminal
-  .WriteLine("13. Fluent Chaining")
+  .WriteLine("12. Fluent Chaining")
   .WriteLine("-------------------")
   .WriteRule("Build Output")
   .WriteTable(t => t
@@ -195,12 +183,15 @@ terminal
   .WriteLine("Done!")
   .WriteLine();
 
-// Example 14: Grow column (flexbox-style)
+// Example 13: Grow column (flexbox-style)
+// Like CSS flex-grow: fixed columns size to their content first,
+// then the Grow column fills whatever terminal width remains.
+// If fixed columns leave no room, the Grow column gets zero width
+// and fixed columns shrink proportionally instead.
 terminal
-  .WriteLine("14. Grow Column (fills remaining terminal width)")
-  .WriteLine("------------------------------------------------");
+  .WriteLine("13. Grow Column (flex-grow semantics)")
+  .WriteLine("--------------------------------------");
 
-// Define columns once, reuse with different data
 TableColumn[] statusColumns =
 [
   new("ID"),
@@ -209,25 +200,28 @@ TableColumn[] statusColumns =
 ];
 
 terminal
-  .WriteLine("Short IDs and statuses — Description fills the rest:")
+  .WriteLine("Fixed columns narrow — Description gets all remaining width:")
   .WriteTable(t => t
-    .AddColumn(statusColumns[0])
-    .AddColumn(statusColumns[1])
-    .AddColumn(statusColumns[2])
-    .AddRow("1", "Active".Green(), "Short description")
-    .AddRow("2", "Pending".Yellow(), "Another description that is a bit longer than the first")
-    .AddRow("3", "Failed".Red(), "Description grows to fill all remaining terminal width")
+    .AddColumns(statusColumns)
+    .AddRow("1", "OK".Green(), "Short")
+    .AddRow("2", "OK".Green(), "A bit longer")
+    .AddRow("3", "OK".Green(), "Even longer than that")
     .Border(BorderStyle.Rounded))
   .WriteLine()
-  .WriteLine("Wide IDs and long statuses — fixed columns expand, Description shrinks to compensate:")
+  .WriteLine("Fixed columns wide — less space left, Description is squeezed:")
   .WriteTable(t => t
-    .AddColumn(statusColumns[0])
-    .AddColumn(statusColumns[1])
-    .AddColumn(statusColumns[2])
-    .AddRow("10001", "In Progress".Cyan(), "Short desc")
-    .AddRow("99999", "Waiting For Review".Yellow(), "Another short desc")
-    .AddRow("42042", "Deployment Failed".Red(), "And one more")
+    .AddColumns(statusColumns)
+    .AddRow("10001", "Waiting For Review".Yellow(), "Short desc")
+    .AddRow("99999", "Deployment Failed".Red(), "Another short desc")
+    .AddRow("42042", "In Progress".Cyan(), "And one more")
     .Border(BorderStyle.Rounded))
   .WriteLine()
-  .WriteLine("Note: Fixed columns (ID, Status) size to their content; Description fills the rest.")
+  .WriteLine("Fixed columns exceed terminal — Grow column gets zero, fixed columns shrink:")
+  .WriteTable(t => t
+    .AddColumns(statusColumns)
+    .AddRow("feature/Cramer-2025-12-22-very-long-branch-name", "Waiting For Peer Review And Approval From The Full Teams".Yellow(), "irrelevant")
+    .AddRow("feature/another-extremely-long-branch-name-here", "Deployment Failed And Needs Immediate Attention Right Now".Red(), "irrelevant")
+    .Border(BorderStyle.Rounded))
+  .WriteLine()
+  .WriteLine("Note: ID and Status are fixed (size to content). Description is Grow (fills the rest).")
   .WriteLine("Demo complete!");
