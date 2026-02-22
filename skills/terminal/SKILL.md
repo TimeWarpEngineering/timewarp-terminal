@@ -220,7 +220,7 @@ Widget constructors are internal. Always use builders.
 
 **PanelBuilder:** `.Header()`, `.Content(string?)`, `.Border()`, `.BorderColor()`, `.Padding()`, `.PaddingHorizontal()`, `.PaddingVertical()`, `.Width()`, `.WordWrap()`, `.Build()`
 
-**TableBuilder:** `.AddColumn(name)`, `.AddColumn(name, alignment)`, `.AddColumn(TableColumn)`, `.AddColumns(params)`, `.AddRow(params)`, `.Border()`, `.BorderColor()`, `.HideHeaders()`, `.ShowRowSeparators()`, `.Expand()`, `.Shrink()`, `.Build()`
+**TableBuilder:** `.AddColumn(name)`, `.AddColumn(name, alignment)`, `.AddColumn(TableColumn)`, `.AddColumns(params string[])`, `.AddColumns(params TableColumn[])`, `.AddRow(params)`, `.Border()`, `.BorderColor()`, `.HideHeaders()`, `.ShowRowSeparators()`, `.Expand()`, `.Build()`
 
 **RuleBuilder:** `.Title()`, `.Style()`, `.Color()`, `.Width()`, `.Build()`
 
@@ -325,12 +325,11 @@ terminal.WriteTable(t => t
   .AddRow("1", "This is a long description that would normally be truncated heavily"));
 ```
 
-### Table Shrink/Expand/Grow Behavior
+### Table Expand/Grow Behavior
 
-- **Shrink** (default: `true`): Proportionally reduces column widths to fit terminal. Wider columns shrink more aggressively. Respects `MinWidth` per column.
+- **Shrink** (always on): Proportionally reduces column widths to fit terminal. Wider columns shrink more aggressively. Respects `MinWidth` per column.
 - **Expand**: Distributes extra terminal width evenly across all columns.
 - **Grow** (column-level): When `Grow = true` on a column, it expands to fill remaining terminal width after fixed columns are allocated. Multiple grow columns share remaining space evenly. Takes precedence over Expand.
-- Disable shrinking with builder `.Shrink(false)` to allow horizontal overflow.
 
 **BorderStyle:** `Rounded`, `Square`, `Doubled`, `Heavy`, `None`
 
