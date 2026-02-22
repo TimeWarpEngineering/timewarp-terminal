@@ -166,6 +166,37 @@ public class TableWidgetGrowTests
 
     await Task.CompletedTask;
   }
+
+  public static async Task Should_keep_grow_column_natural_width_when_no_remaining_space()
+  {
+    // Bug: When terminal is narrower than fixed columns + grow column natural width,
+    // Grow columns were being forced to MinWidth instead of keeping natural width.
+    // This caused branch names like "Cramer-2025-12-22-dev" to truncate to "C..."
+    // when they should display their full content.
+    //
+    // Arrange - create a table where fixed columns are wide enough to consume most space
+    // leaving no room for grow column to expand, but grow column should still show
+    // its natural content width (not be forced to MinWidth)
+    TableColumn growColumn = new("Branch") { Grow = true };
+    Table table = new TableBuilder()
+      .AddColumn(new TableColumn("Repository") { TruncateMode = TruncateMode.Start })
+      .AddColumn(growColumn)
+      .AddColumn(new TableColumn("Path") { TruncateMode = TruncateMode.Start })
+      .AddRow("timewarp-terminal", "Cramer-2025-12-22-dev", "/very/long/path/here")
+      .Border(BorderStyle.Rounded)
+      // Disable Shrink so Grow columns keep their natural width
+      .Shrink(false)
+      .Build();
+
+    // Act - render to 100 chars - wide enough that content should be visible
+    string[] lines = table.Render(100);
+
+    // Assert - Branch column (Grow) should show full content, not be truncated
+    string dataRow = lines[3]; // Data row
+    dataRow.ShouldContain("Cramer-2025-12-22-dev"); // Full branch name should be visible
+
+    await Task.CompletedTask;
+  }
 }
 
 } // namespace TimeWarp.Terminal.Tests.Core.TableWidgetGrow

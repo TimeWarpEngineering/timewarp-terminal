@@ -262,12 +262,8 @@ public sealed class Table
           }
         }
 
-        // Grow columns get minimum width (MinWidth or 4)
-        for (int i = 0; i < ColumnsList.Count; i++)
-        {
-          if (ColumnsList[i].Grow)
-            widths[i] = ColumnsList[i].MinWidth ?? 4;
-        }
+        // Grow columns keep their natural width - they only shrink if Shrink is enabled
+        // and there's actual overflow (handled by standard shrink logic below)
       }
 
       return widths;
@@ -308,12 +304,16 @@ public sealed class Table
         }
 
         // Calculate how much each column can shrink (width above minimum)
+        // Grow columns should NOT shrink - they keep their natural width
         int[] shrinkableAmounts = new int[ColumnsList.Count];
         int totalShrinkable = 0;
         for (int i = 0; i < ColumnsList.Count; i++)
         {
-          shrinkableAmounts[i] = Math.Max(0, widths[i] - minWidths[i]);
-          totalShrinkable += shrinkableAmounts[i];
+          if (!ColumnsList[i].Grow)
+          {
+            shrinkableAmounts[i] = Math.Max(0, widths[i] - minWidths[i]);
+            totalShrinkable += shrinkableAmounts[i];
+          }
         }
 
         if (totalShrinkable > 0)
