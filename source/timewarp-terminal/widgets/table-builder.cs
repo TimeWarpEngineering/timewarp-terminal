@@ -70,6 +70,17 @@ public sealed class TableBuilder : IBuilder<Table>
   }
 
   /// <summary>
+  /// Adds multiple pre-configured columns to the table.
+  /// </summary>
+  /// <param name="columns">The columns to add.</param>
+  /// <returns>This builder for method chaining.</returns>
+  public TableBuilder AddColumns(params TableColumn[] columns)
+  {
+    Table.AddColumns(columns);
+    return this;
+  }
+
+  /// <summary>
   /// Adds a row of data to the table.
   /// </summary>
   /// <param name="cells">The cell values for the row.</param>
@@ -133,18 +144,6 @@ public sealed class TableBuilder : IBuilder<Table>
   }
 
   /// <summary>
-  /// Sets whether the table should shrink columns to fit the terminal width.
-  /// When true, columns are proportionally reduced if the table would exceed terminal width.
-  /// Defaults to <c>true</c>.
-  /// </summary>
-  /// <param name="value">True to enable shrinking, false to allow overflow.</param>
-  /// <returns>This builder for method chaining.</returns>
-  public TableBuilder Shrink(bool value = true)
-  {
-    Table.Shrink = value;
-    return this;
-  }
-
   /// <summary>
   /// Builds the configured <see cref="Table"/> instance.
   /// </summary>

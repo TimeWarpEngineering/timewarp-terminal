@@ -83,26 +83,6 @@ public class TableWidgetShrinkTests
     await Task.CompletedTask;
   }
 
-  public static async Task Should_not_shrink_when_shrink_is_false()
-  {
-    // Arrange
-    Table table = new TableBuilder()
-      .AddColumn("Name")
-      .AddColumn("Very Long Path That Exceeds Normal Width")
-      .AddRow("repo", "/home/user/worktrees/github.com/Organization/project-name/feature-branch")
-      .Shrink(false)
-      .Build();
-
-    // Act - render to narrow terminal (60 chars)
-    string[] lines = table.Render(60);
-
-    // Assert - table should exceed terminal width
-    int topLineWidth = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(lines[0]);
-    topLineWidth.ShouldBeGreaterThan(60);
-
-    await Task.CompletedTask;
-  }
-
   public static async Task Should_use_default_min_width_of_4()
   {
     // Arrange - table with many columns that would need extreme shrinking
@@ -223,42 +203,6 @@ public class TableWidgetShrinkTests
     // Assert - borderless tables should also shrink
     int lineWidth = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(lines[0]);
     lineWidth.ShouldBeLessThanOrEqualTo(40);
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_work_with_builder_shrink_method()
-  {
-    // Arrange & Act
-    using TestTerminal terminal = new() { WindowWidth = 40 };
-
-    terminal.WriteTable(t => t
-      .AddColumn("Repository")
-      .AddColumn("Path")
-      .AddRow("nuru", "/home/user/worktrees/github.com/TimeWarpEngineering/timewarp-nuru")
-      .Shrink());
-
-    // Assert
-    terminal.Output.ShouldNotBeNullOrEmpty();
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_disable_shrink_with_builder()
-  {
-    // Arrange
-    Table table = new TableBuilder()
-      .AddColumn("Long Column Header")
-      .AddRow("Content that is very long and would normally be truncated")
-      .Shrink(false)
-      .Build();
-
-    // Act
-    string[] lines = table.Render(30);
-
-    // Assert - should overflow
-    int topLineWidth = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(lines[0]);
-    topLineWidth.ShouldBeGreaterThan(30);
 
     await Task.CompletedTask;
   }

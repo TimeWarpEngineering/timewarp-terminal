@@ -184,8 +184,6 @@ public class TableWidgetGrowTests
       .AddColumn(new TableColumn("Path") { TruncateMode = TruncateMode.Start })
       .AddRow("timewarp-terminal", "Cramer-2025-12-22-dev", "/very/long/path/here")
       .Border(BorderStyle.Rounded)
-      // Disable Shrink so Grow columns keep their natural width
-      .Shrink(false)
       .Build();
 
     // Act - render to 100 chars - wide enough that content should be visible
