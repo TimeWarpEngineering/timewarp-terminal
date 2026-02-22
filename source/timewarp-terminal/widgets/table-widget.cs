@@ -193,6 +193,86 @@ public sealed class Table
       ? 2 + (ColumnsList.Count - 1) + (2 * ColumnsList.Count)
       : (ColumnsList.Count - 1) * 2; // Borderless: just column separators
 
+    // Separate grow columns from fixed columns
+    bool hasGrowColumns = ColumnsList.Any(c => c.Grow);
+
+    if (hasGrowColumns)
+    {
+      // Allocate fixed columns at natural width, distribute remainder to grow columns
+      int fixedContentWidth = 0;
+      for (int i = 0; i < ColumnsList.Count; i++)
+      {
+        if (!ColumnsList[i].Grow)
+          fixedContentWidth += widths[i];
+      }
+
+      int availableForGrow = terminalWidth - overhead - fixedContentWidth;
+      int growCount = ColumnsList.Count(c => c.Grow);
+
+      if (availableForGrow > 0)
+      {
+        // Distribute remaining space evenly among grow columns
+        int perGrowColumn = availableForGrow / growCount;
+        int remainder = availableForGrow % growCount;
+        int growIndex = 0;
+
+        for (int i = 0; i < ColumnsList.Count; i++)
+        {
+          if (ColumnsList[i].Grow)
+          {
+            widths[i] = perGrowColumn + (growIndex < remainder ? 1 : 0);
+            growIndex++;
+          }
+        }
+      }
+      else
+      {
+        // Not enough space — shrink fixed columns first, then grow columns
+        int excessWidth = overhead + fixedContentWidth - terminalWidth;
+
+        if (excessWidth > 0 && Shrink)
+        {
+          int[] minWidths = new int[ColumnsList.Count];
+          for (int i = 0; i < ColumnsList.Count; i++)
+            minWidths[i] = ColumnsList[i].MinWidth ?? 4;
+
+          // Shrink fixed columns proportionally first
+          int[] shrinkableAmounts = new int[ColumnsList.Count];
+          int totalShrinkable = 0;
+          for (int i = 0; i < ColumnsList.Count; i++)
+          {
+            if (!ColumnsList[i].Grow)
+            {
+              shrinkableAmounts[i] = Math.Max(0, widths[i] - minWidths[i]);
+              totalShrinkable += shrinkableAmounts[i];
+            }
+          }
+
+          int remainingExcess = Math.Min(excessWidth, totalShrinkable);
+          for (int i = 0; i < ColumnsList.Count; i++)
+          {
+            if (!ColumnsList[i].Grow && shrinkableAmounts[i] > 0)
+            {
+              int shrinkAmount = (int)Math.Ceiling((double)shrinkableAmounts[i] / totalShrinkable * remainingExcess);
+              shrinkAmount = Math.Min(shrinkAmount, shrinkableAmounts[i]);
+              widths[i] -= shrinkAmount;
+              totalShrinkable -= shrinkableAmounts[i];
+              remainingExcess -= shrinkAmount;
+            }
+          }
+        }
+
+        // Grow columns get minimum width (MinWidth or 4)
+        for (int i = 0; i < ColumnsList.Count; i++)
+        {
+          if (ColumnsList[i].Grow)
+            widths[i] = ColumnsList[i].MinWidth ?? 4;
+        }
+      }
+
+      return widths;
+    }
+
     int contentWidth = widths.Sum();
     int totalWidth = overhead + contentWidth;
 

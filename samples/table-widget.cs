@@ -193,5 +193,41 @@ terminal
     .AddRow("E2E", "FAILED".Red()))
   .WriteRule()
   .WriteLine("Done!")
+  .WriteLine();
+
+// Example 14: Grow column (flexbox-style)
+terminal
+  .WriteLine("14. Grow Column (fills remaining terminal width)")
+  .WriteLine("------------------------------------------------");
+
+// Define columns once, reuse with different data
+TableColumn[] statusColumns =
+[
+  new("ID"),
+  new("Status"),
+  new TableColumn("Description") { Grow = true }
+];
+
+terminal
+  .WriteLine("Short IDs and statuses — Description fills the rest:")
+  .WriteTable(t => t
+    .AddColumn(statusColumns[0])
+    .AddColumn(statusColumns[1])
+    .AddColumn(statusColumns[2])
+    .AddRow("1", "Active".Green(), "Short description")
+    .AddRow("2", "Pending".Yellow(), "Another description that is a bit longer than the first")
+    .AddRow("3", "Failed".Red(), "Description grows to fill all remaining terminal width")
+    .Border(BorderStyle.Rounded))
   .WriteLine()
+  .WriteLine("Wide IDs and long statuses — fixed columns expand, Description shrinks to compensate:")
+  .WriteTable(t => t
+    .AddColumn(statusColumns[0])
+    .AddColumn(statusColumns[1])
+    .AddColumn(statusColumns[2])
+    .AddRow("10001", "In Progress".Cyan(), "Short desc")
+    .AddRow("99999", "Waiting For Review".Yellow(), "Another short desc")
+    .AddRow("42042", "Deployment Failed".Red(), "And one more")
+    .Border(BorderStyle.Rounded))
+  .WriteLine()
+  .WriteLine("Note: Fixed columns (ID, Status) size to their content; Description fills the rest.")
   .WriteLine("Demo complete!");
