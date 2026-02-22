@@ -100,4 +100,16 @@ public sealed class TableColumn
   /// </code>
   /// </example>
   public TruncateMode TruncateMode { get; set; } = TruncateMode.End;
+
+  /// <summary>
+  /// Gets or sets whether this column should grow to fill remaining terminal width.
+  /// Multiple growing columns share remaining space evenly.
+  /// Defaults to <c>false</c>.
+  /// </summary>
+  /// <remarks>
+  /// Growing columns receive space after fixed columns (Grow = false) have been allocated.
+  /// If the table overflows even after shrinking fixed columns to their MinWidth,
+  /// growing columns also shrink proportionally.
+  /// </remarks>
+  public bool Grow { get; set; }
 }
