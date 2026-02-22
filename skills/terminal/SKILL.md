@@ -255,6 +255,7 @@ terminal.WritePanel(panel);
 | `MaxWidth` | `int?` | `null` | Content exceeding this is truncated with ellipsis |
 | `TruncateMode` | `TruncateMode` | `End` | Where to place ellipsis when truncating |
 | `HeaderColor` | `string?` | `null` | ANSI color code for header text |
+| `Grow` | `bool` | `false` | When true, column expands to fill remaining terminal width after fixed columns are allocated. Multiple grow columns share remaining space evenly. |
 
 ### TruncateMode (Ellipsis Placement)
 
@@ -292,6 +293,29 @@ terminal.WriteTable(t => t
 // Path column shows: "...timewarp-nuru/feature-branch-name"
 ```
 
+#### Example: Grow column for flexbox-style layouts
+
+Grow columns expand to fill remaining terminal width after fixed columns are allocated. Multiple grow columns share remaining space evenly.
+
+```csharp
+// Single grow column fills remaining space
+terminal.WriteTable(t => t
+  .AddColumn("ID")
+  .AddColumn(new TableColumn("Description") { Grow = true })
+  .AddColumn("Status")
+  .AddRow("1", "This description expands to fill available space", "Active")
+  .AddRow("2", "Another long description that grows", "Pending")
+  .Border(BorderStyle.Rounded));
+
+// Multiple grow columns share remaining space evenly
+terminal.WriteTable(t => t
+  .AddColumn("ID")
+  .AddColumn(new TableColumn("Left") { Grow = true })
+  .AddColumn(new TableColumn("Right") { Grow = true })
+  .AddRow("1", "Left side content", "Right side content")
+  .Border(BorderStyle.Rounded));
+```
+
 #### Example: Column with MinWidth constraint
 
 ```csharp
@@ -301,10 +325,11 @@ terminal.WriteTable(t => t
   .AddRow("1", "This is a long description that would normally be truncated heavily"));
 ```
 
-### Table Shrink/Expand Behavior
+### Table Shrink/Expand/Grow Behavior
 
 - **Shrink** (default: `true`): Proportionally reduces column widths to fit terminal. Wider columns shrink more aggressively. Respects `MinWidth` per column.
-- **Expand**: Distributes extra terminal width evenly across columns.
+- **Expand**: Distributes extra terminal width evenly across all columns.
+- **Grow** (column-level): When `Grow = true` on a column, it expands to fill remaining terminal width after fixed columns are allocated. Multiple grow columns share remaining space evenly. Takes precedence over Expand.
 - Disable shrinking with builder `.Shrink(false)` to allow horizontal overflow.
 
 **BorderStyle:** `Rounded`, `Square`, `Doubled`, `Heavy`, `None`
