@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// CI COMMAND
+// WORKFLOW COMMAND
 // ═══════════════════════════════════════════════════════════════════════════════
 // Orchestrates the full CI/CD pipeline.
 // For PR: clean -> build -> verify-samples -> test
@@ -10,13 +10,13 @@ namespace DevCli;
 /// <summary>
 /// Run full CI/CD pipeline
 /// </summary>
-[NuruRoute("ci", Description = "Run full CI/CD pipeline")]
-internal sealed class CiCommand : ICommand<Unit>
+[NuruRoute("workflow", Description = "Run full CI/CD pipeline")]
+internal sealed class WorkflowCommand : ICommand<Unit>
 {
   [Option("api-key", Description = "NuGet API key for publishing (from OIDC Trusted Publishing)")]
   public string? ApiKey { get; set; }
 
-  internal sealed class Handler : ICommandHandler<CiCommand, Unit>
+  internal sealed class Handler : ICommandHandler<WorkflowCommand, Unit>
   {
     private readonly ITerminal Terminal;
 
@@ -25,7 +25,7 @@ internal sealed class CiCommand : ICommand<Unit>
       Terminal = terminal;
     }
 
-    public async ValueTask<Unit> Handle(CiCommand command, CancellationToken ct)
+    public async ValueTask<Unit> Handle(WorkflowCommand command, CancellationToken ct)
     {
       // Auto-detect from GitHub Actions environment
       string? eventName = Environment.GetEnvironmentVariable("GITHUB_EVENT_NAME");
