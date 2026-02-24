@@ -74,6 +74,16 @@ terminal
     .Padding(2, 1))
   .WriteLine();
 
+// 7b. Hyperlink inside a table row
+terminal
+  .WriteLine("7b. Hyperlink in a table row:")
+  .WriteLine()
+  .WriteTable(table => table
+    .AddColumn("Name")
+    .AddColumn("Link")
+    .AddRow("TimeWarp", "Website".Link("https://timewarp.software").Cyan()))
+  .WriteLine();
+
 // 8. Conditional hyperlinks
 terminal.WriteLine("8. Graceful degradation:");
 if (terminal.SupportsHyperlinks)
