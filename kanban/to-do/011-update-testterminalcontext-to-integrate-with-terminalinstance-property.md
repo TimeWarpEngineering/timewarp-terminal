@@ -16,27 +16,50 @@ Update the existing `TestTerminalContext` to provide seamless integration with t
 
 ## Notes
 
-Current test pattern:
+### Current Status (2026-03-19)
+
+**What exists:**
+- `TestTerminalContext` class in `source/timewarp-terminal/test-terminal-context.cs`
+  - Uses `AsyncLocal<TestTerminal?>` for test isolation
+  - Has `Current` property and `Resolve()` methods
+  - **NOT integrated with `Terminal.Instance`**
+- `Terminal` static class in `source/timewarp-terminal/terminal-static.cs`
+  - Has `Instance` property that can be set to any `ITerminal`
+  - **Does NOT check `TestTerminalContext.Current`**
+
+**Current test pattern (working):**
+```csharp
+ITerminal original = Terminal.Instance;
+using TestTerminal testTerminal = new();
+try
+{
+  Terminal.Instance = testTerminal;
+  // test code
+}
+finally
+{
+  Terminal.Instance = original;
+}
+```
+
+**Proposed pattern (cleaner):**
 ```csharp
 using TestTerminal terminal = new();
 TestTerminalContext.Current = terminal;
-await MyApp.RunAsync();
-Assert.Contains("expected output", terminal.Output);
+// Terminal.Instance automatically set
+// Terminal.WriteLine routes to testTerminal
+// Automatic restoration on dispose
 ```
 
-New test pattern with Terminal static API:
-```csharp
-using TestTerminal terminal = new();
-TestTerminalContext.Current = terminal;
+### Why This Task
 
-// Terminal static methods now route to test terminal
-Terminal.WriteLine("Hello");
-Assert.Contains("Hello", terminal.Output);
+The integration would provide:
+1. **Cleaner test code** - No manual try/finally blocks
+2. **Automatic restoration** - `Terminal.Instance` restored when context disposed
+3. **AsyncLocal isolation** - Each async context gets its own terminal
+4. **Backward compatibility** - Existing pattern still works
 
-// Or directly use Terminal.Instance
-Terminal.Instance = terminal;
-Terminal.WriteLine("Direct");
-Assert.Contains("Direct", terminal.Output);
-```
+### Files to Modify
 
-This task ensures backward compatibility while adding support for the new static API.
+- `source/timewarp-terminal/test-terminal-context.cs` - Add integration logic
+- `tests/*.cs` - Optionally update to use new pattern (low priority)
