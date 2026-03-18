@@ -332,10 +332,19 @@ public sealed class TestTerminal : ITerminal, IDisposable
   /// <summary>
   /// Disposes the resources used by this instance.
   /// </summary>
+  /// <summary>
+  /// Disposes the resources used by this instance and clears the test context if this is the current terminal.
+  /// </summary>
   public void Dispose()
   {
     if (Disposed)
       return;
+
+    // Clear context if this is the current terminal (restores previous Terminal.Instance)
+    if (TestTerminalContext.Current == this)
+    {
+      TestTerminalContext.Current = null;
+    }
 
     InputReader.Dispose();
     OutputWriter.Dispose();
