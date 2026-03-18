@@ -20,12 +20,12 @@ This triggers RS0030 warnings because `System.Console` is banned in favor of `IT
 
 ## Checklist
 
-- [ ] Add `CancelKeyPress` event to `ITerminal` interface
-- [ ] Implement event in `TimeWarpConsole` (delegate to `Console.CancelKeyPress`)
-- [ ] Implement event in `TestConsole` (allow test simulation)
-- [ ] Add unit tests for event behavior
-- [ ] Update any relevant documentation
-- [ ] Verify TimeWarp.Nuru REPL can use the new event
+- [x] Add `CancelKeyPress` event to `ITerminal` interface
+- [x] Implement event in `TimeWarpConsole` (delegate to `Console.CancelKeyPress`)
+- [x] Implement event in `TestConsole` (allow test simulation)
+- [x] Add unit tests for event behavior
+- [x] Update any relevant documentation
+- [x] Verify TimeWarp.Nuru REPL can use the new event
 
 ## Notes
 
@@ -69,3 +69,38 @@ Terminal.CancelKeyPress -= OnCancelKeyPress;
 - `source/timewarp-terminal/ITerminal.cs` - Add event to interface
 - `source/timewarp-terminal/TimeWarpConsole.cs` - Implement event
 - `tests/timewarp-terminal.tests/` - Add tests for event behavior
+
+## Results
+
+Successfully added `CancelKeyPress` event to `ITerminal` interface for graceful Ctrl+C handling.
+
+### Files Changed
+- `source/timewarp-terminal/iterminal.cs` - Added `CancelKeyPress` event to interface
+- `source/timewarp-terminal/timewarp-terminal.cs` - Implemented event (delegates to `Console.CancelKeyPress`)
+- `source/timewarp-terminal/test-terminal.cs` - Implemented event with `SimulateCancelKeyPress()` method for testing
+- `tests/cancel-key-press-01-basic.cs` - New test file
+
+### Implementation Details
+
+**ITerminal Interface:**
+```csharp
+event ConsoleCancelEventHandler? CancelKeyPress;
+```
+
+**TimeWarpTerminal:**
+- Delegates directly to `Console.CancelKeyPress`
+
+**TestTerminal:**
+- Uses private handler field for test simulation
+- `SimulateCancelKeyPress(ConsoleSpecialKey)` method uses reflection to create `ConsoleCancelEventArgs` (no public constructor)
+- Supports testing Ctrl+C, Ctrl+Break, and Cancel property
+
+### Verification
+- All new tests pass
+- Existing tests continue to pass
+- Build succeeds with no warnings
+
+### Commits
+- `feat: add CancelKeyPress event to ITerminal for Ctrl+C handling` (f6323fd)
+
+Closes #18
