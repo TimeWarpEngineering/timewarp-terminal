@@ -343,7 +343,7 @@ public sealed class TestTerminal : ITerminal, IDisposable
     // Clear context if this is the current terminal (restores previous Terminal.Instance)
     if (TestTerminalContext.Current == this)
     {
-      TestTerminalContext.Current = null;
+      TestTerminalContext.ClearCurrent();
     }
 
     InputReader.Dispose();

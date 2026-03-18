@@ -11,8 +11,8 @@ namespace TimeWarp.Terminal;
 /// running tests in parallel.
 /// </para>
 /// <para>
-/// When <see cref="Current"/> is set, it automatically updates <see cref="TimeWarp.Terminal.Terminal.Instance"/>
-/// and restores the previous instance when cleared.
+/// Use <see cref="SetCurrent"/> and <see cref="ClearCurrent"/> for explicit lifecycle control,
+/// or <see cref="Use"/> for a scoped pattern that restores automatically.
 /// </para>
 /// <para>
 /// Resolution order when determining which terminal to use:
@@ -24,12 +24,12 @@ namespace TimeWarp.Terminal;
 /// </para>
 /// </remarks>
 /// <example>
-/// Simple test pattern with automatic TimeWarp.Terminal.Terminal.Instance synchronization:
+/// Scoped test pattern with automatic TimeWarp.Terminal.Terminal.Instance synchronization:
 /// <code>
 /// public static async Task Should_display_greeting()
 /// {
 ///     using TestTerminal terminal = new();
-///     TestTerminalContext.Current = terminal;
+///     using IDisposable scope = TestTerminalContext.Use(terminal);
 ///     
 ///     // TimeWarp.Terminal.Terminal.Instance is now set to terminal
 ///     Terminal.WriteLine("Hello");  // Routes to test terminal
@@ -37,65 +37,27 @@ namespace TimeWarp.Terminal;
 ///     await Program.Main(["greet", "World"]);
 ///     
 ///     terminal.OutputContains("Hello, World!").ShouldBeTrue();
-///     
-///     // On dispose, TestTerminal clears context and restores previous TimeWarp.Terminal.Terminal.Instance
 /// }
 /// </code>
 /// </example>
 public static class TestTerminalContext
 {
   private static readonly AsyncLocal<TestTerminal?> Context = new();
-  private static readonly AsyncLocal<ITerminal?> PreviousInstance = new();
+  private static readonly AsyncLocal<Stack<ContextSnapshot>?> SnapshotStack = new();
+
+  private sealed class ContextSnapshot
+  {
+    public required TestTerminal? PreviousContext { get; init; }
+    public required ITerminal PreviousInstance { get; init; }
+  }
 
   /// <summary>
-  /// Gets or sets the current <see cref="TestTerminal"/> for the async execution context.
+  /// Gets the current <see cref="TestTerminal"/> for the async execution context.
   /// </summary>
-  /// <remarks>
-  /// <para>
-  /// Setting this property to a non-null value causes:
-  /// <list type="bullet">
-  ///   <item><description>The current <see cref="TimeWarp.Terminal.Terminal.Instance"/> to be saved</description></item>
-  ///   <item><description><see cref="TimeWarp.Terminal.Terminal.Instance"/> to be set to the provided terminal</description></item>
-  /// </list>
-  /// </para>
-  /// <para>
-  /// Setting this property to <c>null</c> causes:
-  /// <list type="bullet">
-  ///   <item><description><see cref="TimeWarp.Terminal.Terminal.Instance"/> to be restored to its previous value</description></item>
-  /// </list>
-  /// </para>
-  /// <para>
-  /// The value is scoped to the current async execution context, so parallel tests
-  /// each have their own isolated value.
-  /// </para>
-  /// </remarks>
   /// <value>
   /// The <see cref="TestTerminal"/> for the current context, or <c>null</c> if not set.
   /// </value>
-  public static TestTerminal? Current
-  {
-    get => Context.Value;
-    set
-    {
-      if (value is not null)
-      {
-        // Save current TimeWarp.Terminal.Terminal.Instance before replacing
-        PreviousInstance.Value = TimeWarp.Terminal.Terminal.Instance;
-        Context.Value = value;
-        TimeWarp.Terminal.Terminal.Instance = value;
-      }
-      else if (Context.Value is not null)
-      {
-        // Restore previous TimeWarp.Terminal.Terminal.Instance
-        Context.Value = null;
-        if (PreviousInstance.Value is not null)
-        {
-          TimeWarp.Terminal.Terminal.Instance = PreviousInstance.Value;
-          PreviousInstance.Value = null;
-        }
-      }
-    }
-  }
+  public static TestTerminal? Current => Context.Value;
 
   /// <summary>
   /// Gets a value indicating whether a <see cref="TestTerminal"/> is set for the current context.
@@ -103,12 +65,91 @@ public static class TestTerminalContext
   public static bool HasValue => Context.Value is not null;
 
   /// <summary>
+  /// Sets the current <see cref="TestTerminal"/> and synchronizes <see cref="TimeWarp.Terminal.Terminal.Instance"/>.
+  /// </summary>
+  /// <param name="terminal">The terminal to set as current.</param>
+  public static void SetCurrent(TestTerminal terminal)
+  {
+    ArgumentNullException.ThrowIfNull(terminal);
+
+    Stack<ContextSnapshot> stack = GetSnapshotStack();
+    stack.Push
+    (
+      new ContextSnapshot
+      {
+        PreviousContext = Context.Value,
+        PreviousInstance = TimeWarp.Terminal.Terminal.Instance
+      }
+    );
+
+    Context.Value = terminal;
+    TimeWarp.Terminal.Terminal.Instance = terminal;
+  }
+
+  /// <summary>
+  /// Clears the current context and restores the previous <see cref="TimeWarp.Terminal.Terminal.Instance"/>.
+  /// </summary>
+  public static void ClearCurrent()
+  {
+    Stack<ContextSnapshot>? stack = SnapshotStack.Value;
+    if (stack is null || stack.Count == 0)
+    {
+      Context.Value = null;
+      return;
+    }
+
+    ContextSnapshot snapshot = stack.Pop();
+    Context.Value = snapshot.PreviousContext;
+    TimeWarp.Terminal.Terminal.Instance = snapshot.PreviousInstance;
+
+    if (stack.Count == 0)
+      SnapshotStack.Value = null;
+  }
+
+  /// <summary>
+  /// Creates a scoped test terminal context that is restored on dispose.
+  /// </summary>
+  /// <param name="terminal">The terminal to set for the scope.</param>
+  /// <returns>An <see cref="IDisposable"/> scope that restores the previous context.</returns>
+  public static IDisposable Use(TestTerminal terminal)
+  {
+    SetCurrent(terminal);
+    return new Scope();
+  }
+
+  /// <summary>
   /// Gets the <see cref="TestTerminal"/> for the current context, or throws if not set.
   /// </summary>
   /// <returns>The current <see cref="TestTerminal"/>.</returns>
   /// <exception cref="InvalidOperationException">Thrown when no test terminal is set.</exception>
   public static TestTerminal Terminal
-    => Context.Value ?? throw new InvalidOperationException("No TestTerminal set in current context. Set TestTerminalContext.Current first.");
+    => Context.Value ?? throw new InvalidOperationException("No TestTerminal set in current context. Call TestTerminalContext.SetCurrent or TestTerminalContext.Use first.");
+
+  private static Stack<ContextSnapshot> GetSnapshotStack()
+  {
+    Stack<ContextSnapshot>? stack = SnapshotStack.Value;
+    if (stack is null)
+    {
+      stack = new Stack<ContextSnapshot>();
+      SnapshotStack.Value = stack;
+    }
+
+    return stack;
+  }
+
+  private sealed class Scope : IDisposable
+  {
+    private bool Disposed;
+
+    public void Dispose()
+    {
+      if (Disposed)
+        return;
+
+      ClearCurrent();
+      Disposed = true;
+    }
+  }
 
   /// <summary>
   /// Resolves a terminal using the standard resolution order:

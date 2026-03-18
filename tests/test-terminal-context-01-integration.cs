@@ -24,13 +24,13 @@ public class TestTerminalContextIntegrationTests
     using TestTerminal testTerminal = new();
 
     // Act
-    TestTerminalContext.Current = testTerminal;
+    TestTerminalContext.SetCurrent(testTerminal);
 
     // Assert
     TimeWarp.Terminal.Terminal.Instance.ShouldBe(testTerminal);
 
     // Cleanup
-    TestTerminalContext.Current = null;
+    TestTerminalContext.ClearCurrent();
     TimeWarp.Terminal.Terminal.Instance = original;
 
     await Task.CompletedTask;
@@ -41,10 +41,10 @@ public class TestTerminalContextIntegrationTests
     // Arrange
     ITerminal original = TimeWarp.Terminal.Terminal.Instance;
     using TestTerminal testTerminal = new();
-    TestTerminalContext.Current = testTerminal;
+    TestTerminalContext.SetCurrent(testTerminal);
 
     // Act
-    TestTerminalContext.Current = null;
+    TestTerminalContext.ClearCurrent();
 
     // Assert
     TimeWarp.Terminal.Terminal.Instance.ShouldBe(original);
@@ -60,7 +60,7 @@ public class TestTerminalContextIntegrationTests
     // Act
     using (TestTerminal testTerminal = new())
     {
-      TestTerminalContext.Current = testTerminal;
+      TestTerminalContext.SetCurrent(testTerminal);
       TimeWarp.Terminal.Terminal.Instance.ShouldBe(testTerminal);
     }
 
@@ -75,7 +75,7 @@ public class TestTerminalContextIntegrationTests
     // Arrange
     ITerminal original = TimeWarp.Terminal.Terminal.Instance;
     using TestTerminal testTerminal = new();
-    TestTerminalContext.Current = testTerminal;
+    TestTerminalContext.SetCurrent(testTerminal);
 
     // Act
     TimeWarp.Terminal.Terminal.WriteLine("Hello from static API");
@@ -84,7 +84,7 @@ public class TestTerminalContextIntegrationTests
     testTerminal.OutputContains("Hello from static API").ShouldBeTrue();
 
     // Cleanup
-    TestTerminalContext.Current = null;
+    TestTerminalContext.ClearCurrent();
     TimeWarp.Terminal.Terminal.Instance = original;
 
     await Task.CompletedTask;
@@ -94,7 +94,7 @@ public class TestTerminalContextIntegrationTests
   {
     // Arrange
     using TestTerminal testTerminal = new();
-    TestTerminalContext.Current = testTerminal;
+    TestTerminalContext.SetCurrent(testTerminal);
 
     // Act
     TestTerminal retrieved = TestTerminalContext.Terminal;
@@ -103,7 +103,7 @@ public class TestTerminalContextIntegrationTests
     retrieved.ShouldBe(testTerminal);
 
     // Cleanup
-    TestTerminalContext.Current = null;
+    TestTerminalContext.ClearCurrent();
 
     await Task.CompletedTask;
   }
@@ -111,10 +111,30 @@ public class TestTerminalContextIntegrationTests
   public static async Task Should_throw_when_terminal_accessed_without_context()
   {
     // Arrange - ensure no context
-    TestTerminalContext.Current = null;
+    TestTerminalContext.ClearCurrent();
 
     // Act & Assert
     Should.Throw<InvalidOperationException>(() => _ = TestTerminalContext.Terminal);
+
+    await Task.CompletedTask;
+  }
+
+  public static async Task Should_restore_on_use_scope_dispose()
+  {
+    // Arrange
+    ITerminal original = TimeWarp.Terminal.Terminal.Instance;
+    using TestTerminal testTerminal = new();
+
+    // Act
+    using (IDisposable scope = TestTerminalContext.Use(testTerminal))
+    {
+      TimeWarp.Terminal.Terminal.Instance.ShouldBe(testTerminal);
+      TimeWarp.Terminal.Terminal.WriteLine("Scoped output");
+    }
+
+    // Assert
+    testTerminal.OutputContains("Scoped output").ShouldBeTrue();
+    TimeWarp.Terminal.Terminal.Instance.ShouldBe(original);
 
     await Task.CompletedTask;
   }
