@@ -1,5 +1,5 @@
 #!/usr/bin/dotnet --
-#:project ../source/timewarp-terminal/timewarp-terminal.csproj
+#:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
 // Test Terminal static facade widget methods
 // CA1849: We deliberately test sync methods in async test methods

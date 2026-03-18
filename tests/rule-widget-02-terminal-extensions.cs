@@ -1,5 +1,5 @@
 #!/usr/bin/dotnet --
-#:project ../source/timewarp-terminal/timewarp-terminal.csproj
+#:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
 // Test Rule widget terminal extension methods
 
