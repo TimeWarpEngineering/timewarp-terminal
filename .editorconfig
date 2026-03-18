@@ -425,3 +425,11 @@ dotnet_diagnostic.IDE0290.severity = none
 
 # IDE1006: Naming Styles
 dotnet_diagnostic.IDE1006.severity = none
+
+# ganda repo audit configuration
+[ganda.audit]
+# This IS the terminal library that wraps System.Console, so we don't ban it here
+banned-symbols.severity = off
+banned-api-analyzers.severity = off
+# dev-cli-capabilities check - JSON trailing comma is from TimeWarp.Nuru source generator
+dev-cli-capabilities.severity = off

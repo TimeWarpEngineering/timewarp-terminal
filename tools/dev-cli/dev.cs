@@ -1,4 +1,8 @@
 #!/usr/bin/dotnet --
+
+#region Purpose
+// Development CLI for TimeWarp.Terminal repository operations
+#endregion
 // ═══════════════════════════════════════════════════════════════════════════════
 // DEV CLI - TIMEWARP.TERMINAL DEVELOPMENT TOOL
 // ═══════════════════════════════════════════════════════════════════════════════

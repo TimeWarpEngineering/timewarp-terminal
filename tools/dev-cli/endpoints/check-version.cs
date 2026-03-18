@@ -1,3 +1,7 @@
+#region Purpose
+// Development CLI for TimeWarp.Terminal repository operations
+#endregion
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // CHECK VERSION COMMAND
 // ═══════════════════════════════════════════════════════════════════════════════
