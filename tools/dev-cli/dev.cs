@@ -42,6 +42,7 @@
 using TimeWarp.Nuru;
 
 NuruApp app = NuruApp.CreateBuilder()
+  .WithDescription("Development CLI for timewarp-terminal")
   .DiscoverEndpoints()
   .Build();
 
