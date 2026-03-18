@@ -61,3 +61,14 @@ dotnet tools/dev-cli/dev.cs ci --mode pr
 dotnet runfiles/publish-dev.cs
 ./dev --help
 ```
+
+## Archived Reason
+
+**Obsolete** - The dev-cli was already converted to runfile structure before this task was tracked:
+
+- `tools/dev-cli/dev.cs` exists (runfile entry point)
+- `tools/dev-cli/Directory.Build.props` contains configuration
+- No `.csproj` file present
+- `endpoints/` directory contains command handlers
+
+The conversion was completed in a previous session but the task file was not updated at that time.
