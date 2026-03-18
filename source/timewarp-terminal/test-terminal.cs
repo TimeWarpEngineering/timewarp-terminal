@@ -179,7 +179,40 @@ public sealed class TestTerminal : ITerminal, IDisposable
   /// <inheritdoc />
   public bool SupportsHyperlinks { get; set; }
 
+  private ConsoleCancelEventHandler? CancelKeyPressHandler;
+
   /// <inheritdoc />
+  public event ConsoleCancelEventHandler? CancelKeyPress
+  {
+    add => CancelKeyPressHandler += value;
+    remove => CancelKeyPressHandler -= value;
+  }
+
+  /// <summary>
+  /// Simulates a Ctrl+C key press for testing.
+  /// </summary>
+  /// <param name="specialKey">The special key type (default: CtrlC).</param>
+  /// <remarks>
+  /// Uses reflection to create ConsoleCancelEventArgs since it has no public constructor.
+  /// </remarks>
+  public void SimulateCancelKeyPress(ConsoleSpecialKey specialKey = ConsoleSpecialKey.ControlC)
+  {
+    if (CancelKeyPressHandler is null)
+      return;
+
+    // ConsoleCancelEventArgs has no public constructor, so we use reflection
+    System.Reflection.ConstructorInfo? constructor = typeof(ConsoleCancelEventArgs)
+      .GetConstructor(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance, [typeof(ConsoleSpecialKey)]);
+
+    if (constructor is not null)
+    {
+      ConsoleCancelEventArgs args = (ConsoleCancelEventArgs)constructor.Invoke([specialKey]);
+      CancelKeyPressHandler.Invoke(this, args);
+    }
+  }
+
+  /// <inheritdoc />
+
   public void Clear()
     => OutputWriter.WriteLine("[CLEAR]");
 

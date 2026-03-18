@@ -116,4 +116,12 @@ public interface ITerminal : IConsole
   /// Clears the console buffer and corresponding console window of display information.
   /// </summary>
   void Clear();
+
+  /// <summary>
+  /// Occurs when the Ctrl+C key combination is pressed.
+  /// </summary>
+  /// <remarks>
+  /// This event allows graceful handling of Ctrl+C for interactive applications like REPLs.
+  /// </remarks>
+  event ConsoleCancelEventHandler? CancelKeyPress;
 }
