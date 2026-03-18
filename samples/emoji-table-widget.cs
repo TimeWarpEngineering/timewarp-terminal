@@ -1,5 +1,5 @@
 #!/usr/bin/dotnet --
-#:project ../source/timewarp-terminal/timewarp-terminal.csproj
+#:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
 // Demonstrates emoji and wide character alignment in table/panel/rule borders
 using TimeWarp.Terminal;

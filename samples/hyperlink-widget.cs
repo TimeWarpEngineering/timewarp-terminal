@@ -1,7 +1,7 @@
 #!/usr/bin/dotnet --
 // hyperlink-widget-demo - Demonstrates OSC 8 hyperlinks in terminal output
 // GitHub Issue: https://github.com/TimeWarpEngineering/timewarp-terminal/issues/95
-#:project ../source/timewarp-terminal/timewarp-terminal.csproj
+#:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
 using TimeWarp.Terminal;
 

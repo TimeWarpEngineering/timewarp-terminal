@@ -1,7 +1,7 @@
 #!/usr/bin/dotnet --
 // rule-widget-demo - Demonstrates the Rule widget for horizontal divider lines
 // GitHub Issue: https://github.com/TimeWarpEngineering/timewarp-terminal/issues/89
-#:project ../source/timewarp-terminal/timewarp-terminal.csproj
+#:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
 using TimeWarp.Terminal;
 
