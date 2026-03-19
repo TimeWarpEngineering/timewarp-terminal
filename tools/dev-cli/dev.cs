@@ -1,4 +1,8 @@
 #!/usr/bin/dotnet --
+
+#region Purpose
+// Development CLI for TimeWarp.Terminal repository operations
+#endregion
 // ═══════════════════════════════════════════════════════════════════════════════
 // DEV CLI - TIMEWARP.TERMINAL DEVELOPMENT TOOL
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -38,6 +42,7 @@
 using TimeWarp.Nuru;
 
 NuruApp app = NuruApp.CreateBuilder()
+  .WithDescription("Development CLI for timewarp-terminal")
   .DiscoverEndpoints()
   .Build();
 

@@ -1,5 +1,4 @@
 <Project>
-
   <!-- Import repository path definitions -->
   <Import Project="$(MSBuildThisFileDirectory)msbuild/repository.props" />
 
