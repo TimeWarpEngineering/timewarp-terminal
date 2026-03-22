@@ -37,6 +37,24 @@ public sealed class TestConsole : IConsole, IDisposable
   private readonly StringWriter ErrorWriter;
   private readonly Queue<char> CharacterQueue;
   private bool Disposed;
+  private TextReader InReader;
+  private TextWriter OutWriter;
+  private TextWriter ErrorWriterField;
+
+  /// <summary>
+  /// Gets or sets the mock standard input stream.
+  /// </summary>
+  public Stream StandardInputStream { get; set; }
+
+  /// <summary>
+  /// Gets or sets the mock standard output stream.
+  /// </summary>
+  public Stream StandardOutputStream { get; set; }
+
+  /// <summary>
+  /// Gets or sets the mock standard error stream.
+  /// </summary>
+  public Stream StandardErrorStream { get; set; }
 
   /// <summary>
   /// Gets or sets the input encoding for this test console.
@@ -68,6 +86,39 @@ public sealed class TestConsole : IConsole, IDisposable
   /// <value><c>true</c> if error output is redirected; otherwise, <c>false</c>. Defaults to <c>false</c>.</value>
   public bool IsErrorRedirected { get; set; }
 
+  /// <inheritdoc />
+  public Stream OpenStandardInput()
+    => StandardInputStream;
+
+  /// <inheritdoc />
+  public Stream OpenStandardOutput()
+    => StandardOutputStream;
+
+  /// <inheritdoc />
+  public Stream OpenStandardError()
+    => StandardErrorStream;
+
+  /// <inheritdoc />
+  public TextReader In => InReader;
+
+  /// <inheritdoc />
+  public TextWriter Out => OutWriter;
+
+  /// <inheritdoc />
+  public TextWriter Error => ErrorWriterField;
+
+  /// <inheritdoc />
+  public void SetIn(TextReader reader)
+    => InReader = reader;
+
+  /// <inheritdoc />
+  public void SetOut(TextWriter writer)
+    => OutWriter = writer;
+
+  /// <inheritdoc />
+  public void SetError(TextWriter writer)
+    => ErrorWriterField = writer;
+
   /// <summary>
   /// Initializes a new instance of <see cref="TestConsole"/> with optional scripted input.
   /// </summary>
@@ -81,6 +132,12 @@ public sealed class TestConsole : IConsole, IDisposable
     OutputWriter = new StringWriter();
     ErrorWriter = new StringWriter();
     CharacterQueue = new Queue<char>();
+    InReader = InputReader;
+    OutWriter = OutputWriter;
+    ErrorWriterField = ErrorWriter;
+    StandardInputStream = new MemoryStream();
+    StandardOutputStream = new MemoryStream();
+    StandardErrorStream = new MemoryStream();
   }
 
   /// <summary>
@@ -210,6 +267,9 @@ public sealed class TestConsole : IConsole, IDisposable
     InputReader.Dispose();
     OutputWriter.Dispose();
     ErrorWriter.Dispose();
+    StandardInputStream.Dispose();
+    StandardOutputStream.Dispose();
+    StandardErrorStream.Dispose();
     Disposed = true;
   }
 }

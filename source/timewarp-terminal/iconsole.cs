@@ -120,4 +120,58 @@ public interface IConsole
   /// </summary>
   /// <value><c>true</c> if error output is redirected; otherwise, <c>false</c>.</value>
   bool IsErrorRedirected { get; }
+
+  /// <summary>
+  /// Acquires the standard input stream.
+  /// </summary>
+  /// <returns>The standard input stream.</returns>
+  Stream OpenStandardInput();
+
+  /// <summary>
+  /// Acquires the standard output stream.
+  /// </summary>
+  /// <returns>The standard output stream.</returns>
+  Stream OpenStandardOutput();
+
+  /// <summary>
+  /// Acquires the standard error output stream.
+  /// </summary>
+  /// <returns>The standard error output stream.</returns>
+  Stream OpenStandardError();
+
+  /// <summary>
+  /// Gets the standard input reader.
+  /// </summary>
+  /// <value>A <see cref="TextReader"/> that represents the standard input stream.</value>
+  TextReader In { get; }
+
+  /// <summary>
+  /// Gets the standard output writer.
+  /// </summary>
+  /// <value>A <see cref="TextWriter"/> that represents the standard output stream.</value>
+  TextWriter Out { get; }
+
+  /// <summary>
+  /// Gets the standard error writer.
+  /// </summary>
+  /// <value>A <see cref="TextWriter"/> that represents the standard error output stream.</value>
+  TextWriter Error { get; }
+
+  /// <summary>
+  /// Sets the <see cref="In"/> property to the specified <see cref="TextReader"/>.
+  /// </summary>
+  /// <param name="reader">A <see cref="TextReader"/> that represents the new standard input stream.</param>
+  void SetIn(TextReader reader);
+
+  /// <summary>
+  /// Sets the <see cref="Out"/> property to the specified <see cref="TextWriter"/>.
+  /// </summary>
+  /// <param name="writer">A <see cref="TextWriter"/> that represents the new standard output stream.</param>
+  void SetOut(TextWriter writer);
+
+  /// <summary>
+  /// Sets the <see cref="Error"/> property to the specified <see cref="TextWriter"/>.
+  /// </summary>
+  /// <param name="writer">A <see cref="TextWriter"/> that represents the new standard error output stream.</param>
+  void SetError(TextWriter writer);
 }

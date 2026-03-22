@@ -77,4 +77,37 @@ public sealed class TimeWarpConsole : IConsole
 
   /// <inheritdoc />
   public bool IsErrorRedirected => Console.IsErrorRedirected;
+
+  /// <inheritdoc />
+  public Stream OpenStandardInput()
+    => Console.OpenStandardInput();
+
+  /// <inheritdoc />
+  public Stream OpenStandardOutput()
+    => Console.OpenStandardOutput();
+
+  /// <inheritdoc />
+  public Stream OpenStandardError()
+    => Console.OpenStandardError();
+
+  /// <inheritdoc />
+  public TextReader In => Console.In;
+
+  /// <inheritdoc />
+  public TextWriter Out => Console.Out;
+
+  /// <inheritdoc />
+  public TextWriter Error => Console.Error;
+
+  /// <inheritdoc />
+  public void SetIn(TextReader reader)
+    => Console.SetIn(reader);
+
+  /// <inheritdoc />
+  public void SetOut(TextWriter writer)
+    => Console.SetOut(writer);
+
+  /// <inheritdoc />
+  public void SetError(TextWriter writer)
+    => Console.SetError(writer);
 }
