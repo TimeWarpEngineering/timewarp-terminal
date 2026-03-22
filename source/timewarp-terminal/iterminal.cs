@@ -104,10 +104,98 @@ public interface ITerminal : IConsole
   (int Left, int Top) GetCursorPosition();
 
   /// <summary>
-  /// Gets the width of the terminal window in characters.
+  /// Gets or sets the width of the terminal window in characters.
   /// </summary>
   /// <value>The width of the terminal window measured in columns.</value>
-  int WindowWidth { get; }
+  int WindowWidth { get; set; }
+
+  /// <summary>
+  /// Gets or sets the height of the terminal window in characters.
+  /// </summary>
+  /// <value>The height of the terminal window measured in rows.</value>
+  int WindowHeight { get; set; }
+
+  /// <summary>
+  /// Gets or sets the left position of the console window area.
+  /// </summary>
+  /// <value>The leftmost position of the console window.</value>
+  int WindowLeft { get; set; }
+
+  /// <summary>
+  /// Gets or sets the top position of the console window area.
+  /// </summary>
+  /// <value>The topmost position of the console window.</value>
+  int WindowTop { get; set; }
+
+  /// <summary>
+  /// Gets or sets the width of the buffer area.
+  /// </summary>
+  /// <value>The width of the buffer area measured in columns.</value>
+  int BufferWidth { get; set; }
+
+  /// <summary>
+  /// Gets or sets the height of the buffer area.
+  /// </summary>
+  /// <value>The height of the buffer area measured in rows.</value>
+  int BufferHeight { get; set; }
+
+  /// <summary>
+  /// Sets the dimensions of the console window to the specified values.
+  /// </summary>
+  /// <param name="width">The width of the console window measured in columns.</param>
+  /// <param name="height">The height of the console window measured in rows.</param>
+  void SetWindowSize(int width, int height);
+
+  /// <summary>
+  /// Sets the position of the console window relative to the screen buffer.
+  /// </summary>
+  /// <param name="left">The column position of the upper left corner of the console window.</param>
+  /// <param name="top">The row position of the upper left corner of the console window.</param>
+  void SetWindowPosition(int left, int top);
+
+  /// <summary>
+  /// Sets the height and width of the screen buffer area to the specified values.
+  /// </summary>
+  /// <param name="width">The width of the buffer area measured in columns.</param>
+  /// <param name="height">The height of the buffer area measured in rows.</param>
+  void SetBufferSize(int width, int height);
+
+  /// <summary>
+  /// Moves a specified source screen buffer area to a specified destination screen buffer area.
+  /// </summary>
+  /// <param name="sourceLeft">The leftmost column of the source area.</param>
+  /// <param name="sourceTop">The topmost row of the source area.</param>
+  /// <param name="sourceWidth">The number of columns in the source area.</param>
+  /// <param name="sourceHeight">The number of rows in the source area.</param>
+  /// <param name="targetLeft">The leftmost column of the destination area.</param>
+  /// <param name="targetTop">The topmost row of the destination area.</param>
+  /// <param name="sourceChar">The character used to fill the source area.</param>
+  /// <param name="sourceForeColor">The foreground color used to fill the source area.</param>
+  /// <param name="sourceBackColor">The background color used to fill the source area.</param>
+  void MoveBufferArea
+  (
+    int sourceLeft,
+    int sourceTop,
+    int sourceWidth,
+    int sourceHeight,
+    int targetLeft,
+    int targetTop,
+    char sourceChar,
+    ConsoleColor sourceForeColor,
+    ConsoleColor sourceBackColor
+  );
+
+  /// <summary>
+  /// Gets the largest possible number of console window columns.
+  /// </summary>
+  /// <value>The maximum width of the console window measured in columns.</value>
+  int LargestWindowWidth { get; }
+
+  /// <summary>
+  /// Gets the largest possible number of console window rows.
+  /// </summary>
+  /// <value>The maximum height of the console window measured in rows.</value>
+  int LargestWindowHeight { get; }
 
   /// <summary>
   /// Gets a value indicating whether the terminal is interactive.

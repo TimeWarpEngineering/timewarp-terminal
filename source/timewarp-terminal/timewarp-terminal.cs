@@ -306,8 +306,306 @@ public sealed class TimeWarpTerminal : ITerminal
       }
       catch (IOException)
       {
-        // Return default width if console is redirected
         return 80;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.WindowWidth = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int WindowHeight
+  {
+    get
+    {
+      try
+      {
+        return Console.WindowHeight;
+      }
+      catch (IOException)
+      {
+        return 24;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.WindowHeight = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int WindowLeft
+  {
+    get
+    {
+      try
+      {
+        return Console.WindowLeft;
+      }
+      catch (IOException)
+      {
+        return 0;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.WindowLeft = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int WindowTop
+  {
+    get
+    {
+      try
+      {
+        return Console.WindowTop;
+      }
+      catch (IOException)
+      {
+        return 0;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.WindowTop = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int BufferWidth
+  {
+    get
+    {
+      try
+      {
+        return Console.BufferWidth;
+      }
+      catch (IOException)
+      {
+        return 80;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.BufferWidth = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int BufferHeight
+  {
+    get
+    {
+      try
+      {
+        return Console.BufferHeight;
+      }
+      catch (IOException)
+      {
+        return 300;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.BufferHeight = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public void SetWindowSize(int width, int height)
+  {
+    if (!OperatingSystem.IsWindows())
+      return;
+
+    try
+    {
+      Console.SetWindowSize(width, height);
+    }
+    catch (ArgumentOutOfRangeException)
+    {
+    }
+    catch (IOException)
+    {
+    }
+  }
+
+  /// <inheritdoc />
+  public void SetWindowPosition(int left, int top)
+  {
+    if (!OperatingSystem.IsWindows())
+      return;
+
+    try
+    {
+      Console.SetWindowPosition(left, top);
+    }
+    catch (ArgumentOutOfRangeException)
+    {
+    }
+    catch (IOException)
+    {
+    }
+  }
+
+  /// <inheritdoc />
+  public void SetBufferSize(int width, int height)
+  {
+    if (!OperatingSystem.IsWindows())
+      return;
+
+    try
+    {
+      Console.SetBufferSize(width, height);
+    }
+    catch (ArgumentOutOfRangeException)
+    {
+    }
+    catch (IOException)
+    {
+    }
+  }
+
+  /// <inheritdoc />
+  public void MoveBufferArea
+  (
+    int sourceLeft,
+    int sourceTop,
+    int sourceWidth,
+    int sourceHeight,
+    int targetLeft,
+    int targetTop,
+    char sourceChar,
+    ConsoleColor sourceForeColor,
+    ConsoleColor sourceBackColor
+  )
+  {
+    if (!OperatingSystem.IsWindows())
+      return;
+
+    try
+    {
+      Console.MoveBufferArea
+      (
+        sourceLeft,
+        sourceTop,
+        sourceWidth,
+        sourceHeight,
+        targetLeft,
+        targetTop,
+        sourceChar,
+        sourceForeColor,
+        sourceBackColor
+      );
+    }
+    catch (IOException)
+    {
+    }
+  }
+
+  /// <inheritdoc />
+  public int LargestWindowWidth
+  {
+    get
+    {
+      try
+      {
+        return Console.LargestWindowWidth;
+      }
+      catch (IOException)
+      {
+        return 120;
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int LargestWindowHeight
+  {
+    get
+    {
+      try
+      {
+        return Console.LargestWindowHeight;
+      }
+      catch (IOException)
+      {
+        return 40;
       }
     }
   }
