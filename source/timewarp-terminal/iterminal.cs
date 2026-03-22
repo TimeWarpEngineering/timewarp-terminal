@@ -169,4 +169,44 @@ public interface ITerminal : IConsole
   /// This event allows graceful handling of Ctrl+C for interactive applications like REPLs.
   /// </remarks>
   event ConsoleCancelEventHandler? CancelKeyPress;
+
+  /// <summary>
+  /// Plays a beep sound through the console speaker.
+  /// </summary>
+  void Beep();
+
+  /// <summary>
+  /// Plays a beep sound at the specified frequency and duration through the console speaker.
+  /// </summary>
+  /// <param name="frequency">
+  /// The frequency of the beep, ranging from 37 to 32767 hertz.
+  /// </param>
+  /// <param name="duration">
+  /// The duration of the beep, measured in milliseconds.
+  /// </param>
+  void Beep(int frequency, int duration);
+
+  /// <summary>
+  /// Gets or sets a value indicating whether the Ctrl+C key combination
+  /// is treated as ordinary input or as an interrupt.
+  /// </summary>
+  /// <value>
+  /// <c>true</c> if Ctrl+C is treated as ordinary input; <c>false</c> if it raises
+  /// the <see cref="CancelKeyPress"/> event. The default is <c>false</c>.
+  /// </value>
+  bool TreatControlCAsInput { get; set; }
+
+  /// <summary>
+  /// Gets or sets the title to display in the console title bar.
+  /// </summary>
+  /// <value>The string to display in the title bar of the console.</value>
+  string Title { get; set; }
+
+  /// <summary>
+  /// Gets a value indicating whether a key press is available in the input stream.
+  /// </summary>
+  /// <value>
+  /// <c>true</c> if a key press is available; otherwise, <c>false</c>.
+  /// </value>
+  bool KeyAvailable { get; }
 }

@@ -411,4 +411,57 @@ public sealed class TimeWarpTerminal : ITerminal
       // Silently ignore if console is redirected
     }
   }
+
+  /// <inheritdoc />
+  public void Beep()
+  {
+    if (OperatingSystem.IsWindows())
+      Console.Beep();
+  }
+
+  /// <inheritdoc />
+  public void Beep(int frequency, int duration)
+  {
+    if (OperatingSystem.IsWindows())
+      Console.Beep(frequency, duration);
+  }
+
+  /// <inheritdoc />
+  public bool TreatControlCAsInput
+  {
+    get => Console.TreatControlCAsInput;
+    set => Console.TreatControlCAsInput = value;
+  }
+
+  /// <inheritdoc />
+  public string Title
+  {
+    get
+    {
+      if (OperatingSystem.IsWindows())
+        return Console.Title;
+      return string.Empty;
+    }
+    set
+    {
+      if (OperatingSystem.IsWindows())
+        Console.Title = value;
+    }
+  }
+
+  /// <inheritdoc />
+  public bool KeyAvailable
+  {
+    get
+    {
+      try
+      {
+        return Console.KeyAvailable;
+      }
+      catch (IOException)
+      {
+        return false;
+      }
+    }
+  }
 }

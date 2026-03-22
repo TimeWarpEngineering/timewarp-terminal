@@ -305,6 +305,42 @@ public sealed class TestTerminal : ITerminal, IDisposable
   public void Clear()
     => OutputWriter.WriteLine("[CLEAR]");
 
+  /// <summary>
+  /// Gets the number of times <see cref="Beep()"/> has been called.
+  /// </summary>
+  public int BeepCount { get; private set; }
+
+  /// <summary>
+  /// Gets the frequency of the last <see cref="Beep(int, int)"/> call.
+  /// </summary>
+  public int LastBeepFrequency { get; private set; }
+
+  /// <summary>
+  /// Gets the duration of the last <see cref="Beep(int, int)"/> call.
+  /// </summary>
+  public int LastBeepDuration { get; private set; }
+
+  /// <inheritdoc />
+  public void Beep()
+    => BeepCount++;
+
+  /// <inheritdoc />
+  public void Beep(int frequency, int duration)
+  {
+    BeepCount++;
+    LastBeepFrequency = frequency;
+    LastBeepDuration = duration;
+  }
+
+  /// <inheritdoc />
+  public bool TreatControlCAsInput { get; set; }
+
+  /// <inheritdoc />
+  public string Title { get; set; } = string.Empty;
+
+  /// <inheritdoc />
+  public bool KeyAvailable => KeyQueue.Count > 0;
+
   // ========== Test Helper Methods ==========
 
   /// <summary>
