@@ -72,8 +72,197 @@ public sealed class TimeWarpTerminal : ITerminal
     => Console.ReadLine();
 
   /// <inheritdoc />
+  public int Read()
+    => Console.Read();
+
+  /// <inheritdoc />
+  public ConsoleKeyInfo ReadKey()
+    => Console.ReadKey(false);
+
+  /// <inheritdoc />
+  public Encoding InputEncoding
+  {
+    get => Console.InputEncoding;
+    set => Console.InputEncoding = value;
+  }
+
+  /// <inheritdoc />
+  public Encoding OutputEncoding
+  {
+    get => Console.OutputEncoding;
+    set => Console.OutputEncoding = value;
+  }
+
+  /// <inheritdoc />
+  public bool IsInputRedirected => Console.IsInputRedirected;
+
+  /// <inheritdoc />
+  public bool IsOutputRedirected => Console.IsOutputRedirected;
+
+  /// <inheritdoc />
+  public bool IsErrorRedirected => Console.IsErrorRedirected;
+
+  /// <inheritdoc />
+  public Stream OpenStandardInput()
+    => Console.OpenStandardInput();
+
+  /// <inheritdoc />
+  public Stream OpenStandardOutput()
+    => Console.OpenStandardOutput();
+
+  /// <inheritdoc />
+  public Stream OpenStandardError()
+    => Console.OpenStandardError();
+
+  /// <inheritdoc />
+  public TextReader In => Console.In;
+
+  /// <inheritdoc />
+  public TextWriter Out => Console.Out;
+
+  /// <inheritdoc />
+  public TextWriter Error => Console.Error;
+
+  /// <inheritdoc />
+  public void SetIn(TextReader reader)
+    => Console.SetIn(reader);
+
+  /// <inheritdoc />
+  public void SetOut(TextWriter writer)
+    => Console.SetOut(writer);
+
+  /// <inheritdoc />
+  public void SetError(TextWriter writer)
+    => Console.SetError(writer);
+
+  /// <inheritdoc />
   public ConsoleKeyInfo ReadKey(bool intercept)
     => Console.ReadKey(intercept);
+
+  /// <inheritdoc />
+  public int CursorLeft
+  {
+    get
+    {
+      try
+      {
+        return Console.CursorLeft;
+      }
+      catch (IOException)
+      {
+        return 0;
+      }
+    }
+    set
+    {
+      try
+      {
+        Console.CursorLeft = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int CursorTop
+  {
+    get
+    {
+      try
+      {
+        return Console.CursorTop;
+      }
+      catch (IOException)
+      {
+        return 0;
+      }
+    }
+    set
+    {
+      try
+      {
+        Console.CursorTop = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public bool CursorVisible
+  {
+    get
+    {
+      if (!OperatingSystem.IsWindows())
+        return true;
+
+      try
+      {
+        return Console.CursorVisible;
+      }
+      catch (IOException)
+      {
+        return true;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.CursorVisible = value;
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int CursorSize
+  {
+    get
+    {
+      if (!OperatingSystem.IsWindows())
+        return 100;
+
+      try
+      {
+        return Console.CursorSize;
+      }
+      catch (IOException)
+      {
+        return 100;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.CursorSize = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
 
   /// <inheritdoc />
   public void SetCursorPosition(int left, int top)
@@ -117,8 +306,306 @@ public sealed class TimeWarpTerminal : ITerminal
       }
       catch (IOException)
       {
-        // Return default width if console is redirected
         return 80;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.WindowWidth = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int WindowHeight
+  {
+    get
+    {
+      try
+      {
+        return Console.WindowHeight;
+      }
+      catch (IOException)
+      {
+        return 24;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.WindowHeight = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int WindowLeft
+  {
+    get
+    {
+      try
+      {
+        return Console.WindowLeft;
+      }
+      catch (IOException)
+      {
+        return 0;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.WindowLeft = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int WindowTop
+  {
+    get
+    {
+      try
+      {
+        return Console.WindowTop;
+      }
+      catch (IOException)
+      {
+        return 0;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.WindowTop = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int BufferWidth
+  {
+    get
+    {
+      try
+      {
+        return Console.BufferWidth;
+      }
+      catch (IOException)
+      {
+        return 80;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.BufferWidth = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int BufferHeight
+  {
+    get
+    {
+      try
+      {
+        return Console.BufferHeight;
+      }
+      catch (IOException)
+      {
+        return 300;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.BufferHeight = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public void SetWindowSize(int width, int height)
+  {
+    if (!OperatingSystem.IsWindows())
+      return;
+
+    try
+    {
+      Console.SetWindowSize(width, height);
+    }
+    catch (ArgumentOutOfRangeException)
+    {
+    }
+    catch (IOException)
+    {
+    }
+  }
+
+  /// <inheritdoc />
+  public void SetWindowPosition(int left, int top)
+  {
+    if (!OperatingSystem.IsWindows())
+      return;
+
+    try
+    {
+      Console.SetWindowPosition(left, top);
+    }
+    catch (ArgumentOutOfRangeException)
+    {
+    }
+    catch (IOException)
+    {
+    }
+  }
+
+  /// <inheritdoc />
+  public void SetBufferSize(int width, int height)
+  {
+    if (!OperatingSystem.IsWindows())
+      return;
+
+    try
+    {
+      Console.SetBufferSize(width, height);
+    }
+    catch (ArgumentOutOfRangeException)
+    {
+    }
+    catch (IOException)
+    {
+    }
+  }
+
+  /// <inheritdoc />
+  public void MoveBufferArea
+  (
+    int sourceLeft,
+    int sourceTop,
+    int sourceWidth,
+    int sourceHeight,
+    int targetLeft,
+    int targetTop,
+    char sourceChar,
+    ConsoleColor sourceForeColor,
+    ConsoleColor sourceBackColor
+  )
+  {
+    if (!OperatingSystem.IsWindows())
+      return;
+
+    try
+    {
+      Console.MoveBufferArea
+      (
+        sourceLeft,
+        sourceTop,
+        sourceWidth,
+        sourceHeight,
+        targetLeft,
+        targetTop,
+        sourceChar,
+        sourceForeColor,
+        sourceBackColor
+      );
+    }
+    catch (IOException)
+    {
+    }
+  }
+
+  /// <inheritdoc />
+  public int LargestWindowWidth
+  {
+    get
+    {
+      try
+      {
+        return Console.LargestWindowWidth;
+      }
+      catch (IOException)
+      {
+        return 120;
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int LargestWindowHeight
+  {
+    get
+    {
+      try
+      {
+        return Console.LargestWindowHeight;
+      }
+      catch (IOException)
+      {
+        return 40;
       }
     }
   }
@@ -173,13 +660,77 @@ public sealed class TimeWarpTerminal : ITerminal
   }
 
   /// <inheritdoc />
-  /// <inheritdoc />
   public event ConsoleCancelEventHandler? CancelKeyPress
   {
     add => Console.CancelKeyPress += value;
     remove => Console.CancelKeyPress -= value;
   }
 
+  /// <inheritdoc />
+  public ConsoleColor ForegroundColor
+  {
+    get
+    {
+      try
+      {
+        return Console.ForegroundColor;
+      }
+      catch (IOException)
+      {
+        return ConsoleColor.Gray;
+      }
+    }
+    set
+    {
+      try
+      {
+        Console.ForegroundColor = value;
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public ConsoleColor BackgroundColor
+  {
+    get
+    {
+      try
+      {
+        return Console.BackgroundColor;
+      }
+      catch (IOException)
+      {
+        return ConsoleColor.Black;
+      }
+    }
+    set
+    {
+      try
+      {
+        Console.BackgroundColor = value;
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public void ResetColor()
+  {
+    try
+    {
+      Console.ResetColor();
+    }
+    catch (IOException)
+    {
+    }
+  }
+
+  /// <inheritdoc />
   public void Clear()
   {
     try
@@ -189,6 +740,59 @@ public sealed class TimeWarpTerminal : ITerminal
     catch (IOException)
     {
       // Silently ignore if console is redirected
+    }
+  }
+
+  /// <inheritdoc />
+  public void Beep()
+  {
+    if (OperatingSystem.IsWindows())
+      Console.Beep();
+  }
+
+  /// <inheritdoc />
+  public void Beep(int frequency, int duration)
+  {
+    if (OperatingSystem.IsWindows())
+      Console.Beep(frequency, duration);
+  }
+
+  /// <inheritdoc />
+  public bool TreatControlCAsInput
+  {
+    get => Console.TreatControlCAsInput;
+    set => Console.TreatControlCAsInput = value;
+  }
+
+  /// <inheritdoc />
+  public string Title
+  {
+    get
+    {
+      if (OperatingSystem.IsWindows())
+        return Console.Title;
+      return string.Empty;
+    }
+    set
+    {
+      if (OperatingSystem.IsWindows())
+        Console.Title = value;
+    }
+  }
+
+  /// <inheritdoc />
+  public bool KeyAvailable
+  {
+    get
+    {
+      try
+      {
+        return Console.KeyAvailable;
+      }
+      catch (IOException)
+      {
+        return false;
+      }
     }
   }
 }

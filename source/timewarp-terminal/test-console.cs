@@ -35,7 +35,89 @@ public sealed class TestConsole : IConsole, IDisposable
   private readonly StringReader InputReader;
   private readonly StringWriter OutputWriter;
   private readonly StringWriter ErrorWriter;
+  private readonly Queue<char> CharacterQueue;
   private bool Disposed;
+  private TextReader InReader;
+  private TextWriter OutWriter;
+  private TextWriter ErrorWriterField;
+
+  /// <summary>
+  /// Gets or sets the mock standard input stream.
+  /// </summary>
+  public Stream StandardInputStream { get; set; }
+
+  /// <summary>
+  /// Gets or sets the mock standard output stream.
+  /// </summary>
+  public Stream StandardOutputStream { get; set; }
+
+  /// <summary>
+  /// Gets or sets the mock standard error stream.
+  /// </summary>
+  public Stream StandardErrorStream { get; set; }
+
+  /// <summary>
+  /// Gets or sets the input encoding for this test console.
+  /// </summary>
+  /// <value>The encoding used for input. Defaults to <see cref="Encoding.UTF8"/>.</value>
+  public Encoding InputEncoding { get; set; } = Encoding.UTF8;
+
+  /// <summary>
+  /// Gets or sets the output encoding for this test console.
+  /// </summary>
+  /// <value>The encoding used for output. Defaults to <see cref="Encoding.UTF8"/>.</value>
+  public Encoding OutputEncoding { get; set; } = Encoding.UTF8;
+
+  /// <summary>
+  /// Gets or sets a value indicating whether input is redirected.
+  /// </summary>
+  /// <value><c>true</c> if input is redirected; otherwise, <c>false</c>. Defaults to <c>false</c>.</value>
+  public bool IsInputRedirected { get; set; }
+
+  /// <summary>
+  /// Gets or sets a value indicating whether output is redirected.
+  /// </summary>
+  /// <value><c>true</c> if output is redirected; otherwise, <c>false</c>. Defaults to <c>false</c>.</value>
+  public bool IsOutputRedirected { get; set; }
+
+  /// <summary>
+  /// Gets or sets a value indicating whether error output is redirected.
+  /// </summary>
+  /// <value><c>true</c> if error output is redirected; otherwise, <c>false</c>. Defaults to <c>false</c>.</value>
+  public bool IsErrorRedirected { get; set; }
+
+  /// <inheritdoc />
+  public Stream OpenStandardInput()
+    => StandardInputStream;
+
+  /// <inheritdoc />
+  public Stream OpenStandardOutput()
+    => StandardOutputStream;
+
+  /// <inheritdoc />
+  public Stream OpenStandardError()
+    => StandardErrorStream;
+
+  /// <inheritdoc />
+  public TextReader In => InReader;
+
+  /// <inheritdoc />
+  public TextWriter Out => OutWriter;
+
+  /// <inheritdoc />
+  public TextWriter Error => ErrorWriterField;
+
+  /// <inheritdoc />
+  public void SetIn(TextReader reader)
+    => InReader = reader ?? throw new ArgumentNullException(nameof(reader));
+
+  /// <inheritdoc />
+  public void SetOut(TextWriter writer)
+    => OutWriter = writer ?? throw new ArgumentNullException(nameof(writer));
+
+  /// <inheritdoc />
+  public void SetError(TextWriter writer)
+    => ErrorWriterField = writer ?? throw new ArgumentNullException(nameof(writer));
 
   /// <summary>
   /// Initializes a new instance of <see cref="TestConsole"/> with optional scripted input.
@@ -49,6 +131,13 @@ public sealed class TestConsole : IConsole, IDisposable
     InputReader = new StringReader(input);
     OutputWriter = new StringWriter();
     ErrorWriter = new StringWriter();
+    CharacterQueue = new Queue<char>();
+    InReader = InputReader;
+    OutWriter = OutputWriter;
+    ErrorWriterField = ErrorWriter;
+    StandardInputStream = new MemoryStream();
+    StandardOutputStream = new MemoryStream();
+    StandardErrorStream = new MemoryStream();
   }
 
   /// <summary>
@@ -98,6 +187,35 @@ public sealed class TestConsole : IConsole, IDisposable
   /// <inheritdoc />
   public string? ReadLine()
     => InputReader.ReadLine();
+
+  /// <inheritdoc />
+  public int Read()
+  {
+    if (CharacterQueue.Count > 0)
+      return CharacterQueue.Dequeue();
+
+    return -1;
+  }
+
+  /// <inheritdoc />
+  public ConsoleKeyInfo ReadKey()
+    => throw new NotSupportedException("TestConsole does not support key-by-key input. Use TestTerminal for interactive key input.");
+
+  /// <summary>
+  /// Queues characters for <see cref="Read"/> to return.
+  /// </summary>
+  /// <param name="characters">The characters to queue.</param>
+  public void QueueCharacters(string characters)
+  {
+    ArgumentNullException.ThrowIfNull(characters);
+    foreach (char c in characters)
+      CharacterQueue.Enqueue(c);
+  }
+
+  /// <summary>
+  /// Gets the number of characters currently in the queue.
+  /// </summary>
+  public int CharactersInQueue => CharacterQueue.Count;
 
   /// <summary>
   /// Clears all captured output.
@@ -149,6 +267,9 @@ public sealed class TestConsole : IConsole, IDisposable
     InputReader.Dispose();
     OutputWriter.Dispose();
     ErrorWriter.Dispose();
+    StandardInputStream.Dispose();
+    StandardOutputStream.Dispose();
+    StandardErrorStream.Dispose();
     Disposed = true;
   }
 }

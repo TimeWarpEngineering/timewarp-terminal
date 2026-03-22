@@ -63,6 +63,34 @@ public interface ITerminal : IConsole
   ConsoleKeyInfo ReadKey(bool intercept);
 
   /// <summary>
+  /// Gets or sets the column position of the cursor.
+  /// </summary>
+  /// <value>The column position, 0-based from left to right.</value>
+  int CursorLeft { get; set; }
+
+  /// <summary>
+  /// Gets or sets the row position of the cursor.
+  /// </summary>
+  /// <value>The row position, 0-based from top to bottom.</value>
+  int CursorTop { get; set; }
+
+  /// <summary>
+  /// Gets or sets a value indicating whether the cursor is visible.
+  /// </summary>
+  /// <value><c>true</c> if the cursor is visible; otherwise, <c>false</c>.</value>
+  bool CursorVisible { get; set; }
+
+  /// <summary>
+  /// Gets or sets the height of the cursor within a character cell.
+  /// </summary>
+  /// <value>The cursor size as a percentage from 1 to 100.</value>
+  /// <remarks>
+  /// A value of 1 indicates a horizontal line at the bottom of the cell.
+  /// A value of 100 indicates a full block cursor.
+  /// </remarks>
+  int CursorSize { get; set; }
+
+  /// <summary>
   /// Sets the position of the cursor.
   /// </summary>
   /// <param name="left">The column position of the cursor. Columns are numbered from left to right starting at 0.</param>
@@ -76,10 +104,98 @@ public interface ITerminal : IConsole
   (int Left, int Top) GetCursorPosition();
 
   /// <summary>
-  /// Gets the width of the terminal window in characters.
+  /// Gets or sets the width of the terminal window in characters.
   /// </summary>
   /// <value>The width of the terminal window measured in columns.</value>
-  int WindowWidth { get; }
+  int WindowWidth { get; set; }
+
+  /// <summary>
+  /// Gets or sets the height of the terminal window in characters.
+  /// </summary>
+  /// <value>The height of the terminal window measured in rows.</value>
+  int WindowHeight { get; set; }
+
+  /// <summary>
+  /// Gets or sets the left position of the console window area.
+  /// </summary>
+  /// <value>The leftmost position of the console window.</value>
+  int WindowLeft { get; set; }
+
+  /// <summary>
+  /// Gets or sets the top position of the console window area.
+  /// </summary>
+  /// <value>The topmost position of the console window.</value>
+  int WindowTop { get; set; }
+
+  /// <summary>
+  /// Gets or sets the width of the buffer area.
+  /// </summary>
+  /// <value>The width of the buffer area measured in columns.</value>
+  int BufferWidth { get; set; }
+
+  /// <summary>
+  /// Gets or sets the height of the buffer area.
+  /// </summary>
+  /// <value>The height of the buffer area measured in rows.</value>
+  int BufferHeight { get; set; }
+
+  /// <summary>
+  /// Sets the dimensions of the console window to the specified values.
+  /// </summary>
+  /// <param name="width">The width of the console window measured in columns.</param>
+  /// <param name="height">The height of the console window measured in rows.</param>
+  void SetWindowSize(int width, int height);
+
+  /// <summary>
+  /// Sets the position of the console window relative to the screen buffer.
+  /// </summary>
+  /// <param name="left">The column position of the upper left corner of the console window.</param>
+  /// <param name="top">The row position of the upper left corner of the console window.</param>
+  void SetWindowPosition(int left, int top);
+
+  /// <summary>
+  /// Sets the height and width of the screen buffer area to the specified values.
+  /// </summary>
+  /// <param name="width">The width of the buffer area measured in columns.</param>
+  /// <param name="height">The height of the buffer area measured in rows.</param>
+  void SetBufferSize(int width, int height);
+
+  /// <summary>
+  /// Moves a specified source screen buffer area to a specified destination screen buffer area.
+  /// </summary>
+  /// <param name="sourceLeft">The leftmost column of the source area.</param>
+  /// <param name="sourceTop">The topmost row of the source area.</param>
+  /// <param name="sourceWidth">The number of columns in the source area.</param>
+  /// <param name="sourceHeight">The number of rows in the source area.</param>
+  /// <param name="targetLeft">The leftmost column of the destination area.</param>
+  /// <param name="targetTop">The topmost row of the destination area.</param>
+  /// <param name="sourceChar">The character used to fill the source area.</param>
+  /// <param name="sourceForeColor">The foreground color used to fill the source area.</param>
+  /// <param name="sourceBackColor">The background color used to fill the source area.</param>
+  void MoveBufferArea
+  (
+    int sourceLeft,
+    int sourceTop,
+    int sourceWidth,
+    int sourceHeight,
+    int targetLeft,
+    int targetTop,
+    char sourceChar,
+    ConsoleColor sourceForeColor,
+    ConsoleColor sourceBackColor
+  );
+
+  /// <summary>
+  /// Gets the largest possible number of console window columns.
+  /// </summary>
+  /// <value>The maximum width of the console window measured in columns.</value>
+  int LargestWindowWidth { get; }
+
+  /// <summary>
+  /// Gets the largest possible number of console window rows.
+  /// </summary>
+  /// <value>The maximum height of the console window measured in rows.</value>
+  int LargestWindowHeight { get; }
 
   /// <summary>
   /// Gets a value indicating whether the terminal is interactive.
@@ -113,6 +229,23 @@ public interface ITerminal : IConsole
   bool SupportsHyperlinks { get; }
 
   /// <summary>
+  /// Gets or sets the foreground color of the console.
+  /// </summary>
+  /// <value>The foreground color. The default is gray.</value>
+  ConsoleColor ForegroundColor { get; set; }
+
+  /// <summary>
+  /// Gets or sets the background color of the console.
+  /// </summary>
+  /// <value>The background color. The default is black.</value>
+  ConsoleColor BackgroundColor { get; set; }
+
+  /// <summary>
+  /// Resets the foreground and background console colors to their defaults.
+  /// </summary>
+  void ResetColor();
+
+  /// <summary>
   /// Clears the console buffer and corresponding console window of display information.
   /// </summary>
   void Clear();
@@ -124,4 +257,44 @@ public interface ITerminal : IConsole
   /// This event allows graceful handling of Ctrl+C for interactive applications like REPLs.
   /// </remarks>
   event ConsoleCancelEventHandler? CancelKeyPress;
+
+  /// <summary>
+  /// Plays a beep sound through the console speaker.
+  /// </summary>
+  void Beep();
+
+  /// <summary>
+  /// Plays a beep sound at the specified frequency and duration through the console speaker.
+  /// </summary>
+  /// <param name="frequency">
+  /// The frequency of the beep, ranging from 37 to 32767 hertz.
+  /// </param>
+  /// <param name="duration">
+  /// The duration of the beep, measured in milliseconds.
+  /// </param>
+  void Beep(int frequency, int duration);
+
+  /// <summary>
+  /// Gets or sets a value indicating whether the Ctrl+C key combination
+  /// is treated as ordinary input or as an interrupt.
+  /// </summary>
+  /// <value>
+  /// <c>true</c> if Ctrl+C is treated as ordinary input; <c>false</c> if it raises
+  /// the <see cref="CancelKeyPress"/> event. The default is <c>false</c>.
+  /// </value>
+  bool TreatControlCAsInput { get; set; }
+
+  /// <summary>
+  /// Gets or sets the title to display in the console title bar.
+  /// </summary>
+  /// <value>The string to display in the title bar of the console.</value>
+  string Title { get; set; }
+
+  /// <summary>
+  /// Gets a value indicating whether a key press is available in the input stream.
+  /// </summary>
+  /// <value>
+  /// <c>true</c> if a key press is available; otherwise, <c>false</c>.
+  /// </value>
+  bool KeyAvailable { get; }
 }

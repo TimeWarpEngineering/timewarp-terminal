@@ -592,6 +592,116 @@ public static class Terminal
     Instance.Write(link);
   }
 
+  // Stream Access Methods (IConsole)
+
+  /// <summary>
+  /// Acquires the standard input stream.
+  /// </summary>
+  /// <returns>The standard input stream.</returns>
+  public static Stream OpenStandardInput() => Instance.OpenStandardInput();
+
+  /// <summary>
+  /// Acquires the standard output stream.
+  /// </summary>
+  /// <returns>The standard output stream.</returns>
+  public static Stream OpenStandardOutput() => Instance.OpenStandardOutput();
+
+  /// <summary>
+  /// Acquires the standard error output stream.
+  /// </summary>
+  /// <returns>The standard error output stream.</returns>
+  public static Stream OpenStandardError() => Instance.OpenStandardError();
+
+  /// <summary>
+  /// Gets the standard input reader.
+  /// </summary>
+  /// <value>A <see cref="TextReader"/> that represents the standard input stream.</value>
+  public static TextReader In => Instance.In;
+
+  /// <summary>
+  /// Gets the standard output writer.
+  /// </summary>
+  /// <value>A <see cref="TextWriter"/> that represents the standard output stream.</value>
+  public static TextWriter Out => Instance.Out;
+
+  /// <summary>
+  /// Gets the standard error writer.
+  /// </summary>
+  /// <value>A <see cref="TextWriter"/> that represents the standard error output stream.</value>
+  public static TextWriter Error => Instance.Error;
+
+  /// <summary>
+  /// Sets the <see cref="In"/> property to the specified <see cref="TextReader"/>.
+  /// </summary>
+  /// <param name="reader">A <see cref="TextReader"/> that represents the new standard input stream.</param>
+  public static void SetIn(TextReader reader)
+  {
+    ArgumentNullException.ThrowIfNull(reader);
+    Instance.SetIn(reader);
+  }
+
+  /// <summary>
+  /// Sets the <see cref="Out"/> property to the specified <see cref="TextWriter"/>.
+  /// </summary>
+  /// <param name="writer">A <see cref="TextWriter"/> that represents the new standard output stream.</param>
+  public static void SetOut(TextWriter writer)
+  {
+    ArgumentNullException.ThrowIfNull(writer);
+    Instance.SetOut(writer);
+  }
+
+  /// <summary>
+  /// Sets the <see cref="Error"/> property to the specified <see cref="TextWriter"/>.
+  /// </summary>
+  /// <param name="writer">A <see cref="TextWriter"/> that represents the new standard error output stream.</param>
+  public static void SetError(TextWriter writer)
+  {
+    ArgumentNullException.ThrowIfNull(writer);
+    Instance.SetError(writer);
+  }
+
+  // Encoding Properties (IConsole)
+
+  /// <summary>
+  /// Gets or sets the encoding the console uses to read input.
+  /// </summary>
+  /// <value>The encoding used to read console input.</value>
+  public static Encoding InputEncoding
+  {
+    get => Instance.InputEncoding;
+    set => Instance.InputEncoding = value;
+  }
+
+  /// <summary>
+  /// Gets or sets the encoding the console uses to write output.
+  /// </summary>
+  /// <value>The encoding used to write console output.</value>
+  public static Encoding OutputEncoding
+  {
+    get => Instance.OutputEncoding;
+    set => Instance.OutputEncoding = value;
+  }
+
+  // Redirection Properties (IConsole)
+
+  /// <summary>
+  /// Gets a value indicating whether the input stream has been redirected from the standard input stream.
+  /// </summary>
+  /// <value><c>true</c> if input is redirected; otherwise, <c>false</c>.</value>
+  public static bool IsInputRedirected => Instance.IsInputRedirected;
+
+  /// <summary>
+  /// Gets a value indicating whether the output stream has been redirected from the standard output stream.
+  /// </summary>
+  /// <value><c>true</c> if output is redirected; otherwise, <c>false</c>.</value>
+  public static bool IsOutputRedirected => Instance.IsOutputRedirected;
+
+  /// <summary>
+  /// Gets a value indicating whether the error stream has been redirected from the standard error stream.
+  /// </summary>
+  /// <value><c>true</c> if error output is redirected; otherwise, <c>false</c>.</value>
+  public static bool IsErrorRedirected => Instance.IsErrorRedirected;
+
   // Input Methods
 
   /// <summary>
@@ -603,6 +713,24 @@ public static class Terminal
   public static string? ReadLine() => Instance.ReadLine();
 
   /// <summary>
+  /// Reads the next character from the standard input stream.
+  /// </summary>
+  /// <returns>
+  /// The next character from the input stream, or -1 if no more characters are available.
+  /// </returns>
+  public static int Read() => Instance.Read();
+
+  /// <summary>
+  /// Obtains the next character or function key pressed by the user.
+  /// The pressed key is displayed in the console window.
+  /// </summary>
+  /// <returns>
+  /// An object that describes the <see cref="ConsoleKey"/> constant and Unicode character,
+  /// if any, that correspond to the pressed console key.
+  /// </returns>
+  public static ConsoleKeyInfo ReadKey() => Instance.ReadKey();
+
+  /// <summary>
   /// Obtains the next character or function key pressed by the user.
   /// </summary>
   /// <param name="intercept">
@@ -612,15 +740,252 @@ public static class Terminal
   /// An object that describes the <see cref="ConsoleKey"/> constant and Unicode character,
   /// if any, that correspond to the pressed console key.
   /// </returns>
-  public static ConsoleKeyInfo ReadKey(bool intercept = false) => Instance.ReadKey(intercept);
+  public static ConsoleKeyInfo ReadKey(bool intercept) => Instance.ReadKey(intercept);
+
+  // Cursor Properties (ITerminal)
+
+  /// <summary>
+  /// Gets or sets the column position of the cursor.
+  /// </summary>
+  /// <value>The column position, 0-based from left to right.</value>
+  public static int CursorLeft
+  {
+    get => Instance.CursorLeft;
+    set => Instance.CursorLeft = value;
+  }
+
+  /// <summary>
+  /// Gets or sets the row position of the cursor.
+  /// </summary>
+  /// <value>The row position, 0-based from top to bottom.</value>
+  public static int CursorTop
+  {
+    get => Instance.CursorTop;
+    set => Instance.CursorTop = value;
+  }
+
+  /// <summary>
+  /// Gets or sets a value indicating whether the cursor is visible.
+  /// </summary>
+  /// <value><c>true</c> if the cursor is visible; otherwise, <c>false</c>.</value>
+  public static bool CursorVisible
+  {
+    get => Instance.CursorVisible;
+    set => Instance.CursorVisible = value;
+  }
+
+  /// <summary>
+  /// Gets or sets the height of the cursor within a character cell.
+  /// </summary>
+  /// <value>The cursor size as a percentage from 1 to 100.</value>
+  public static int CursorSize
+  {
+    get => Instance.CursorSize;
+    set => Instance.CursorSize = value;
+  }
+
+  // Window/Buffer Geometry Properties (ITerminal)
+
+  /// <summary>
+  /// Gets or sets the height of the terminal window in characters.
+  /// </summary>
+  /// <value>The height of the terminal window measured in rows.</value>
+  public static int WindowHeight
+  {
+    get => Instance.WindowHeight;
+    set => Instance.WindowHeight = value;
+  }
+
+  /// <summary>
+  /// Gets or sets the left position of the console window area.
+  /// </summary>
+  /// <value>The leftmost position of the console window.</value>
+  public static int WindowLeft
+  {
+    get => Instance.WindowLeft;
+    set => Instance.WindowLeft = value;
+  }
+
+  /// <summary>
+  /// Gets or sets the top position of the console window area.
+  /// </summary>
+  /// <value>The topmost position of the console window.</value>
+  public static int WindowTop
+  {
+    get => Instance.WindowTop;
+    set => Instance.WindowTop = value;
+  }
+
+  /// <summary>
+  /// Gets or sets the width of the buffer area.
+  /// </summary>
+  /// <value>The width of the buffer area measured in columns.</value>
+  public static int BufferWidth
+  {
+    get => Instance.BufferWidth;
+    set => Instance.BufferWidth = value;
+  }
+
+  /// <summary>
+  /// Gets or sets the height of the buffer area.
+  /// </summary>
+  /// <value>The height of the buffer area measured in rows.</value>
+  public static int BufferHeight
+  {
+    get => Instance.BufferHeight;
+    set => Instance.BufferHeight = value;
+  }
+
+  /// <summary>
+  /// Gets the largest possible number of console window columns.
+  /// </summary>
+  /// <value>The maximum width of the console window measured in columns.</value>
+  public static int LargestWindowWidth => Instance.LargestWindowWidth;
+
+  /// <summary>
+  /// Gets the largest possible number of console window rows.
+  /// </summary>
+  /// <value>The maximum height of the console window measured in rows.</value>
+  public static int LargestWindowHeight => Instance.LargestWindowHeight;
+
+  // Window/Buffer Geometry Methods (ITerminal)
+
+  /// <summary>
+  /// Sets the dimensions of the console window to the specified values.
+  /// </summary>
+  /// <param name="width">The width of the console window measured in columns.</param>
+  /// <param name="height">The height of the console window measured in rows.</param>
+  public static void SetWindowSize(int width, int height) => Instance.SetWindowSize(width, height);
+
+  /// <summary>
+  /// Sets the position of the console window relative to the screen buffer.
+  /// </summary>
+  /// <param name="left">The column position of the upper left corner of the console window.</param>
+  /// <param name="top">The row position of the upper left corner of the console window.</param>
+  public static void SetWindowPosition(int left, int top) => Instance.SetWindowPosition(left, top);
+
+  /// <summary>
+  /// Sets the height and width of the screen buffer area to the specified values.
+  /// </summary>
+  /// <param name="width">The width of the buffer area measured in columns.</param>
+  /// <param name="height">The height of the buffer area measured in rows.</param>
+  public static void SetBufferSize(int width, int height) => Instance.SetBufferSize(width, height);
+
+  /// <summary>
+  /// Moves a specified source screen buffer area to a specified destination screen buffer area.
+  /// </summary>
+  /// <param name="sourceLeft">The leftmost column of the source area.</param>
+  /// <param name="sourceTop">The topmost row of the source area.</param>
+  /// <param name="sourceWidth">The number of columns in the source area.</param>
+  /// <param name="sourceHeight">The number of rows in the source area.</param>
+  /// <param name="targetLeft">The leftmost column of the destination area.</param>
+  /// <param name="targetTop">The topmost row of the destination area.</param>
+  /// <param name="sourceChar">The character used to fill the source area.</param>
+  /// <param name="sourceForeColor">The foreground color used to fill the source area.</param>
+  /// <param name="sourceBackColor">The background color used to fill the source area.</param>
+  public static void MoveBufferArea
+  (
+    int sourceLeft,
+    int sourceTop,
+    int sourceWidth,
+    int sourceHeight,
+    int targetLeft,
+    int targetTop,
+    char sourceChar,
+    ConsoleColor sourceForeColor,
+    ConsoleColor sourceBackColor
+  ) => Instance.MoveBufferArea(sourceLeft, sourceTop, sourceWidth, sourceHeight, targetLeft, targetTop, sourceChar, sourceForeColor, sourceBackColor);
+
+  // Color State Properties (ITerminal)
+
+  /// <summary>
+  /// Gets or sets the foreground color of the console.
+  /// </summary>
+  /// <value>The foreground color. The default is gray.</value>
+  public static ConsoleColor ForegroundColor
+  {
+    get => Instance.ForegroundColor;
+    set => Instance.ForegroundColor = value;
+  }
+
+  /// <summary>
+  /// Gets or sets the background color of the console.
+  /// </summary>
+  /// <value>The background color. The default is black.</value>
+  public static ConsoleColor BackgroundColor
+  {
+    get => Instance.BackgroundColor;
+    set => Instance.BackgroundColor = value;
+  }
+
+  /// <summary>
+  /// Resets the foreground and background console colors to their defaults.
+  /// </summary>
+  public static void ResetColor() => Instance.ResetColor();
+
+  // Control/Utility Properties (ITerminal)
+
+  /// <summary>
+  /// Gets or sets a value indicating whether the Ctrl+C key combination
+  /// is treated as ordinary input or as an interrupt.
+  /// </summary>
+  /// <value>
+  /// <c>true</c> if Ctrl+C is treated as ordinary input; <c>false</c> if it raises
+  /// the <see cref="CancelKeyPress"/> event. The default is <c>false</c>.
+  /// </value>
+  public static bool TreatControlCAsInput
+  {
+    get => Instance.TreatControlCAsInput;
+    set => Instance.TreatControlCAsInput = value;
+  }
+
+  /// <summary>
+  /// Gets or sets the title to display in the console title bar.
+  /// </summary>
+  /// <value>The string to display in the title bar of the console.</value>
+  public static string Title
+  {
+    get => Instance.Title;
+    set => Instance.Title = value;
+  }
+
+  /// <summary>
+  /// Gets a value indicating whether a key press is available in the input stream.
+  /// </summary>
+  /// <value>
+  /// <c>true</c> if a key press is available; otherwise, <c>false</c>.
+  /// </value>
+  public static bool KeyAvailable => Instance.KeyAvailable;
+
+  // Control/Utility Methods (ITerminal)
+
+  /// <summary>
+  /// Plays a beep sound through the console speaker.
+  /// </summary>
+  public static void Beep() => Instance.Beep();
+
+  /// <summary>
+  /// Plays a beep sound at the specified frequency and duration through the console speaker.
+  /// </summary>
+  /// <param name="frequency">
+  /// The frequency of the beep, ranging from 37 to 32767 hertz.
+  /// </param>
+  /// <param name="duration">
+  /// The duration of the beep, measured in milliseconds.
+  /// </param>
+  public static void Beep(int frequency, int duration) => Instance.Beep(frequency, duration);
 
   // Terminal Properties
 
   /// <summary>
-  /// Gets the width of the terminal window in characters.
+  /// Gets or sets the width of the terminal window in characters.
   /// </summary>
   /// <value>The width of the terminal window measured in columns.</value>
-  public static int WindowWidth => Instance.WindowWidth;
+  public static int WindowWidth
+  {
+    get => Instance.WindowWidth;
+    set => Instance.WindowWidth = value;
+  }
 
   /// <summary>
   /// Gets a value indicating whether the terminal is interactive.

@@ -45,9 +45,91 @@ public sealed class TestTerminal : ITerminal, IDisposable
   private readonly StringWriter OutputWriter;
   private readonly StringWriter ErrorWriter;
   private readonly Queue<ConsoleKeyInfo> KeyQueue;
-  private int CursorLeft;
-  private int CursorTop;
+  private int CursorLeftField;
+  private int CursorTopField;
+  private int CursorSizeField = 100;
   private bool Disposed;
+  private TextReader InReader;
+  private TextWriter OutWriter;
+  private TextWriter ErrorWriterField;
+
+  /// <summary>
+  /// Gets or sets the mock standard input stream.
+  /// </summary>
+  public Stream StandardInputStream { get; set; }
+
+  /// <summary>
+  /// Gets or sets the mock standard output stream.
+  /// </summary>
+  public Stream StandardOutputStream { get; set; }
+
+  /// <summary>
+  /// Gets or sets the mock standard error stream.
+  /// </summary>
+  public Stream StandardErrorStream { get; set; }
+
+  /// <summary>
+  /// Gets or sets the input encoding for this test terminal.
+  /// </summary>
+  /// <value>The encoding used for input. Defaults to <see cref="Encoding.UTF8"/>.</value>
+  public Encoding InputEncoding { get; set; } = Encoding.UTF8;
+
+  /// <summary>
+  /// Gets or sets the output encoding for this test terminal.
+  /// </summary>
+  /// <value>The encoding used for output. Defaults to <see cref="Encoding.UTF8"/>.</value>
+  public Encoding OutputEncoding { get; set; } = Encoding.UTF8;
+
+  /// <summary>
+  /// Gets or sets a value indicating whether input is redirected.
+  /// </summary>
+  /// <value><c>true</c> if input is redirected; otherwise, <c>false</c>. Defaults to <c>false</c>.</value>
+  public bool IsInputRedirected { get; set; }
+
+  /// <summary>
+  /// Gets or sets a value indicating whether output is redirected.
+  /// </summary>
+  /// <value><c>true</c> if output is redirected; otherwise, <c>false</c>. Defaults to <c>false</c>.</value>
+  public bool IsOutputRedirected { get; set; }
+
+  /// <summary>
+  /// Gets or sets a value indicating whether error output is redirected.
+  /// </summary>
+  /// <value><c>true</c> if error output is redirected; otherwise, <c>false</c>. Defaults to <c>false</c>.</value>
+  public bool IsErrorRedirected { get; set; }
+
+  /// <inheritdoc />
+  public Stream OpenStandardInput()
+    => StandardInputStream;
+
+  /// <inheritdoc />
+  public Stream OpenStandardOutput()
+    => StandardOutputStream;
+
+  /// <inheritdoc />
+  public Stream OpenStandardError()
+    => StandardErrorStream;
+
+  /// <inheritdoc />
+  public TextReader In => InReader;
+
+  /// <inheritdoc />
+  public TextWriter Out => OutWriter;
+
+  /// <inheritdoc />
+  public TextWriter Error => ErrorWriterField;
+
+  /// <inheritdoc />
+  public void SetIn(TextReader reader)
+    => InReader = reader ?? throw new ArgumentNullException(nameof(reader));
+
+  /// <inheritdoc />
+  public void SetOut(TextWriter writer)
+    => OutWriter = writer ?? throw new ArgumentNullException(nameof(writer));
+
+  /// <inheritdoc />
+  public void SetError(TextWriter writer)
+    => ErrorWriterField = writer ?? throw new ArgumentNullException(nameof(writer));
 
   /// <summary>
   /// Initializes a new instance of <see cref="TestTerminal"/> with optional scripted line input.
@@ -65,10 +147,45 @@ public sealed class TestTerminal : ITerminal, IDisposable
     WindowWidth = 80;
     IsInteractive = false; // Testing is non-interactive by default
     SupportsColor = true;
+    InReader = InputReader;
+    OutWriter = OutputWriter;
+    ErrorWriterField = ErrorWriter;
+    StandardInputStream = new MemoryStream();
+    StandardOutputStream = new MemoryStream();
+    StandardErrorStream = new MemoryStream();
 
     // Suppress unused field warnings - these fields will be used when REPL is updated to use ITerminal
-    _ = CursorLeft;
-    _ = CursorTop;
+    _ = CursorLeftField;
+    _ = CursorTopField;
+  }
+
+  /// <inheritdoc />
+  public int CursorLeft
+  {
+    get => CursorLeftField;
+    set => CursorLeftField = value;
+  }
+
+  /// <inheritdoc />
+  public int CursorTop
+  {
+    get => CursorTopField;
+    set => CursorTopField = value;
+  }
+
+  /// <inheritdoc />
+  public bool CursorVisible { get; set; } = true;
+
+  /// <inheritdoc />
+  public int CursorSize
+  {
+    get => CursorSizeField;
+    set
+    {
+      if (value < 1 || value > 100)
+        throw new ArgumentOutOfRangeException(nameof(value), value, "CursorSize must be between 1 and 100.");
+      CursorSizeField = value;
+    }
   }
 
   /// <summary>
@@ -128,6 +245,22 @@ public sealed class TestTerminal : ITerminal, IDisposable
     => InputReader.ReadLine();
 
   /// <inheritdoc />
+  public int Read()
+  {
+    if (KeyQueue.Count > 0)
+    {
+      ConsoleKeyInfo keyInfo = KeyQueue.Dequeue();
+      return keyInfo.KeyChar;
+    }
+
+    return -1;
+  }
+
+  /// <inheritdoc />
+  public ConsoleKeyInfo ReadKey()
+    => ReadKey(false);
+
+  /// <inheritdoc />
   public ConsoleKeyInfo ReadKey(bool intercept)
   {
     if (KeyQueue.Count > 0)
@@ -159,16 +292,80 @@ public sealed class TestTerminal : ITerminal, IDisposable
   /// <inheritdoc />
   public void SetCursorPosition(int left, int top)
   {
-    CursorLeft = left;
-    CursorTop = top;
+    CursorLeftField = left;
+    CursorTopField = top;
   }
 
   /// <inheritdoc />
   public (int Left, int Top) GetCursorPosition()
-    => (CursorLeft, CursorTop);
+    => (CursorLeftField, CursorTopField);
 
   /// <inheritdoc />
   public int WindowWidth { get; set; }
+
+  /// <inheritdoc />
+  public int WindowHeight { get; set; } = 24;
+
+  /// <inheritdoc />
+  public int WindowLeft { get; set; }
+
+  /// <inheritdoc />
+  public int WindowTop { get; set; }
+
+  /// <inheritdoc />
+  public int BufferWidth { get; set; } = 80;
+
+  /// <inheritdoc />
+  public int BufferHeight { get; set; } = 300;
+
+  /// <inheritdoc />
+  public int LargestWindowWidth { get; set; } = 120;
+
+  /// <inheritdoc />
+  public int LargestWindowHeight { get; set; } = 40;
+
+  /// <summary>
+  /// Gets the number of times <see cref="MoveBufferArea"/> has been called.
+  /// </summary>
+  public int MoveBufferAreaCallCount { get; private set; }
+
+  /// <inheritdoc />
+  public void SetWindowSize(int width, int height)
+  {
+    WindowWidth = width;
+    WindowHeight = height;
+  }
+
+  /// <inheritdoc />
+  public void SetWindowPosition(int left, int top)
+  {
+    WindowLeft = left;
+    WindowTop = top;
+  }
+
+  /// <inheritdoc />
+  public void SetBufferSize(int width, int height)
+  {
+    BufferWidth = width;
+    BufferHeight = height;
+  }
+
+  /// <inheritdoc />
+  public void MoveBufferArea
+  (
+    int sourceLeft,
+    int sourceTop,
+    int sourceWidth,
+    int sourceHeight,
+    int targetLeft,
+    int targetTop,
+    char sourceChar,
+    ConsoleColor sourceForeColor,
+    ConsoleColor sourceBackColor
+  )
+  {
+    MoveBufferAreaCallCount++;
+  }
 
   /// <inheritdoc />
   public bool IsInteractive { get; set; }
@@ -178,6 +375,19 @@ public sealed class TestTerminal : ITerminal, IDisposable
 
   /// <inheritdoc />
   public bool SupportsHyperlinks { get; set; }
+
+  /// <inheritdoc />
+  public ConsoleColor ForegroundColor { get; set; } = ConsoleColor.Gray;
+
+  /// <inheritdoc />
+  public ConsoleColor BackgroundColor { get; set; } = ConsoleColor.Black;
+
+  /// <inheritdoc />
+  public void ResetColor()
+  {
+    ForegroundColor = ConsoleColor.Gray;
+    BackgroundColor = ConsoleColor.Black;
+  }
 
   private ConsoleCancelEventHandler? CancelKeyPressHandler;
 
@@ -215,6 +425,42 @@ public sealed class TestTerminal : ITerminal, IDisposable
 
   public void Clear()
     => OutputWriter.WriteLine("[CLEAR]");
+
+  /// <summary>
+  /// Gets the number of times <see cref="Beep()"/> has been called.
+  /// </summary>
+  public int BeepCount { get; private set; }
+
+  /// <summary>
+  /// Gets the frequency of the last <see cref="Beep(int, int)"/> call.
+  /// </summary>
+  public int LastBeepFrequency { get; private set; }
+
+  /// <summary>
+  /// Gets the duration of the last <see cref="Beep(int, int)"/> call.
+  /// </summary>
+  public int LastBeepDuration { get; private set; }
+
+  /// <inheritdoc />
+  public void Beep()
+    => BeepCount++;
+
+  /// <inheritdoc />
+  public void Beep(int frequency, int duration)
+  {
+    BeepCount++;
+    LastBeepFrequency = frequency;
+    LastBeepDuration = duration;
+  }
+
+  /// <inheritdoc />
+  public bool TreatControlCAsInput { get; set; }
+
+  /// <inheritdoc />
+  public string Title { get; set; } = string.Empty;
+
+  /// <inheritdoc />
+  public bool KeyAvailable => KeyQueue.Count > 0;
 
   // ========== Test Helper Methods ==========
 
@@ -349,6 +595,9 @@ public sealed class TestTerminal : ITerminal, IDisposable
     InputReader.Dispose();
     OutputWriter.Dispose();
     ErrorWriter.Dispose();
+    StandardInputStream.Dispose();
+    StandardOutputStream.Dispose();
+    StandardErrorStream.Dispose();
     Disposed = true;
   }
 
