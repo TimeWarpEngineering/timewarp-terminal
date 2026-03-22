@@ -63,6 +63,34 @@ public interface ITerminal : IConsole
   ConsoleKeyInfo ReadKey(bool intercept);
 
   /// <summary>
+  /// Gets or sets the column position of the cursor.
+  /// </summary>
+  /// <value>The column position, 0-based from left to right.</value>
+  int CursorLeft { get; set; }
+
+  /// <summary>
+  /// Gets or sets the row position of the cursor.
+  /// </summary>
+  /// <value>The row position, 0-based from top to bottom.</value>
+  int CursorTop { get; set; }
+
+  /// <summary>
+  /// Gets or sets a value indicating whether the cursor is visible.
+  /// </summary>
+  /// <value><c>true</c> if the cursor is visible; otherwise, <c>false</c>.</value>
+  bool CursorVisible { get; set; }
+
+  /// <summary>
+  /// Gets or sets the height of the cursor within a character cell.
+  /// </summary>
+  /// <value>The cursor size as a percentage from 1 to 100.</value>
+  /// <remarks>
+  /// A value of 1 indicates a horizontal line at the bottom of the cell.
+  /// A value of 100 indicates a full block cursor.
+  /// </remarks>
+  int CursorSize { get; set; }
+
+  /// <summary>
   /// Sets the position of the cursor.
   /// </summary>
   /// <param name="left">The column position of the cursor. Columns are numbered from left to right starting at 0.</param>

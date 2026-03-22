@@ -45,8 +45,9 @@ public sealed class TestTerminal : ITerminal, IDisposable
   private readonly StringWriter OutputWriter;
   private readonly StringWriter ErrorWriter;
   private readonly Queue<ConsoleKeyInfo> KeyQueue;
-  private int CursorLeft;
-  private int CursorTop;
+  private int CursorLeftField;
+  private int CursorTopField;
+  private int CursorSizeField = 100;
   private bool Disposed;
 
   /// <summary>
@@ -97,8 +98,37 @@ public sealed class TestTerminal : ITerminal, IDisposable
     SupportsColor = true;
 
     // Suppress unused field warnings - these fields will be used when REPL is updated to use ITerminal
-    _ = CursorLeft;
-    _ = CursorTop;
+    _ = CursorLeftField;
+    _ = CursorTopField;
+  }
+
+  /// <inheritdoc />
+  public int CursorLeft
+  {
+    get => CursorLeftField;
+    set => CursorLeftField = value;
+  }
+
+  /// <inheritdoc />
+  public int CursorTop
+  {
+    get => CursorTopField;
+    set => CursorTopField = value;
+  }
+
+  /// <inheritdoc />
+  public bool CursorVisible { get; set; } = true;
+
+  /// <inheritdoc />
+  public int CursorSize
+  {
+    get => CursorSizeField;
+    set
+    {
+      if (value < 1 || value > 100)
+        throw new ArgumentOutOfRangeException(nameof(value), value, "CursorSize must be between 1 and 100.");
+      CursorSizeField = value;
+    }
   }
 
   /// <summary>
@@ -205,13 +235,13 @@ public sealed class TestTerminal : ITerminal, IDisposable
   /// <inheritdoc />
   public void SetCursorPosition(int left, int top)
   {
-    CursorLeft = left;
-    CursorTop = top;
+    CursorLeftField = left;
+    CursorTopField = top;
   }
 
   /// <inheritdoc />
   public (int Left, int Top) GetCursorPosition()
-    => (CursorLeft, CursorTop);
+    => (CursorLeftField, CursorTopField);
 
   /// <inheritdoc />
   public int WindowWidth { get; set; }

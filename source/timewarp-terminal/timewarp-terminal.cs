@@ -107,6 +107,131 @@ public sealed class TimeWarpTerminal : ITerminal
     => Console.ReadKey(intercept);
 
   /// <inheritdoc />
+  public int CursorLeft
+  {
+    get
+    {
+      try
+      {
+        return Console.CursorLeft;
+      }
+      catch (IOException)
+      {
+        return 0;
+      }
+    }
+    set
+    {
+      try
+      {
+        Console.CursorLeft = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int CursorTop
+  {
+    get
+    {
+      try
+      {
+        return Console.CursorTop;
+      }
+      catch (IOException)
+      {
+        return 0;
+      }
+    }
+    set
+    {
+      try
+      {
+        Console.CursorTop = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public bool CursorVisible
+  {
+    get
+    {
+      if (!OperatingSystem.IsWindows())
+        return true;
+
+      try
+      {
+        return Console.CursorVisible;
+      }
+      catch (IOException)
+      {
+        return true;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.CursorVisible = value;
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public int CursorSize
+  {
+    get
+    {
+      if (!OperatingSystem.IsWindows())
+        return 100;
+
+      try
+      {
+        return Console.CursorSize;
+      }
+      catch (IOException)
+      {
+        return 100;
+      }
+    }
+    set
+    {
+      if (!OperatingSystem.IsWindows())
+        return;
+
+      try
+      {
+        Console.CursorSize = value;
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
   public void SetCursorPosition(int left, int top)
   {
     try
