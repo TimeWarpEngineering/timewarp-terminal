@@ -35,6 +35,7 @@ public sealed class TestConsole : IConsole, IDisposable
   private readonly StringReader InputReader;
   private readonly StringWriter OutputWriter;
   private readonly StringWriter ErrorWriter;
+  private readonly Queue<char> CharacterQueue;
   private bool Disposed;
 
   /// <summary>
@@ -79,6 +80,7 @@ public sealed class TestConsole : IConsole, IDisposable
     InputReader = new StringReader(input);
     OutputWriter = new StringWriter();
     ErrorWriter = new StringWriter();
+    CharacterQueue = new Queue<char>();
   }
 
   /// <summary>
@@ -128,6 +130,35 @@ public sealed class TestConsole : IConsole, IDisposable
   /// <inheritdoc />
   public string? ReadLine()
     => InputReader.ReadLine();
+
+  /// <inheritdoc />
+  public int Read()
+  {
+    if (CharacterQueue.Count > 0)
+      return CharacterQueue.Dequeue();
+
+    return -1;
+  }
+
+  /// <inheritdoc />
+  public ConsoleKeyInfo ReadKey()
+    => throw new NotSupportedException("TestConsole does not support key-by-key input. Use TestTerminal for interactive key input.");
+
+  /// <summary>
+  /// Queues characters for <see cref="Read"/> to return.
+  /// </summary>
+  /// <param name="characters">The characters to queue.</param>
+  public void QueueCharacters(string characters)
+  {
+    ArgumentNullException.ThrowIfNull(characters);
+    foreach (char c in characters)
+      CharacterQueue.Enqueue(c);
+  }
+
+  /// <summary>
+  /// Gets the number of characters currently in the queue.
+  /// </summary>
+  public int CharactersInQueue => CharacterQueue.Count;
 
   /// <summary>
   /// Clears all captured output.

@@ -158,6 +158,22 @@ public sealed class TestTerminal : ITerminal, IDisposable
     => InputReader.ReadLine();
 
   /// <inheritdoc />
+  public int Read()
+  {
+    if (KeyQueue.Count > 0)
+    {
+      ConsoleKeyInfo keyInfo = KeyQueue.Dequeue();
+      return keyInfo.KeyChar;
+    }
+
+    return -1;
+  }
+
+  /// <inheritdoc />
+  public ConsoleKeyInfo ReadKey()
+    => ReadKey(false);
+
+  /// <inheritdoc />
   public ConsoleKeyInfo ReadKey(bool intercept)
   {
     if (KeyQueue.Count > 0)
