@@ -46,4 +46,27 @@ public sealed class TimeWarpConsole : IConsole
   /// <inheritdoc />
   public string? ReadLine()
     => Console.ReadLine();
+
+  /// <inheritdoc />
+  public Encoding InputEncoding
+  {
+    get => Console.InputEncoding;
+    set => Console.InputEncoding = value;
+  }
+
+  /// <inheritdoc />
+  public Encoding OutputEncoding
+  {
+    get => Console.OutputEncoding;
+    set => Console.OutputEncoding = value;
+  }
+
+  /// <inheritdoc />
+  public bool IsInputRedirected => Console.IsInputRedirected;
+
+  /// <inheritdoc />
+  public bool IsOutputRedirected => Console.IsOutputRedirected;
+
+  /// <inheritdoc />
+  public bool IsErrorRedirected => Console.IsErrorRedirected;
 }

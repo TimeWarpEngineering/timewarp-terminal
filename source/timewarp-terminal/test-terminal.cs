@@ -50,6 +50,36 @@ public sealed class TestTerminal : ITerminal, IDisposable
   private bool Disposed;
 
   /// <summary>
+  /// Gets or sets the input encoding for this test terminal.
+  /// </summary>
+  /// <value>The encoding used for input. Defaults to <see cref="Encoding.UTF8"/>.</value>
+  public Encoding InputEncoding { get; set; } = Encoding.UTF8;
+
+  /// <summary>
+  /// Gets or sets the output encoding for this test terminal.
+  /// </summary>
+  /// <value>The encoding used for output. Defaults to <see cref="Encoding.UTF8"/>.</value>
+  public Encoding OutputEncoding { get; set; } = Encoding.UTF8;
+
+  /// <summary>
+  /// Gets or sets a value indicating whether input is redirected.
+  /// </summary>
+  /// <value><c>true</c> if input is redirected; otherwise, <c>false</c>. Defaults to <c>false</c>.</value>
+  public bool IsInputRedirected { get; set; }
+
+  /// <summary>
+  /// Gets or sets a value indicating whether output is redirected.
+  /// </summary>
+  /// <value><c>true</c> if output is redirected; otherwise, <c>false</c>. Defaults to <c>false</c>.</value>
+  public bool IsOutputRedirected { get; set; }
+
+  /// <summary>
+  /// Gets or sets a value indicating whether error output is redirected.
+  /// </summary>
+  /// <value><c>true</c> if error output is redirected; otherwise, <c>false</c>. Defaults to <c>false</c>.</value>
+  public bool IsErrorRedirected { get; set; }
+
+  /// <summary>
   /// Initializes a new instance of <see cref="TestTerminal"/> with optional scripted line input.
   /// </summary>
   /// <param name="input">

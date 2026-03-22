@@ -72,6 +72,29 @@ public sealed class TimeWarpTerminal : ITerminal
     => Console.ReadLine();
 
   /// <inheritdoc />
+  public Encoding InputEncoding
+  {
+    get => Console.InputEncoding;
+    set => Console.InputEncoding = value;
+  }
+
+  /// <inheritdoc />
+  public Encoding OutputEncoding
+  {
+    get => Console.OutputEncoding;
+    set => Console.OutputEncoding = value;
+  }
+
+  /// <inheritdoc />
+  public bool IsInputRedirected => Console.IsInputRedirected;
+
+  /// <inheritdoc />
+  public bool IsOutputRedirected => Console.IsOutputRedirected;
+
+  /// <inheritdoc />
+  public bool IsErrorRedirected => Console.IsErrorRedirected;
+
+  /// <inheritdoc />
   public ConsoleKeyInfo ReadKey(bool intercept)
     => Console.ReadKey(intercept);
 

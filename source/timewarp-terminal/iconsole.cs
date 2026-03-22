@@ -72,4 +72,34 @@ public interface IConsole
   /// The next line of characters from the input stream, or null if no more lines are available.
   /// </returns>
   string? ReadLine();
+
+  /// <summary>
+  /// Gets or sets the encoding the console uses to read input.
+  /// </summary>
+  /// <value>The encoding used to read console input.</value>
+  Encoding InputEncoding { get; set; }
+
+  /// <summary>
+  /// Gets or sets the encoding the console uses to write output.
+  /// </summary>
+  /// <value>The encoding used to write console output.</value>
+  Encoding OutputEncoding { get; set; }
+
+  /// <summary>
+  /// Gets a value indicating whether the input stream has been redirected from the standard input stream.
+  /// </summary>
+  /// <value><c>true</c> if input is redirected; otherwise, <c>false</c>.</value>
+  bool IsInputRedirected { get; }
+
+  /// <summary>
+  /// Gets a value indicating whether the output stream has been redirected from the standard output stream.
+  /// </summary>
+  /// <value><c>true</c> if output is redirected; otherwise, <c>false</c>.</value>
+  bool IsOutputRedirected { get; }
+
+  /// <summary>
+  /// Gets a value indicating whether the error stream has been redirected from the standard error stream.
+  /// </summary>
+  /// <value><c>true</c> if error output is redirected; otherwise, <c>false</c>.</value>
+  bool IsErrorRedirected { get; }
 }
