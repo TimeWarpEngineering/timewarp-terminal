@@ -634,19 +634,31 @@ public static class Terminal
   /// Sets the <see cref="In"/> property to the specified <see cref="TextReader"/>.
   /// </summary>
   /// <param name="reader">A <see cref="TextReader"/> that represents the new standard input stream.</param>
-  public static void SetIn(TextReader reader) => Instance.SetIn(reader);
+  public static void SetIn(TextReader reader)
+  {
+    ArgumentNullException.ThrowIfNull(reader);
+    Instance.SetIn(reader);
+  }
 
   /// <summary>
   /// Sets the <see cref="Out"/> property to the specified <see cref="TextWriter"/>.
   /// </summary>
   /// <param name="writer">A <see cref="TextWriter"/> that represents the new standard output stream.</param>
-  public static void SetOut(TextWriter writer) => Instance.SetOut(writer);
+  public static void SetOut(TextWriter writer)
+  {
+    ArgumentNullException.ThrowIfNull(writer);
+    Instance.SetOut(writer);
+  }
 
   /// <summary>
   /// Sets the <see cref="Error"/> property to the specified <see cref="TextWriter"/>.
   /// </summary>
   /// <param name="writer">A <see cref="TextWriter"/> that represents the new standard error output stream.</param>
-  public static void SetError(TextWriter writer) => Instance.SetError(writer);
+  public static void SetError(TextWriter writer)
+  {
+    ArgumentNullException.ThrowIfNull(writer);
+    Instance.SetError(writer);
+  }
 
   // Encoding Properties (IConsole)
 

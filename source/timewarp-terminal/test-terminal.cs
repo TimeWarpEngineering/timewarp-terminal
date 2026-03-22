@@ -121,15 +121,15 @@ public sealed class TestTerminal : ITerminal, IDisposable
 
   /// <inheritdoc />
   public void SetIn(TextReader reader)
-    => InReader = reader;
+    => InReader = reader ?? throw new ArgumentNullException(nameof(reader));
 
   /// <inheritdoc />
   public void SetOut(TextWriter writer)
-    => OutWriter = writer;
+    => OutWriter = writer ?? throw new ArgumentNullException(nameof(writer));
 
   /// <inheritdoc />
   public void SetError(TextWriter writer)
-    => ErrorWriterField = writer;
+    => ErrorWriterField = writer ?? throw new ArgumentNullException(nameof(writer));
 
   /// <summary>
   /// Initializes a new instance of <see cref="TestTerminal"/> with optional scripted line input.

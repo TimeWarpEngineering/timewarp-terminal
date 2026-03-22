@@ -660,7 +660,6 @@ public sealed class TimeWarpTerminal : ITerminal
   }
 
   /// <inheritdoc />
-  /// <inheritdoc />
   public event ConsoleCancelEventHandler? CancelKeyPress
   {
     add => Console.CancelKeyPress += value;
@@ -731,6 +730,7 @@ public sealed class TimeWarpTerminal : ITerminal
     }
   }
 
+  /// <inheritdoc />
   public void Clear()
   {
     try
