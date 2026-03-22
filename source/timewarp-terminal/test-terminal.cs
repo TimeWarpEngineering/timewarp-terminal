@@ -255,6 +255,19 @@ public sealed class TestTerminal : ITerminal, IDisposable
   /// <inheritdoc />
   public bool SupportsHyperlinks { get; set; }
 
+  /// <inheritdoc />
+  public ConsoleColor ForegroundColor { get; set; } = ConsoleColor.Gray;
+
+  /// <inheritdoc />
+  public ConsoleColor BackgroundColor { get; set; } = ConsoleColor.Black;
+
+  /// <inheritdoc />
+  public void ResetColor()
+  {
+    ForegroundColor = ConsoleColor.Gray;
+    BackgroundColor = ConsoleColor.Black;
+  }
+
   private ConsoleCancelEventHandler? CancelKeyPressHandler;
 
   /// <inheritdoc />

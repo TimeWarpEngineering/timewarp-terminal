@@ -141,6 +141,23 @@ public interface ITerminal : IConsole
   bool SupportsHyperlinks { get; }
 
   /// <summary>
+  /// Gets or sets the foreground color of the console.
+  /// </summary>
+  /// <value>The foreground color. The default is gray.</value>
+  ConsoleColor ForegroundColor { get; set; }
+
+  /// <summary>
+  /// Gets or sets the background color of the console.
+  /// </summary>
+  /// <value>The background color. The default is black.</value>
+  ConsoleColor BackgroundColor { get; set; }
+
+  /// <summary>
+  /// Resets the foreground and background console colors to their defaults.
+  /// </summary>
+  void ResetColor();
+
+  /// <summary>
   /// Clears the console buffer and corresponding console window of display information.
   /// </summary>
   void Clear();

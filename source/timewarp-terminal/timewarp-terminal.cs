@@ -336,6 +336,70 @@ public sealed class TimeWarpTerminal : ITerminal
     remove => Console.CancelKeyPress -= value;
   }
 
+  /// <inheritdoc />
+  public ConsoleColor ForegroundColor
+  {
+    get
+    {
+      try
+      {
+        return Console.ForegroundColor;
+      }
+      catch (IOException)
+      {
+        return ConsoleColor.Gray;
+      }
+    }
+    set
+    {
+      try
+      {
+        Console.ForegroundColor = value;
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public ConsoleColor BackgroundColor
+  {
+    get
+    {
+      try
+      {
+        return Console.BackgroundColor;
+      }
+      catch (IOException)
+      {
+        return ConsoleColor.Black;
+      }
+    }
+    set
+    {
+      try
+      {
+        Console.BackgroundColor = value;
+      }
+      catch (IOException)
+      {
+      }
+    }
+  }
+
+  /// <inheritdoc />
+  public void ResetColor()
+  {
+    try
+    {
+      Console.ResetColor();
+    }
+    catch (IOException)
+    {
+    }
+  }
+
   public void Clear()
   {
     try
