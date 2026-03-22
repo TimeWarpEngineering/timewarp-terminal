@@ -4,74 +4,18 @@
 
 Goal: **Completely replace the need for `System.Console`** so application code never has to touch it directly. Current API surface is partial—missing significant chunks of the Console API.
 
+This is a parent task. See child tasks for detailed implementation and testing checklists.
+
 ## Checklist
 
-### Phase 1: Core Stream Access (IConsole)
-- [ ] Add `OpenStandardInput()` → `Stream`
-- [ ] Add `OpenStandardOutput()` → `Stream`
-- [ ] Add `OpenStandardError()` → `Stream`
-- [ ] Add `In` → `TextReader` property
-- [ ] Add `Out` → `TextWriter` property
-- [ ] Add `Error` → `TextWriter` property
-- [ ] Add `SetIn(TextReader)` method
-- [ ] Add `SetOut(TextWriter)` method
-- [ ] Add `SetError(TextWriter)` method
-
-### Phase 2: Encoding (IConsole)
-- [ ] Add `InputEncoding` get/set property
-- [ ] Add `OutputEncoding` get/set property
-
-### Phase 3: Redirection State (IConsole)
-- [ ] Add `IsInputRedirected` property
-- [ ] Add `IsOutputRedirected` property
-- [ ] Add `IsErrorRedirected` property
-- [ ] Consider deprecating `IsInteractive` in favor of explicit `!IsInputRedirected`
-
-### Phase 4: Rich Input (IConsole)
-- [ ] Add `Read()` → `int` (reads single character)
-- [ ] Add `ReadKey()` overload without parameter (defaults to intercept: false)
-
-### Phase 5: Cursor Properties (ITerminal)
-- [ ] Add `CursorLeft` get/set property (currently only have method pair)
-- [ ] Add `CursorTop` get/set property (currently only have method pair)
-- [ ] Add `CursorVisible` get/set property
-- [ ] Add `CursorSize` get/set property
-
-### Phase 6: Window/Buffer Geometry (ITerminal)
-- [ ] Add `WindowHeight` property
-- [ ] Add `WindowLeft` property
-- [ ] Add `WindowTop` property
-- [ ] Add `BufferWidth` property
-- [ ] Add `BufferHeight` property
-- [ ] Add `SetWindowSize(int width, int height)` method
-- [ ] Add `SetWindowPosition(int left, int top)` method
-- [ ] Add `SetBufferSize(int width, int height)` method
-- [ ] Add `MoveBufferArea(...)` method
-- [ ] Add `LargestWindowWidth` property
-- [ ] Add `LargestWindowHeight` property
-
-### Phase 7: Color State (ITerminal)
-- [ ] Add `ForegroundColor` get/set property (ConsoleColor)
-- [ ] Add `BackgroundColor` get/set property (ConsoleColor)
-- [ ] Add `ResetColor()` method
-- [ ] Note: Current ANSI extension methods are for inline styling; these are for terminal state
-
-### Phase 8: Control/Utility (ITerminal)
-- [ ] Add `Beep()` method
-- [ ] Add `Beep(int frequency, int duration)` overload
-- [ ] Add `TreatControlCAsInput` get/set property
-- [ ] Add `Title` get/set property
-- [ ] Add `KeyAvailable` property
-
-### Phase 9: Static Terminal Facade
-- [ ] Mirror all new IConsole members on `Terminal` static class
-- [ ] Mirror all new ITerminal members on `Terminal` static class
-
-### Phase 10: Test Implementations
-- [ ] Update `TestConsole` to implement all new IConsole members
-- [ ] Update `TestTerminal` to implement all new ITerminal members
-- [ ] Add mock stream support to test implementations
-- [ ] Add mock encoding support to test implementations
+- [ ] #020-001: Add stream access APIs to IConsole
+- [ ] #020-002: Add encoding and redirection APIs to IConsole
+- [ ] #020-003: Add rich input APIs to IConsole
+- [ ] #020-004: Add cursor properties to ITerminal
+- [ ] #020-005: Add window/buffer geometry to ITerminal
+- [ ] #020-006: Add color state APIs to ITerminal
+- [ ] #020-007: Add control/utility APIs to ITerminal
+- [ ] #020-008: Mirror new APIs on Terminal static class (depends on all above)
 
 ## Notes
 
@@ -108,14 +52,12 @@ Goal: **Completely replace the need for `System.Console`** so application code n
    - `test-terminal.cs`, `test-console.cs`
    - `terminal-static.cs` (for static facade)
 
-4. **Test implementation challenges**:
-   - `OpenStandard*()` methods return `Stream` - test implementations need mock streams
-   - `In`/`Out`/`Error` are `TextReader`/`TextWriter` - test implementations need mock readers/writers
-   - Encoding properties need test defaults
-   - Window/buffer geometry needs sensible test defaults
-
-5. **RS0030 analyzer**: Currently flags `Console.OpenStandard*` usage. Once we expose these on IConsole, the analyzer should be satisfied.
+4. **RS0030 analyzer**: Currently flags `Console.OpenStandard*` usage. Once we expose these on IConsole, the analyzer should be satisfied.
 
 ### Reference
 
 System.Console API docs: https://learn.microsoft.com/en-us/dotnet/api/system.console
+
+## Coding Standards Reminder
+
+Follow the `/csharp` skill for all implementation work on this task and all child tasks.
