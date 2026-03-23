@@ -1,14 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project>
   <!-- MSBuild and NuGet behavior configuration -->
   <PropertyGroup Label="MSBuild/NuGet Configuration">
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup Label="TimeWarp Packages">
-    <PackageVersion Include="TimeWarp.Amuru" Version="1.0.0-beta.21" />
+    <PackageVersion Include="TimeWarp.Amuru" Version="1.0.0-beta.22" />
     <PackageVersion Include="TimeWarp.Builder" Version="1.0.0-beta.1" />
     <PackageVersion Include="TimeWarp.Jaribu" Version="1.0.0-beta.12" />
-    <PackageVersion Include="TimeWarp.Nuru" Version="3.0.0-beta.63" />
+    <PackageVersion Include="TimeWarp.Nuru" Version="3.0.0-beta.65" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <PackageVersion Include="Shouldly" Version="4.3.0" />
