@@ -420,3 +420,6 @@ tools/dev-cli/generated/
 
 # Dev CLI AOT binary
 bin/
+
+# VS Code language server cache
+*.lscache
