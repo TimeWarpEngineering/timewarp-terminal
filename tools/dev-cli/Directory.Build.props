@@ -5,6 +5,7 @@
   <PropertyGroup>
     <!-- Suppress warnings that don't apply to CLI tools -->
     <!-- CA1031: Catch general exception types - OK for CLI error handling -->
+    <!-- CA1034: Nested types - used by Nuru command pattern -->
     <!-- CA1303: Literal strings - OK for CLI output -->
     <!-- CA1508: Dead code analysis false positive -->
     <!-- CA1515: Internal types in exe projects are fine -->
@@ -13,7 +14,7 @@
     <!-- CA2016: CancellationToken forwarding - will address where needed -->
     <!-- CA2000: Dispose on app builder - handled by framework -->
     <!-- RCS1046: Async suffix - private methods don't need it -->
-    <NoWarn>$(NoWarn);CA1031;CA1303;CA1508;CA1515;CA1849;CA2007;CA2016;CA2000;RCS1046</NoWarn>
+    <NoWarn>$(NoWarn);CA1031;CA1034;CA1303;CA1508;CA1515;CA1849;CA2007;CA2016;CA2000;RCS1046;CA5399;IL2104;IL3053;IDE0065</NoWarn>
 
     <!-- AOT Support -->
     <PublishAot>true</PublishAot>
@@ -37,8 +38,10 @@
     <Using Include="System.Xml.Linq" />
 
     <Using Include="TimeWarp.Nuru" />
+    <Using Include="TimeWarp.Nuru.Unit" Static="true" />
     <Using Include="TimeWarp.Amuru" />
     <Using Include="TimeWarp.Terminal" />
+    <Using Include="DevCli" />
     <Using Include="Microsoft.Extensions.DependencyInjection" />
 
     <Using Include="System.Console" Static="true" />
@@ -58,6 +61,7 @@
     <!-- Package references -->
     <PackageReference Include="TimeWarp.Amuru" />
     <PackageReference Include="TimeWarp.Nuru" />
+    <PackageReference Include="TimeWarp.Nuru.DevCli" />
   </ItemGroup>
 
 </Project>

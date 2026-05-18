@@ -39,10 +39,15 @@
 //   dev --help
 // ═══════════════════════════════════════════════════════════════════════════════
 
-using TimeWarp.Nuru;
-
 NuruApp app = NuruApp.CreateBuilder()
   .WithDescription("Development CLI for timewarp-terminal")
+  .ConfigureServices(services =>
+  {
+    services.AddSingleton<IRepoCleanService, RepoCleanService>();
+    services.AddSingleton<NuGetVersionService>();
+    services.AddSingleton<GitTagCheckService>();
+    services.AddSingleton<IRepoConfigService, RepoConfigService>();
+  })
   .DiscoverEndpoints()
   .Build();
 
