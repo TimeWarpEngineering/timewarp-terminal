@@ -1,0 +1,13 @@
+<Project>
+  <!-- Import parent Directory.Build.props -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <!-- Samples should not be packaged -->
+    <IsPackable>false</IsPackable>
+    <!-- Suppress warnings for samples:
+         CA1303: Localization not needed in samples
+         IDE0211: Sample runfiles are file-based apps and require top-level statements -->
+    <NoWarn>$(NoWarn);CA1303;IDE0211</NoWarn>
+  </PropertyGroup>
+</Project>

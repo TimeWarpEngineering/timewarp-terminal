@@ -148,7 +148,9 @@ public sealed class Table
   public string[] Render(int terminalWidth = 80)
   {
     if (ColumnsList.Count == 0)
+    {
       return [];
+    }
 
     int[] columnWidths = CalculateColumnWidths(terminalWidth);
 
@@ -207,7 +209,9 @@ public sealed class Table
       for (int i = 0; i < ColumnsList.Count; i++)
       {
         if (!ColumnsList[i].Grow)
+        {
           fixedContentWidth += widths[i];
+        }
       }
 
       int availableForGrow = terminalWidth - overhead - fixedContentWidth;
@@ -238,7 +242,9 @@ public sealed class Table
         {
           int[] minWidths = new int[ColumnsList.Count];
           for (int i = 0; i < ColumnsList.Count; i++)
+          {
             minWidths[i] = ColumnsList[i].MinWidth ?? 4;
+          }
 
           // Shrink fixed columns proportionally first
           int[] shrinkableAmounts = new int[ColumnsList.Count];
@@ -270,7 +276,9 @@ public sealed class Table
         for (int i = 0; i < ColumnsList.Count; i++)
         {
           if (ColumnsList[i].Grow)
+          {
             widths[i] = 0;
+          }
         }
       }
 
@@ -421,15 +429,18 @@ public sealed class Table
     string colorEnd = !string.IsNullOrEmpty(BorderColor) ? AnsiColors.Reset : "";
 
     StringBuilder sb = new();
-    sb.Append(colorStart);
-    sb.Append(left);
+    _ = sb.Append(colorStart);
+    _ = sb.Append(left);
 
     for (int i = 0; i < columnWidths.Length; i++)
     {
-      if (columnWidths[i] == 0) continue;
+      if (columnWidths[i] == 0)
+      {
+        continue;
+      }
 
       // Each cell has padding (1 space on each side) plus content width
-      sb.Append(horizontal, columnWidths[i] + 2);
+      _ = sb.Append(horizontal, columnWidths[i] + 2);
 
       if (i < columnWidths.Length - 1)
       {
@@ -441,12 +452,14 @@ public sealed class Table
         }
 
         if (hasNextNonZero)
-          sb.Append(junction);
+        {
+          _ = sb.Append(junction);
+        }
       }
     }
 
-    sb.Append(right);
-    sb.Append(colorEnd);
+    _ = sb.Append(right);
+    _ = sb.Append(colorEnd);
 
     return sb.ToString();
   }
@@ -457,13 +470,16 @@ public sealed class Table
     string colorEnd = !string.IsNullOrEmpty(BorderColor) ? AnsiColors.Reset : "";
 
     StringBuilder sb = new();
-    sb.Append(colorStart);
-    sb.Append(vertical);
-    sb.Append(colorEnd);
+    _ = sb.Append(colorStart);
+    _ = sb.Append(vertical);
+    _ = sb.Append(colorEnd);
 
     for (int i = 0; i < columnWidths.Length; i++)
     {
-      if (columnWidths[i] == 0) continue;
+      if (columnWidths[i] == 0)
+      {
+        continue;
+      }
 
       string cellValue = i < cells.Length ? cells[i] ?? "" : "";
       TableColumn column = ColumnsList[i];
@@ -484,12 +500,12 @@ public sealed class Table
       // Apply alignment
       string alignedCell = AlignCell(cellValue, columnWidths[i], column.Alignment);
 
-      sb.Append(' '); // Left padding
-      sb.Append(alignedCell);
-      sb.Append(' '); // Right padding
-      sb.Append(colorStart);
-      sb.Append(vertical);
-      sb.Append(colorEnd);
+      _ = sb.Append(' '); // Left padding
+      _ = sb.Append(alignedCell);
+      _ = sb.Append(' '); // Right padding
+      _ = sb.Append(colorStart);
+      _ = sb.Append(vertical);
+      _ = sb.Append(colorEnd);
     }
 
     return sb.ToString();
@@ -522,10 +538,10 @@ public sealed class Table
 
       if (i > 0)
       {
-        sb.Append("  "); // Column separator for borderless tables
+        _ = sb.Append("  "); // Column separator for borderless tables
       }
 
-      sb.Append(alignedCell);
+      _ = sb.Append(alignedCell);
     }
 
     return sb.ToString();
@@ -561,6 +577,7 @@ public sealed class Table
     {
       TruncateMode.Start => "..." + TakeGraphemesFromEnd(plainText, maxWidth - 3),
       TruncateMode.Middle => TruncateMiddle(plainText, maxWidth),
+      TruncateMode.End => TakeGraphemesFromStart(plainText, maxWidth - 3) + "...",
       _ => TakeGraphemesFromStart(plainText, maxWidth - 3) + "..."
     };
   }
@@ -584,8 +601,11 @@ public sealed class Table
       string grapheme = enumerator.GetTextElement();
       int gw = UnicodeWidth.GetTextWidth(grapheme);
       if (width + gw > maxColumns)
+      {
         break;
-      sb.Append(grapheme);
+      }
+
+      _ = sb.Append(grapheme);
       width += gw;
     }
 
@@ -598,7 +618,9 @@ public sealed class Table
     List<string> graphemes = [];
     TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(text);
     while (enumerator.MoveNext())
+    {
       graphemes.Add(enumerator.GetTextElement());
+    }
 
     StringBuilder sb = new();
     int width = 0;
@@ -606,14 +628,17 @@ public sealed class Table
     {
       int gw = UnicodeWidth.GetTextWidth(graphemes[i]);
       if (width + gw > maxColumns)
+      {
         break;
+      }
+
       width += gw;
     }
 
     // Now collect from the correct starting position
     int skipWidth = UnicodeWidth.GetTextWidth(text) - width;
     int accumulated = 0;
-    sb.Clear();
+    _ = sb.Clear();
     enumerator = StringInfo.GetTextElementEnumerator(text);
     while (enumerator.MoveNext())
     {
@@ -621,7 +646,9 @@ public sealed class Table
       int gw = UnicodeWidth.GetTextWidth(grapheme);
       accumulated += gw;
       if (accumulated > skipWidth)
-        sb.Append(grapheme);
+      {
+        _ = sb.Append(grapheme);
+      }
     }
 
     return sb.ToString();

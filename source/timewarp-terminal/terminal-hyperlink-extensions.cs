@@ -42,11 +42,11 @@ public static class TerminalHyperlinkExtensions
 
     if (terminal.SupportsHyperlinks)
     {
-      terminal.Write(AnsiHyperlinks.CreateLink(text, url));
+      _ = terminal.Write(AnsiHyperlinks.CreateLink(text, url));
     }
     else
     {
-      terminal.Write(text);
+      _ = terminal.Write(text);
     }
 
     return terminal;
@@ -72,11 +72,11 @@ public static class TerminalHyperlinkExtensions
 
     if (terminal.SupportsHyperlinks)
     {
-      terminal.WriteLine(AnsiHyperlinks.CreateLink(text, url));
+      _ = terminal.WriteLine(AnsiHyperlinks.CreateLink(text, url));
     }
     else
     {
-      terminal.WriteLine(text);
+      _ = terminal.WriteLine(text);
     }
 
     return terminal;

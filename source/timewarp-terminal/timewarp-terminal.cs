@@ -203,7 +203,9 @@ public sealed class TimeWarpTerminal : ITerminal
     get
     {
       if (!OperatingSystem.IsWindows())
+      {
         return true;
+      }
 
       try
       {
@@ -217,7 +219,9 @@ public sealed class TimeWarpTerminal : ITerminal
     set
     {
       if (!OperatingSystem.IsWindows())
+      {
         return;
+      }
 
       try
       {
@@ -235,7 +239,9 @@ public sealed class TimeWarpTerminal : ITerminal
     get
     {
       if (!OperatingSystem.IsWindows())
+      {
         return 100;
+      }
 
       try
       {
@@ -249,7 +255,9 @@ public sealed class TimeWarpTerminal : ITerminal
     set
     {
       if (!OperatingSystem.IsWindows())
+      {
         return;
+      }
 
       try
       {
@@ -312,7 +320,9 @@ public sealed class TimeWarpTerminal : ITerminal
     set
     {
       if (!OperatingSystem.IsWindows())
+      {
         return;
+      }
 
       try
       {
@@ -344,7 +354,9 @@ public sealed class TimeWarpTerminal : ITerminal
     set
     {
       if (!OperatingSystem.IsWindows())
+      {
         return;
+      }
 
       try
       {
@@ -376,7 +388,9 @@ public sealed class TimeWarpTerminal : ITerminal
     set
     {
       if (!OperatingSystem.IsWindows())
+      {
         return;
+      }
 
       try
       {
@@ -408,7 +422,9 @@ public sealed class TimeWarpTerminal : ITerminal
     set
     {
       if (!OperatingSystem.IsWindows())
+      {
         return;
+      }
 
       try
       {
@@ -440,7 +456,9 @@ public sealed class TimeWarpTerminal : ITerminal
     set
     {
       if (!OperatingSystem.IsWindows())
+      {
         return;
+      }
 
       try
       {
@@ -472,7 +490,9 @@ public sealed class TimeWarpTerminal : ITerminal
     set
     {
       if (!OperatingSystem.IsWindows())
+      {
         return;
+      }
 
       try
       {
@@ -491,7 +511,9 @@ public sealed class TimeWarpTerminal : ITerminal
   public void SetWindowSize(int width, int height)
   {
     if (!OperatingSystem.IsWindows())
+    {
       return;
+    }
 
     try
     {
@@ -509,7 +531,9 @@ public sealed class TimeWarpTerminal : ITerminal
   public void SetWindowPosition(int left, int top)
   {
     if (!OperatingSystem.IsWindows())
+    {
       return;
+    }
 
     try
     {
@@ -527,7 +551,9 @@ public sealed class TimeWarpTerminal : ITerminal
   public void SetBufferSize(int width, int height)
   {
     if (!OperatingSystem.IsWindows())
+    {
       return;
+    }
 
     try
     {
@@ -556,7 +582,9 @@ public sealed class TimeWarpTerminal : ITerminal
   )
   {
     if (!OperatingSystem.IsWindows())
+    {
       return;
+    }
 
     try
     {
@@ -628,32 +656,46 @@ public sealed class TimeWarpTerminal : ITerminal
   {
     // No hyperlinks if output is redirected
     if (Console.IsOutputRedirected)
+    {
       return false;
+    }
 
     // Windows Terminal
     if (Environment.GetEnvironmentVariable("WT_SESSION") is not null)
+    {
       return true;
+    }
 
     // VS Code integrated terminal
     if (Environment.GetEnvironmentVariable("TERM_PROGRAM") == "vscode")
+    {
       return true;
+    }
 
     // iTerm2
     if (Environment.GetEnvironmentVariable("TERM_PROGRAM") == "iTerm.app")
+    {
       return true;
+    }
 
     // Konsole
     if (Environment.GetEnvironmentVariable("KONSOLE_VERSION") is not null)
+    {
       return true;
+    }
 
     // GNOME Terminal (VTE 0.50+ / version 5000+)
     string? vteVersion = Environment.GetEnvironmentVariable("VTE_VERSION");
     if (vteVersion is not null && int.TryParse(vteVersion, out int version) && version >= 5000)
+    {
       return true;
+    }
 
     // Hyper terminal
     if (Environment.GetEnvironmentVariable("TERM_PROGRAM") == "Hyper")
+    {
       return true;
+    }
 
     // Default: assume no support for unknown terminals
     return false;
@@ -747,14 +789,18 @@ public sealed class TimeWarpTerminal : ITerminal
   public void Beep()
   {
     if (OperatingSystem.IsWindows())
+    {
       Console.Beep();
+    }
   }
 
   /// <inheritdoc />
   public void Beep(int frequency, int duration)
   {
     if (OperatingSystem.IsWindows())
+    {
       Console.Beep(frequency, duration);
+    }
   }
 
   /// <inheritdoc />
@@ -770,13 +816,18 @@ public sealed class TimeWarpTerminal : ITerminal
     get
     {
       if (OperatingSystem.IsWindows())
+      {
         return Console.Title;
+      }
+
       return string.Empty;
     }
     set
     {
       if (OperatingSystem.IsWindows())
+      {
         Console.Title = value;
+      }
     }
   }
 

@@ -1,10 +1,8 @@
-#!/usr/bin/dotnet --
+#!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
 // Tests for CancelKeyPress event on ITerminal
 #pragma warning disable CA1508 // Avoid dead conditional code
-
-using TimeWarp.Terminal;
 
 // Create test terminal
 using TestTerminal terminal = new();

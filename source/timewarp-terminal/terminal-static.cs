@@ -47,8 +47,6 @@ using System.Globalization;
 /// </remarks>
 public static class Terminal
 {
-  private static ITerminal s_Instance = TimeWarpTerminal.Default;
-
   /// <summary>
   /// Gets or sets the terminal instance used by all static methods.
   /// Defaults to <see cref="TimeWarpTerminal.Default"/> for production use.
@@ -61,9 +59,9 @@ public static class Terminal
   /// </remarks>
   public static ITerminal Instance
   {
-    get => s_Instance;
-    set => s_Instance = value ?? throw new ArgumentNullException(nameof(value));
-  }
+    get;
+    set => field = value ?? throw new ArgumentNullException(nameof(value));
+  } = TimeWarpTerminal.Default;
 
   // Output Methods
 
@@ -94,7 +92,7 @@ public static class Terminal
   public static void Write(string? message, ConsoleColor foregroundColor)
   {
     string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
-    Instance.Write(coloredMessage);
+    _ = Instance.Write(coloredMessage);
   }
 
   /// <summary>
@@ -112,7 +110,7 @@ public static class Terminal
   public static void WriteLine(string? message, ConsoleColor foregroundColor)
   {
     string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
-    Instance.WriteLine(coloredMessage);
+    _ = Instance.WriteLine(coloredMessage);
   }
 
   /// <summary>
@@ -133,7 +131,7 @@ public static class Terminal
                             AnsiColors.GetBackground(backgroundColor) +
                             (message ?? string.Empty) +
                             AnsiColors.Reset;
-    Instance.WriteLine(coloredMessage);
+    _ = Instance.WriteLine(coloredMessage);
   }
 
   /// <summary>
@@ -165,7 +163,7 @@ public static class Terminal
   public static void WriteErrorLine(string? message, ConsoleColor foregroundColor)
   {
     string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
-    Instance.WriteErrorLine(coloredMessage);
+    _ = Instance.WriteErrorLine(coloredMessage);
   }
 
   /// <summary>
@@ -315,7 +313,9 @@ public static class Terminal
     Table table = builder.Build();
     string[] lines = table.Render(WindowWidth);
     foreach (string line in lines)
-      Instance.WriteLine(line);
+    {
+      _ = Instance.WriteLine(line);
+    }
   }
 
   /// <summary>
@@ -338,7 +338,9 @@ public static class Terminal
 
     string[] lines = table.Render(WindowWidth);
     foreach (string line in lines)
-      Instance.WriteLine(line);
+    {
+      _ = Instance.WriteLine(line);
+    }
   }
 
   /// <summary>
@@ -395,11 +397,11 @@ public static class Terminal
                              (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +
                              line +
                              AnsiColors.Reset;
-        Instance.WriteLine(coloredLine);
+        _ = Instance.WriteLine(coloredLine);
       }
       else
       {
-        Instance.WriteLine(line);
+        _ = Instance.WriteLine(line);
       }
     }
   }
@@ -426,7 +428,9 @@ public static class Terminal
     Panel panel = builder.Build();
     string[] lines = panel.Render(WindowWidth);
     foreach (string line in lines)
-      Instance.WriteLine(line);
+    {
+      _ = Instance.WriteLine(line);
+    }
   }
 
   /// <summary>
@@ -445,7 +449,9 @@ public static class Terminal
     Panel panel = new() { Content = content, Header = header };
     string[] lines = panel.Render(WindowWidth);
     foreach (string line in lines)
-      Instance.WriteLine(line);
+    {
+      _ = Instance.WriteLine(line);
+    }
   }
 
   /// <summary>
@@ -520,11 +526,11 @@ public static class Terminal
                              (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +
                              line +
                              AnsiColors.Reset;
-        Instance.WriteLine(coloredLine);
+        _ = Instance.WriteLine(coloredLine);
       }
       else
       {
-        Instance.WriteLine(line);
+        _ = Instance.WriteLine(line);
       }
     }
   }
@@ -543,7 +549,7 @@ public static class Terminal
   {
     Rule rule = new() { Title = title };
     string rendered = rule.Render(WindowWidth);
-    Instance.WriteLine(rendered);
+    _ = Instance.WriteLine(rendered);
   }
 
   /// <summary>
@@ -567,7 +573,7 @@ public static class Terminal
 
     Rule rule = builder.Build();
     string rendered = rule.Render(WindowWidth);
-    Instance.WriteLine(rendered);
+    _ = Instance.WriteLine(rendered);
   }
 
   /// <summary>
@@ -589,7 +595,7 @@ public static class Terminal
     ArgumentNullException.ThrowIfNull(text);
 
     string link = AnsiHyperlinks.CreateLink(text, url);
-    Instance.Write(link);
+    _ = Instance.Write(link);
   }
 
   // Stream Access Methods (IConsole)
@@ -931,7 +937,7 @@ public static class Terminal
   /// </summary>
   /// <value>
   /// <c>true</c> if Ctrl+C is treated as ordinary input; <c>false</c> if it raises
-  /// the <see cref="CancelKeyPress"/> event. The default is <c>false</c>.
+  /// the <see cref="ITerminal.CancelKeyPress"/> event. The default is <c>false</c>.
   /// </value>
   public static bool TreatControlCAsInput
   {

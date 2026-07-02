@@ -177,7 +177,7 @@ public static class TerminalPanelExtensions
     string[] lines = panel.Render(terminal.WindowWidth);
     foreach (string line in lines)
     {
-      terminal.WriteLine(line);
+      _ = terminal.WriteLine(line);
     }
   }
 
@@ -191,11 +191,11 @@ public static class TerminalPanelExtensions
                              (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +
                              line +
                              AnsiColors.Reset;
-        terminal.WriteLine(coloredLine);
+        _ = terminal.WriteLine(coloredLine);
       }
       else
       {
-        terminal.WriteLine(line);
+        _ = terminal.WriteLine(line);
       }
     }
   }

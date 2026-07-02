@@ -30,12 +30,12 @@ namespace TimeWarp.Terminal;
 /// {
 ///     using TestTerminal terminal = new();
 ///     using IDisposable scope = TestTerminalContext.Use(terminal);
-///     
+///
 ///     // TimeWarp.Terminal.Terminal.Instance is now set to terminal
 ///     Terminal.WriteLine("Hello");  // Routes to test terminal
-///     
+///
 ///     await Program.Main(["greet", "World"]);
-///     
+///
 ///     terminal.OutputContains("Hello, World!").ShouldBeTrue();
 /// }
 /// </code>
@@ -103,7 +103,9 @@ public static class TestTerminalContext
     TimeWarp.Terminal.Terminal.Instance = snapshot.PreviousInstance;
 
     if (stack.Count == 0)
+    {
       SnapshotStack.Value = null;
+    }
   }
 
   /// <summary>
@@ -144,7 +146,9 @@ public static class TestTerminalContext
     public void Dispose()
     {
       if (Disposed)
+      {
         return;
+      }
 
       ClearCurrent();
       Disposed = true;

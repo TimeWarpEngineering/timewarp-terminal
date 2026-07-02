@@ -21,7 +21,9 @@ public static class UnicodeWidth
 
     // Control characters
     if (Rune.IsControl(rune))
+    {
       return 0;
+    }
 
     UnicodeCategory category = Rune.GetUnicodeCategory(rune);
 
@@ -29,17 +31,30 @@ public static class UnicodeWidth
     if (category is UnicodeCategory.NonSpacingMark
         or UnicodeCategory.EnclosingMark
         or UnicodeCategory.Format)
+    {
       return 0;
+    }
 
     // Explicit zero-width code points
     if (value is 0x00AD) // Soft hyphen
+    {
       return 0;
+    }
+
     if (value is 0x200B or 0x200C or 0x200D or 0x2060) // ZWSP, ZWNJ, ZWJ, WJ
+    {
       return 0;
+    }
+
     if (value is >= 0xFE00 and <= 0xFE0F) // Variation selectors VS1-VS16
+    {
       return 0;
+    }
+
     if (value is >= 0xE0100 and <= 0xE01EF) // Variation selectors supplement
+    {
       return 0;
+    }
 
     // ── Emoji_Presentation=Yes code points (U+2000-U+2BFF) ──
     // Source: Unicode 16.0 emoji-data.txt — only code points that render
@@ -67,93 +82,145 @@ public static class UnicodeWidth
         or 0x27B0 or 0x27BF                              // ➰➿
         or 0x2B1B or 0x2B1C                              // ⬛⬜
         or 0x2B50 or 0x2B55)                             // ⭐⭕
+    {
       return 2;
+    }
 
     // Wide angle brackets
     if (value is >= 0x2329 and <= 0x232A)
+    {
       return 2;
+    }
 
     // ── CJK ranges (width 2) ──
 
     // CJK Radicals, Kangxi, Ideographic Description
     if (value is >= 0x2E80 and <= 0x303E)
+    {
       return 2;
+    }
     // Hiragana, Katakana, Bopomofo, CJK Compatibility
     if (value is >= 0x3041 and <= 0x33BF)
+    {
       return 2;
+    }
     // CJK Unified Ideographs Extension A
     if (value is >= 0x3400 and <= 0x4DBF)
+    {
       return 2;
+    }
     // CJK Unified Ideographs
     if (value is >= 0x4E00 and <= 0x9FFF)
+    {
       return 2;
+    }
     // Yi Syllables and Radicals
     if (value is >= 0xA000 and <= 0xA4CF)
+    {
       return 2;
+    }
     // Hangul Syllables
     if (value is >= 0xAC00 and <= 0xD7A3)
+    {
       return 2;
+    }
     // CJK Compatibility Ideographs
     if (value is >= 0xF900 and <= 0xFAFF)
+    {
       return 2;
+    }
 
     // ── CJK and Fullwidth forms ──
 
     // Vertical Forms
     if (value is >= 0xFE10 and <= 0xFE19)
+    {
       return 2;
+    }
     // CJK Compatibility Forms
     if (value is >= 0xFE30 and <= 0xFE6F)
+    {
       return 2;
+    }
     // Fullwidth Latin, Punctuation, Katakana, Hangul
     if (value is >= 0xFF01 and <= 0xFF60)
+    {
       return 2;
+    }
     // Fullwidth Signs
     if (value is >= 0xFFE0 and <= 0xFFE6)
+    {
       return 2;
+    }
 
     // ── Hangul Jamo ──
 
     if (value is >= 0x1100 and <= 0x115F)
+    {
       return 2;
+    }
 
     // ── Emoji blocks (Supplementary Multilingual Plane) ──
 
     // Mahjong, Dominos, Playing Cards, Enclosed Alphanumerics Supplement
     if (value is >= 0x1F000 and <= 0x1FAFF)
+    {
       return 2;
+    }
+
     if (value is >= 0x1FC00 and <= 0x1FFFF)
+    {
       return 2;
+    }
+
     // Regional indicator symbols (flag emoji components)
     if (value is >= 0x1F1E0 and <= 0x1F1FF)
+    {
       return 2;
+    }
 
     // ── CJK Extensions in Supplementary Ideographic Plane ──
 
     // CJK Extension B
     if (value is >= 0x20000 and <= 0x2A6DF)
+    {
       return 2;
+    }
     // CJK Extension C
     if (value is >= 0x2A700 and <= 0x2B73F)
+    {
       return 2;
+    }
     // CJK Extension D
     if (value is >= 0x2B740 and <= 0x2B81F)
+    {
       return 2;
+    }
     // CJK Extension E
     if (value is >= 0x2B820 and <= 0x2CEAF)
+    {
       return 2;
+    }
     // CJK Extension F
     if (value is >= 0x2CEB0 and <= 0x2EBEF)
+    {
       return 2;
+    }
     // CJK Compatibility Ideographs Supplement
     if (value is >= 0x2F800 and <= 0x2FA1F)
+    {
       return 2;
+    }
     // CJK Extension G
     if (value is >= 0x30000 and <= 0x3134F)
+    {
       return 2;
+    }
     // CJK Extension H
     if (value is >= 0x31350 and <= 0x323AF)
+    {
       return 2;
+    }
 
     return 1;
   }
@@ -168,7 +235,9 @@ public static class UnicodeWidth
   public static int GetTextWidth(string? text)
   {
     if (string.IsNullOrEmpty(text))
+    {
       return 0;
+    }
 
     TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(text);
     int totalWidth = 0;
@@ -191,7 +260,10 @@ public static class UnicodeWidth
       foreach (Rune rune in grapheme.EnumerateRunes())
       {
         if (runeCount == 0)
+        {
           firstRuneWidth = GetRuneWidth(rune);
+        }
+
         runeCount++;
       }
 

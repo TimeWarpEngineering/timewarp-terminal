@@ -1,4 +1,4 @@
-#!/usr/bin/dotnet --
+#!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
 // Test Rule widget basic functionality
@@ -10,134 +10,134 @@ return await RunAllTests();
 namespace TimeWarp.Terminal.Tests.Core.RuleWidget
 {
 
-[TestTag("Widgets")]
-public class RuleWidgetBasicTests
-{
-  [ModuleInitializer]
-  internal static void Register() => RegisterTests<RuleWidgetBasicTests>();
-
-  public static async Task Should_render_simple_rule_at_specified_width()
+  [TestTag("Widgets")]
+  public class RuleWidgetBasicTests
   {
-    // Arrange
-    Rule rule = new RuleBuilder().Build();
+    [ModuleInitializer]
+    internal static void Register() => RegisterTests<RuleWidgetBasicTests>();
 
-    // Act
-    string rendered = rule.Render(40);
+    public static async Task Should_render_simple_rule_at_specified_width()
+    {
+      // Arrange
+      Rule rule = new RuleBuilder().Build();
 
-    // Assert
-    rendered.Length.ShouldBe(40);
-    rendered.ShouldBe(new string('─', 40));
+      // Act
+      string rendered = rule.Render(40);
 
-    await Task.CompletedTask;
+      // Assert
+      rendered.Length.ShouldBe(40);
+      rendered.ShouldBe(new string('─', 40));
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_render_rule_with_centered_title()
+    {
+      // Arrange
+      Rule rule = new RuleBuilder().Title("Test").Build();
+
+      // Act
+      string rendered = rule.Render(40);
+
+      // Assert
+      rendered.ShouldContain("Test");
+      rendered.ShouldContain("─");
+
+      // Title should be roughly centered
+      int testIndex = rendered.IndexOf("Test", StringComparison.Ordinal);
+      testIndex.ShouldBeGreaterThan(10);
+      testIndex.ShouldBeLessThan(25);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_render_rule_with_doubled_style()
+    {
+      // Arrange
+      Rule rule = new RuleBuilder().Style(LineStyle.Doubled).Build();
+
+      // Act
+      string rendered = rule.Render(20);
+
+      // Assert
+      rendered.ShouldBe(new string('═', 20));
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_render_rule_with_heavy_style()
+    {
+      // Arrange
+      Rule rule = new RuleBuilder().Style(LineStyle.Heavy).Build();
+
+      // Act
+      string rendered = rule.Render(20);
+
+      // Assert
+      rendered.ShouldBe(new string('━', 20));
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_render_rule_with_color()
+    {
+      // Arrange
+      Rule rule = new RuleBuilder().Color(AnsiColors.Cyan).Build();
+
+      // Act
+      string rendered = rule.Render(20);
+
+      // Assert
+      rendered.ShouldContain(AnsiColors.Cyan);
+      rendered.ShouldContain(AnsiColors.Reset);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_render_rule_with_fixed_width()
+    {
+      // Arrange
+      Rule rule = new RuleBuilder().Width(30).Build();
+
+      // Act
+      string rendered = rule.Render(80); // Terminal width should be ignored
+
+      // Assert
+      rendered.Length.ShouldBe(30);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_handle_title_longer_than_width()
+    {
+      // Arrange
+      Rule rule = new RuleBuilder().Title("This is a very long title").Build();
+
+      // Act
+      string rendered = rule.Render(20);
+
+      // Assert - Should just show the title if not enough space
+      rendered.ShouldContain("This is a very long title");
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_preserve_title_ansi_codes_when_colored()
+    {
+      // Arrange
+      string styledTitle = "Test".Cyan();
+      Rule rule = new RuleBuilder().Title(styledTitle).Color(AnsiColors.Yellow).Build();
+
+      // Act
+      string rendered = rule.Render(40);
+
+      // Assert - Title should keep its color
+      rendered.ShouldContain(AnsiColors.Cyan);
+      // Line color should be applied
+      rendered.ShouldContain(AnsiColors.Yellow);
+
+      await Task.CompletedTask;
+    }
   }
-
-  public static async Task Should_render_rule_with_centered_title()
-  {
-    // Arrange
-    Rule rule = new RuleBuilder().Title("Test").Build();
-
-    // Act
-    string rendered = rule.Render(40);
-
-    // Assert
-    rendered.ShouldContain("Test");
-    rendered.ShouldContain("─");
-
-    // Title should be roughly centered
-    int testIndex = rendered.IndexOf("Test", StringComparison.Ordinal);
-    testIndex.ShouldBeGreaterThan(10);
-    testIndex.ShouldBeLessThan(25);
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_render_rule_with_doubled_style()
-  {
-    // Arrange
-    Rule rule = new RuleBuilder().Style(LineStyle.Doubled).Build();
-
-    // Act
-    string rendered = rule.Render(20);
-
-    // Assert
-    rendered.ShouldBe(new string('═', 20));
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_render_rule_with_heavy_style()
-  {
-    // Arrange
-    Rule rule = new RuleBuilder().Style(LineStyle.Heavy).Build();
-
-    // Act
-    string rendered = rule.Render(20);
-
-    // Assert
-    rendered.ShouldBe(new string('━', 20));
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_render_rule_with_color()
-  {
-    // Arrange
-    Rule rule = new RuleBuilder().Color(AnsiColors.Cyan).Build();
-
-    // Act
-    string rendered = rule.Render(20);
-
-    // Assert
-    rendered.ShouldContain(AnsiColors.Cyan);
-    rendered.ShouldContain(AnsiColors.Reset);
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_render_rule_with_fixed_width()
-  {
-    // Arrange
-    Rule rule = new RuleBuilder().Width(30).Build();
-
-    // Act
-    string rendered = rule.Render(80); // Terminal width should be ignored
-
-    // Assert
-    rendered.Length.ShouldBe(30);
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_handle_title_longer_than_width()
-  {
-    // Arrange
-    Rule rule = new RuleBuilder().Title("This is a very long title").Build();
-
-    // Act
-    string rendered = rule.Render(20);
-
-    // Assert - Should just show the title if not enough space
-    rendered.ShouldContain("This is a very long title");
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_preserve_title_ansi_codes_when_colored()
-  {
-    // Arrange
-    string styledTitle = "Test".Cyan();
-    Rule rule = new RuleBuilder().Title(styledTitle).Color(AnsiColors.Yellow).Build();
-
-    // Act
-    string rendered = rule.Render(40);
-
-    // Assert - Title should keep its color
-    rendered.ShouldContain(AnsiColors.Cyan);
-    // Line color should be applied
-    rendered.ShouldContain(AnsiColors.Yellow);
-
-    await Task.CompletedTask;
-  }
-}
 
 } // namespace TimeWarp.Terminal.Tests.Core.RuleWidget

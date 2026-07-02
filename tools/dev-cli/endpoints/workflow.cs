@@ -65,7 +65,10 @@ internal sealed class WorkflowCommand : ICommand<Unit>
         .WithArguments("clean", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-v", "q")
         .WithWorkingDirectory(repoRoot)
         .RunAsync();
-      if (exitCode != 0) throw new InvalidOperationException("Clean failed!");
+      if (exitCode != 0)
+      {
+        throw new InvalidOperationException("Clean failed!");
+      }
 
       // Step 2: Build
       Terminal.WriteLine("\nStep 2/4: Build");
@@ -73,7 +76,10 @@ internal sealed class WorkflowCommand : ICommand<Unit>
         .WithArguments("build", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-c", "Release")
         .WithWorkingDirectory(repoRoot)
         .RunAsync();
-      if (exitCode != 0) throw new InvalidOperationException("Build failed!");
+      if (exitCode != 0)
+      {
+        throw new InvalidOperationException("Build failed!");
+      }
 
       // Step 3: Verify Samples
       Terminal.WriteLine("\nStep 3/4: Verify Samples");
@@ -89,7 +95,10 @@ internal sealed class WorkflowCommand : ICommand<Unit>
             .WithArguments("run", sampleFile, "--", "--help")
             .WithWorkingDirectory(samplesDir)
             .RunAsync();
-          if (exitCode != 0) throw new InvalidOperationException($"Sample verification failed: {fileName}");
+          if (exitCode != 0)
+          {
+            throw new InvalidOperationException($"Sample verification failed: {fileName}");
+          }
         }
       }
 
@@ -99,7 +108,10 @@ internal sealed class WorkflowCommand : ICommand<Unit>
         .WithArguments("test", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "--no-build", "-v", "n")
         .WithWorkingDirectory(repoRoot)
         .RunAsync();
-      if (exitCode != 0) throw new InvalidOperationException("Tests failed!");
+      if (exitCode != 0)
+      {
+        throw new InvalidOperationException("Tests failed!");
+      }
 
       Terminal.WriteLine("\n✓ CI Pipeline completed successfully");
     }
@@ -115,7 +127,10 @@ internal sealed class WorkflowCommand : ICommand<Unit>
         .WithArguments("clean", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-v", "q")
         .WithWorkingDirectory(repoRoot)
         .RunAsync();
-      if (exitCode != 0) throw new InvalidOperationException("Clean failed!");
+      if (exitCode != 0)
+      {
+        throw new InvalidOperationException("Clean failed!");
+      }
 
       // Step 2: Build
       Terminal.WriteLine("\nStep 2/4: Build");
@@ -123,7 +138,10 @@ internal sealed class WorkflowCommand : ICommand<Unit>
         .WithArguments("build", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-c", "Release")
         .WithWorkingDirectory(repoRoot)
         .RunAsync();
-      if (exitCode != 0) throw new InvalidOperationException("Build failed!");
+      if (exitCode != 0)
+      {
+        throw new InvalidOperationException("Build failed!");
+      }
 
       // Step 3: Check Version
       Terminal.WriteLine("\nStep 3/4: Check Version");
@@ -211,7 +229,13 @@ internal sealed class WorkflowCommand : ICommand<Unit>
             .WithApiKey(apiKey)
             .RunAsync(ct);
 
-          if (exitCode != 0) throw new InvalidOperationException($"NuGet push failed: {packageName}");
+          if (exitCode != 0)
+
+          {
+
+            throw new InvalidOperationException($"NuGet push failed: {packageName}");
+
+          }
         }
 
         Terminal.WriteLine("✓ Packages pushed to NuGet.org");

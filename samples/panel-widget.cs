@@ -1,4 +1,4 @@
-#!/usr/bin/dotnet --
+#!/usr/bin/env -S dotnet --
 // panel-widget-demo - Demonstrates the Panel widget for bordered boxes
 // GitHub Issue: https://github.com/TimeWarpEngineering/timewarp-terminal/issues/90
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj

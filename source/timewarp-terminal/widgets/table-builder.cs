@@ -31,7 +31,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddColumn(string header)
   {
-    Table.AddColumn(header);
+    _ = Table.AddColumn(header);
     return this;
   }
 
@@ -43,7 +43,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddColumn(string header, Alignment alignment)
   {
-    Table.AddColumn(header, alignment);
+    _ = Table.AddColumn(header, alignment);
     return this;
   }
 
@@ -54,7 +54,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddColumn(TableColumn column)
   {
-    Table.AddColumn(column);
+    _ = Table.AddColumn(column);
     return this;
   }
 
@@ -65,7 +65,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddColumns(params string[] headers)
   {
-    Table.AddColumns(headers);
+    _ = Table.AddColumns(headers);
     return this;
   }
 
@@ -76,7 +76,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddColumns(params TableColumn[] columns)
   {
-    Table.AddColumns(columns);
+    _ = Table.AddColumns(columns);
     return this;
   }
 
@@ -87,7 +87,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddRow(params string[] cells)
   {
-    Table.AddRow(cells);
+    _ = Table.AddRow(cells);
     return this;
   }
 
@@ -143,7 +143,6 @@ public sealed class TableBuilder : IBuilder<Table>
     return this;
   }
 
-  /// <summary>
   /// <summary>
   /// Builds the configured <see cref="Table"/> instance.
   /// </summary>

@@ -35,7 +35,9 @@ public static partial class AnsiStringUtils
   public static string StripAnsiCodes(string? text)
   {
     if (string.IsNullOrEmpty(text))
+    {
       return string.Empty;
+    }
 
     return AnsiRegex().Replace(text, string.Empty);
   }
@@ -55,7 +57,9 @@ public static partial class AnsiStringUtils
   public static int GetVisibleLength(string? text)
   {
     if (string.IsNullOrEmpty(text))
+    {
       return 0;
+    }
 
     return UnicodeWidth.GetTextWidth(StripAnsiCodes(text));
   }
@@ -70,11 +74,15 @@ public static partial class AnsiStringUtils
   public static string PadRightVisible(string? text, int totalWidth, char paddingChar = ' ')
   {
     if (string.IsNullOrEmpty(text))
+    {
       return new string(paddingChar, totalWidth);
+    }
 
     int visibleLength = GetVisibleLength(text);
     if (visibleLength >= totalWidth)
+    {
       return text;
+    }
 
     return text + new string(paddingChar, totalWidth - visibleLength);
   }
@@ -89,11 +97,15 @@ public static partial class AnsiStringUtils
   public static string PadLeftVisible(string? text, int totalWidth, char paddingChar = ' ')
   {
     if (string.IsNullOrEmpty(text))
+    {
       return new string(paddingChar, totalWidth);
+    }
 
     int visibleLength = GetVisibleLength(text);
     if (visibleLength >= totalWidth)
+    {
       return text;
+    }
 
     return new string(paddingChar, totalWidth - visibleLength) + text;
   }
@@ -108,11 +120,15 @@ public static partial class AnsiStringUtils
   public static string CenterVisible(string? text, int totalWidth, char paddingChar = ' ')
   {
     if (string.IsNullOrEmpty(text))
+    {
       return new string(paddingChar, totalWidth);
+    }
 
     int visibleLength = GetVisibleLength(text);
     if (visibleLength >= totalWidth)
+    {
       return text;
+    }
 
     int totalPadding = totalWidth - visibleLength;
     int leftPadding = totalPadding / 2;
@@ -131,16 +147,20 @@ public static partial class AnsiStringUtils
   /// <code>
   /// string longText = "This is a very long text that needs wrapping";
   /// var lines = AnsiStringUtils.WrapText(longText, 20);
-  /// // Returns multiple lines, each with visible length <= 20
+  /// // Returns multiple lines, each with visible length &lt;= 20
   /// </code>
   /// </example>
   public static IReadOnlyList<string> WrapText(string? text, int maxWidth)
   {
     if (string.IsNullOrEmpty(text))
+    {
       return [""];
+    }
 
     if (maxWidth < 1)
+    {
       maxWidth = 1;
+    }
 
     List<string> result = [];
 
@@ -158,7 +178,7 @@ public static partial class AnsiStringUtils
       {
         // Track ANSI state for carrying across lines
         UpdateAnsiState(activeAnsiState, segment.Text);
-        currentLine.Append(segment.Text);
+        _ = currentLine.Append(segment.Text);
       }
       else
       {
@@ -170,12 +190,14 @@ public static partial class AnsiStringUtils
           int wordLength = UnicodeWidth.GetTextWidth(word);
 
           if (wordLength == 0)
+          {
             continue;
+          }
 
           // Check if word fits on current line
           if (currentLineWidth + wordLength <= maxWidth)
           {
-            currentLine.Append(word);
+            _ = currentLine.Append(word);
             currentLineWidth += wordLength;
           }
           else if (currentLineWidth == 0)
@@ -191,16 +213,19 @@ public static partial class AnsiStringUtils
               {
                 // Close current line with reset if we have active state
                 if (activeAnsiState.Length > 0)
-                  currentLine.Append(AnsiColors.Reset);
+                {
+                  _ = currentLine.Append(AnsiColors.Reset);
+                }
+
                 result.Add(currentLine.ToString());
 
                 // Start new line with active state
-                currentLine.Clear();
-                currentLine.Append(activeAnsiState);
+                _ = currentLine.Clear();
+                _ = currentLine.Append(activeAnsiState);
                 currentLineWidth = 0;
               }
 
-              currentLine.Append(grapheme);
+              _ = currentLine.Append(grapheme);
               currentLineWidth += graphemeWidth;
             }
           }
@@ -209,12 +234,15 @@ public static partial class AnsiStringUtils
             // Start a new line
             // Close current line with reset if we have active state
             if (activeAnsiState.Length > 0)
-              currentLine.Append(AnsiColors.Reset);
+            {
+              _ = currentLine.Append(AnsiColors.Reset);
+            }
+
             result.Add(currentLine.ToString());
 
             // Start new line with active state
-            currentLine.Clear();
-            currentLine.Append(activeAnsiState);
+            _ = currentLine.Clear();
+            _ = currentLine.Append(activeAnsiState);
             currentLineWidth = 0;
 
             // Handle the word on the new line
@@ -222,7 +250,7 @@ public static partial class AnsiStringUtils
             {
               // Trim leading space if word starts with space
               string trimmedWord = word.TrimStart();
-              currentLine.Append(trimmedWord);
+              _ = currentLine.Append(trimmedWord);
               currentLineWidth = UnicodeWidth.GetTextWidth(trimmedWord);
             }
             else
@@ -235,20 +263,25 @@ public static partial class AnsiStringUtils
                 int graphemeWidth = UnicodeWidth.GetTextWidth(grapheme);
 
                 if (grapheme == " " && currentLineWidth == 0)
+                {
                   continue; // Skip leading spaces on new line
+                }
 
                 if (currentLineWidth + graphemeWidth > maxWidth && currentLineWidth > 0)
                 {
                   if (activeAnsiState.Length > 0)
-                    currentLine.Append(AnsiColors.Reset);
+                  {
+                    _ = currentLine.Append(AnsiColors.Reset);
+                  }
+
                   result.Add(currentLine.ToString());
 
-                  currentLine.Clear();
-                  currentLine.Append(activeAnsiState);
+                  _ = currentLine.Clear();
+                  _ = currentLine.Append(activeAnsiState);
                   currentLineWidth = 0;
                 }
 
-                currentLine.Append(grapheme);
+                _ = currentLine.Append(grapheme);
                 currentLineWidth += graphemeWidth;
               }
             }
@@ -265,7 +298,9 @@ public static partial class AnsiStringUtils
 
     // Ensure we return at least one empty line
     if (result.Count == 0)
+    {
       result.Add("");
+    }
 
     return result;
   }
@@ -322,17 +357,17 @@ public static partial class AnsiStringUtils
     {
       if (char.IsWhiteSpace(c))
       {
-        current.Append(c);
+        _ = current.Append(c);
         // End of word (including trailing space)
         if (current.Length > 0)
         {
           words.Add(current.ToString());
-          current.Clear();
+          _ = current.Clear();
         }
       }
       else
       {
-        current.Append(c);
+        _ = current.Append(c);
       }
     }
 
@@ -354,7 +389,7 @@ public static partial class AnsiStringUtils
     // Check if this is a reset code
     if (ansiCode is "\x1b[0m" or "\x1b[m")
     {
-      state.Clear();
+      _ = state.Clear();
     }
     // Check if this is an OSC 8 end hyperlink sequence (reset hyperlink)
     else if (ansiCode.StartsWith("\x1b]8;;", StringComparison.Ordinal) &&
@@ -373,13 +408,13 @@ public static partial class AnsiStringUtils
       else
       {
         // This is a start hyperlink, add to state
-        state.Append(ansiCode);
+        _ = state.Append(ansiCode);
       }
     }
     else
     {
       // Accumulate other ANSI codes (colors, styles)
-      state.Append(ansiCode);
+      _ = state.Append(ansiCode);
     }
   }
 }

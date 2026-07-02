@@ -37,9 +37,6 @@ public sealed class TestConsole : IConsole, IDisposable
   private readonly StringWriter ErrorWriter;
   private readonly Queue<char> CharacterQueue;
   private bool Disposed;
-  private TextReader InReader;
-  private TextWriter OutWriter;
-  private TextWriter ErrorWriterField;
 
   /// <summary>
   /// Gets or sets the mock standard input stream.
@@ -99,25 +96,25 @@ public sealed class TestConsole : IConsole, IDisposable
     => StandardErrorStream;
 
   /// <inheritdoc />
-  public TextReader In => InReader;
+  public TextReader In { get; private set; }
 
   /// <inheritdoc />
-  public TextWriter Out => OutWriter;
+  public TextWriter Out { get; private set; }
 
   /// <inheritdoc />
-  public TextWriter Error => ErrorWriterField;
+  public TextWriter Error { get; private set; }
 
   /// <inheritdoc />
   public void SetIn(TextReader reader)
-    => InReader = reader ?? throw new ArgumentNullException(nameof(reader));
+    => In = reader ?? throw new ArgumentNullException(nameof(reader));
 
   /// <inheritdoc />
   public void SetOut(TextWriter writer)
-    => OutWriter = writer ?? throw new ArgumentNullException(nameof(writer));
+    => Out = writer ?? throw new ArgumentNullException(nameof(writer));
 
   /// <inheritdoc />
   public void SetError(TextWriter writer)
-    => ErrorWriterField = writer ?? throw new ArgumentNullException(nameof(writer));
+    => Error = writer ?? throw new ArgumentNullException(nameof(writer));
 
   /// <summary>
   /// Initializes a new instance of <see cref="TestConsole"/> with optional scripted input.
@@ -132,9 +129,9 @@ public sealed class TestConsole : IConsole, IDisposable
     OutputWriter = new StringWriter();
     ErrorWriter = new StringWriter();
     CharacterQueue = new Queue<char>();
-    InReader = InputReader;
-    OutWriter = OutputWriter;
-    ErrorWriterField = ErrorWriter;
+    In = InputReader;
+    Out = OutputWriter;
+    Error = ErrorWriter;
     StandardInputStream = new MemoryStream();
     StandardOutputStream = new MemoryStream();
     StandardErrorStream = new MemoryStream();
@@ -192,7 +189,9 @@ public sealed class TestConsole : IConsole, IDisposable
   public int Read()
   {
     if (CharacterQueue.Count > 0)
+    {
       return CharacterQueue.Dequeue();
+    }
 
     return -1;
   }
@@ -209,7 +208,9 @@ public sealed class TestConsole : IConsole, IDisposable
   {
     ArgumentNullException.ThrowIfNull(characters);
     foreach (char c in characters)
+    {
       CharacterQueue.Enqueue(c);
+    }
   }
 
   /// <summary>
@@ -222,8 +223,8 @@ public sealed class TestConsole : IConsole, IDisposable
   /// </summary>
   public void Clear()
   {
-    OutputWriter.GetStringBuilder().Clear();
-    ErrorWriter.GetStringBuilder().Clear();
+    _ = OutputWriter.GetStringBuilder().Clear();
+    _ = ErrorWriter.GetStringBuilder().Clear();
   }
 
   /// <summary>
@@ -262,7 +263,9 @@ public sealed class TestConsole : IConsole, IDisposable
   public void Dispose()
   {
     if (Disposed)
+    {
       return;
+    }
 
     InputReader.Dispose();
     OutputWriter.Dispose();

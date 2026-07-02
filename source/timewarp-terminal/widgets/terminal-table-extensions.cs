@@ -94,11 +94,11 @@ public static class TerminalTableExtensions
                              (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +
                              line +
                              AnsiColors.Reset;
-        terminal.WriteLine(coloredLine);
+        _ = terminal.WriteLine(coloredLine);
       }
       else
       {
-        terminal.WriteLine(line);
+        _ = terminal.WriteLine(line);
       }
     }
   }
@@ -123,7 +123,7 @@ public static class TerminalTableExtensions
     string[] lines = table.Render(terminal.WindowWidth);
     foreach (string line in lines)
     {
-      terminal.WriteLine(line);
+      _ = terminal.WriteLine(line);
     }
   }
 }

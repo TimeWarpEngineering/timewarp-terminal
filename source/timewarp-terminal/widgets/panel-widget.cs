@@ -92,7 +92,9 @@ public sealed class Panel
   private string[] RenderWithoutBorder()
   {
     if (string.IsNullOrEmpty(Content))
+    {
       return [];
+    }
 
     return Content.Split('\n');
   }
@@ -113,7 +115,10 @@ public sealed class Panel
 
     // Content area width = total width - 2 borders - 2×horizontal padding
     int contentAreaWidth = width - 2 - (2 * PaddingHorizontal);
-    if (contentAreaWidth < 1) contentAreaWidth = 1;
+    if (contentAreaWidth < 1)
+    {
+      contentAreaWidth = 1;
+    }
 
     // Split content into lines and optionally wrap
     List<string> contentLines = [];
