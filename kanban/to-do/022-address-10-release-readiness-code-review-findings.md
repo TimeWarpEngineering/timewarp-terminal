@@ -1,0 +1,212 @@
+# Address 1.0 release readiness code review findings
+
+## Description
+
+Complete code review of the TimeWarp.Terminal library (all 25 source files, ~7,200 lines)
+in preparation for moving from 1.0.0-beta.13 to a stable 1.0.0 release. Six review passes
+covered: core abstractions (IConsole/ITerminal/TimeWarpConsole/TimeWarpTerminal), the static
+facade + hyperlinks, the shipped test doubles, the table subsystem, text/ANSI/unicode
+utilities + panel/rule widgets, and packaging/API-surface/semver readiness.
+
+Blockers must be fixed before 1.0. Majors should be fixed or explicitly accepted (many are
+behavioral contracts that become breaking changes to fix after 1.0). Minors are judgment
+calls — triage each.
+
+## Checklist — Blockers (must fix before 1.0)
+
+- [ ] `terminal-static.cs:447,495` — `WritePanel(string, string?)` and
+      `WritePanel(string, string?, ConsoleColor?, ConsoleColor?)` make
+      `Terminal.WritePanel("content")` a CS0121 ambiguous-call compile error; that exact
+      call is the documented example at line 443. Collapse the overload set.
+- [ ] `widgets/rule-widget.cs:102-110` — colored rule with a title longer than the width
+      recomputes negative left/right line lengths and `new string(char, -n)` throws
+      ArgumentOutOfRangeException, bypassing the min-width fallback computed at line 74.
+- [ ] `timewarp-terminal.cs:219` — CursorVisible setter is gated behind
+      `OperatingSystem.IsWindows()` and silently no-ops on Linux/macOS, but
+      `Console.CursorVisible`'s *setter* is supported on Unix (only the getter throws).
+      Hide/show cursor is core REPL functionality broken on the primary platforms.
+- [ ] `Directory.Packages.props:9` — stable 1.0.0 would depend on prerelease
+      TimeWarp.Builder 1.0.0-beta.3 (non-private; IBuilder<T> is implemented by public
+      builder types) and trip NU5104. Needs a stable TimeWarp.Builder or the dependency
+      removed/internalized.
+
+## Checklist — Major (fix or explicitly accept; behavioral contracts freeze at 1.0)
+
+### Platform gating & core correctness
+- [ ] `timewarp-terminal.cs:825` — Title setter Windows-gated but Console.Title's setter
+      works on Unix; silently no-ops on Linux/macOS.
+- [ ] `timewarp-terminal.cs:789` — parameterless Beep() Windows-gated but Console.Beep()
+      is cross-platform (BEL on Unix); only Beep(freq, duration) is Windows-only.
+- [ ] `timewarp-terminal.cs:835` — KeyAvailable catches only IOException but Console
+      throws InvalidOperationException when stdin is redirected — crashes in exactly the
+      redirected scenario the fallback exists for.
+- [ ] `iterminal.cs:262` (and members) — interface XML docs promise unconditional behavior
+      while TimeWarpTerminal silently no-ops on non-Windows and swallows exceptions;
+      document the actual contract before it freezes at 1.0.
+
+### Static facade
+- [ ] `terminal-static.cs:60-64` + `test-terminal-context.cs:86` — Terminal.Instance is a
+      process-global mutable static; TestTerminalContext stores Current in AsyncLocal but
+      still swaps the global, so the documented "parallel test isolation" guarantee is
+      false — parallel tests last-writer-win and can restore stale instances.
+- [ ] `terminal-static.cs:92-135,163` — colored Write/WriteLine/WriteErrorLine emit ANSI
+      unconditionally, ignoring SupportsColor / NO_COLOR / redirection; raw escapes land
+      in piped output.
+- [ ] `terminal-static.cs:184-290` — format overloads use InvariantCulture where
+      System.Console uses current culture; silent formatting differences for migrated
+      code, undocumented.
+- [ ] `terminal-static.cs:591-599` — static Terminal.WriteLink always emits raw OSC 8,
+      while the same-named ITerminal.WriteLink extension checks SupportsHyperlinks and
+      falls back to plain text; two same-named APIs with different behavior.
+- [ ] `terminal-static.cs` — facade exposes TreatControlCAsInput but omits the
+      CancelKeyPress event both ITerminal and System.Console provide; Ctrl+C handling
+      requires reaching through Terminal.Instance.
+- [ ] `ansi-hyperlink-extensions.cs:30` — CreateLink does no URI validation/escaping; a
+      URL containing ESC/BEL/ST terminates the OSC 8 sequence early = terminal
+      escape-injection vector via attacker-influenced URLs.
+
+### Test doubles (shipped public API)
+- [ ] `test-terminal-context.cs:94-99` — ClearCurrent with an empty snapshot stack nulls
+      Context.Value but never restores Terminal.Instance; AsyncLocal writes don't flow
+      back from async helpers, so Instance can be left pointing at a disposed
+      TestTerminal for the rest of the run (ObjectDisposedException in later tests).
+- [ ] `test-terminal.cs:237-246` — Read() only drains KeyQueue and returns -1, never
+      consuming constructor input: `new TestTerminal("abc").Read()` returns -1 while
+      ReadLine() returns "abc"; contradicts Console where both consume the same stream.
+- [ ] `test-terminal.cs:456` — KeyAvailable reflects only KeyQueue even though ReadKey()
+      synthesizes keys from constructor input, so `while (KeyAvailable) ReadKey()` loops
+      behave opposite to a real console.
+- [ ] `test-terminal.cs:469-514,536` — QueueKey ignores shift/ctrl when computing KeyChar
+      (shift:true yields 'a' not 'A'; ctrl:true yields 'a' not ''); QueueKeys("A")
+      produces shift:false.
+- [ ] `test-console.cs:200-201` — TestConsole.ReadKey() throws NotSupportedException
+      while inheriting IConsole docs that promise a value; first-party implementation
+      violates its own contract (suggests ReadKey belongs on ITerminal — breaking to move
+      later).
+
+### Widgets / text
+- [ ] `widgets/unicode-width.cs:260-279` — GetTextWidth treats every multi-rune grapheme
+      as width 2, so NFD combining sequences ("e" + U+0301) measure 2 instead of 1;
+      misaligns borders for decomposed Latin text.
+- [ ] `widgets/unicode-width.cs:163-180` — blanket 0x1F000-0x1FAFF wide range makes
+      narrow EAW=N blocks wide (playing cards, ornamental dingbats, alchemical symbols);
+      regional-indicator branch unreachable inside it; genuinely wide ranges missing
+      (Hangul Jamo Ext-A, Tangut, Kana Extended, CJK Compat tail).
+- [ ] `widgets/ansi-string-utils.cs:14-15` — strip/measure regex only matches SGR ('m')
+      CSI + OSC 8; cursor movement, erase, private-mode sequences count as visible
+      characters, corrupting all width math for real ANSI streams.
+- [ ] `widgets/ansi-string-utils.cs:186-289` — WrapText treats an ANSI code mid-word as a
+      word boundary, so a single styled word can wrap mid-word and get TrimStart'ed.
+- [ ] `widgets/panel-widget.cs:226-229` — with WordWrap(false), long lines are never
+      truncated (comment says "Pad or truncate" but PadRightVisible never truncates) and
+      push past the right border, breaking the box.
+- [ ] `widgets/table-widget.cs:569` — TruncateWithEllipsis strips all ANSI codes in every
+      branch despite the line-493 comment claiming codes are preserved; truncated cells
+      silently lose colors.
+- [ ] `widgets/table-widget.cs:276-282,223-234` — Grow columns hard-set to width 0 when
+      fixed columns fill the terminal (content silently vanishes) and MinWidth is never
+      consulted, contradicting table-column.cs docs.
+- [ ] `widgets/table-builder.cs:150` — Build() returns the live Table instance (no
+      snapshot); building twice yields the same object and post-Build builder calls
+      mutate the "built" table.
+
+### Packaging / release pipeline
+- [ ] `tools/dev-cli/endpoints/workflow.cs:121` — release pipeline is
+      clean→build→check-version→pack→push with no test or verify-samples step; 1.0.0
+      could publish from a commit whose tests never ran on the release event.
+- [ ] `timewarp-terminal.csproj:23` — README.md is packed as a file but PackageReadmeFile
+      is never set, so nuget.org shows no readme.
+- [ ] `Directory.Build.props:66` + `csproj:13` — IsAotCompatible=true is claimed while
+      all trim/AOT diagnostics (IL2026/IL2067/IL2070/IL2075/IL3050/IL2104/IL3053) are
+      globally NoWarn'd "not yet implemented"; the package advertises AOT compat that is
+      unverified.
+- [ ] `README.md:193` — Table quickstart calls `.Shrink()` which does not exist on
+      TableBuilder; front-page sample does not compile.
+- [ ] `tools/dev-cli/endpoints/workflow.cs:204` — no symbol package (snupkg) and no
+      ContinuousIntegrationBuild; no debugger symbols published for 1.0.
+
+## Checklist — Minor (triage)
+
+- [ ] `timewarp-terminal.cs:647` — NO_COLOR honored even when set to empty string (spec
+      says non-empty disables); no TERM=dumb / FORCE_COLOR handling.
+- [ ] `timewarp-terminal.cs:293` — GetCursorPosition reads CursorLeft then CursorTop
+      non-atomically instead of Console.GetCursorPosition(); pair can tear.
+- [ ] `timewarp-terminal.cs:807` — TreatControlCAsInput lacks the try/catch every other
+      member has; throws when no console attached.
+- [ ] `iterminal.cs:175` — MoveBufferArea/CursorSize/Window-Buffer setters bake
+      Windows-legacy-console APIs into the cross-platform interface; unremovable after 1.0.
+- [ ] `timewarp-terminal.cs:642` — IsInteractive checks only input redirection; stdout
+      piped still reports interactive, and docs don't say which stream.
+- [ ] `ansi-hyperlink-extensions.cs:30` vs `terminal-static.cs:591` —
+      CreateLink(displayText, url) and WriteLink(url, text) take the same two strings in
+      opposite order; invites silently transposed args.
+- [ ] `terminal-static.cs:128,163,591` — overload asymmetry: WriteLine has (fg,bg) but
+      Write/WriteErrorLine have fg-only or none; WriteLink has no WriteLinkLine.
+- [ ] `terminal-static.cs:102,110-114` — colored-overload docs claim null message writes
+      "only the line terminator" but color prefix + reset escapes are still emitted.
+- [ ] `test-terminal.cs:261-265` — ReadKey at EOF fabricates Ctrl+D forever (real console
+      throws when redirected); undocumented sentinel becomes contract.
+- [ ] `test-terminal.cs:47,456` — KeyQueue and StringWriters unsynchronized while
+      System.Console members are documented thread-safe; production-safe code can fail
+      only under the double.
+- [ ] `test-terminal.cs:399-415` — SimulateCancelKeyPress reflects into
+      ConsoleCancelEventArgs' non-public ctor and silently no-ops if lookup fails
+      (trimming/AOT/future BCL); false-passing consumer tests.
+- [ ] `test-terminal.cs:419-420` — Clear() appends a "[CLEAR]" marker line to captured
+      output; behavior only documented in internal Design region, not public docs.
+- [ ] `test-terminal.cs:628-630` — Dispose disposes consumer-assigned Standard*Stream
+      property values; duplicated summary doc block at 606-611; no cursor/window arg
+      validation vs Console's ArgumentOutOfRangeException; TestTerminalContext class doc
+      mentions DI resolution Resolve() doesn't implement (test-terminal-context.cs:21).
+- [ ] `widgets/ansi-string-utils.cs:387-418` — wrap state machine never clears OSC 8
+      hyperlink state on the end sequence and SGR reset wrongly wipes hyperlink state;
+      wrapped lines re-open closed hyperlinks.
+- [ ] `ansi-colors.cs:210-253` — GetForeground maps dark and bright ConsoleColors to the
+      same SGR code (Red/DarkRed both 31; bright 91-97 unused; background likewise).
+- [ ] `widgets/ansi-string-utils.cs:74-137` — Pad*/Center with negative width throw
+      ArgumentOutOfRangeException from `new string(c, negative)`; clamp or document.
+- [ ] `widgets/table-widget.cs:139` — AddRow stores null params array without check; NRE
+      at Render far from call site (AddColumns throws eagerly by contrast).
+- [ ] `widgets/terminal-table-extensions.cs:93-96` — WriteTable fg/bg prefix is cancelled
+      by the first embedded AnsiColors.Reset (border/cell colors), so the color overload
+      malfunctions when combined with BorderColor or colored cells.
+- [ ] `widgets/table-widget.cs:292` — Expand silently ignored when Border is None;
+      undocumented.
+- [ ] `widgets/table-widget.cs:298-305` — Expand distributes width to MaxWidth-capped
+      columns, violating the MaxWidth contract.
+- [ ] `widgets/table-widget.cs:198-199` — 3-char overhead reserved for Grow columns that
+      later collapse to width 0, over-shrinking fixed columns.
+- [ ] `widgets/table-builder.cs:153-157` — ToTable() doc references an implicit operator
+      that doesn't exist.
+- [ ] Overload pairs differing only by trailing optional ConsoleColor params
+      (`terminal-table-extensions.cs:36/57,78/112`, `terminal-panel-extensions.cs:31-56,
+      109-141,149-173`, facade equivalents) — optional-param overloads are unreachable
+      without explicit args and the redundant pairs freeze into the 1.0 surface.
+- [ ] `tools/dev-cli/endpoints/workflow.cs:147` — check-version never compares the props
+      version to the GitHub release tag that triggered the run; a v1.0.0 release event
+      with props still at beta would silently push another beta.
+- [ ] `Directory.Build.props:17` — net10.0-only target excludes LTS (net8.0) consumers at
+      1.0 launch; single-TFM is a deliberate choice worth confirming.
+- [ ] `source/Directory.Build.props:6` — missing PackageProjectUrl, RepositoryType, and a
+      PackageReleaseNotes strategy.
+- [ ] `terminal-static.cs:48` — type `TimeWarp.Terminal.Terminal` collides with its
+      namespace (CA1724 suppressed); permanent qualification awkwardness — confirm as
+      accepted design.
+- [ ] `README.md:59-67` — README teaches raw `Terminal.Instance =` swapping and never
+      mentions TestTerminalContext, the safer shipped API.
+
+## Notes
+
+- Review executed by six parallel subsystem reviewers; all blocker findings were
+  independently re-verified against the source before filing.
+- Clean areas worth noting: TimeWarpConsole delegation, CancelKeyPress event forwarding,
+  proportional shrink arithmetic in table-widget, grapheme-based cell truncation, ragged
+  row handling, box-chars/border-style/line-style, license/icon packaging metadata, OIDC
+  trusted publishing setup, all-public-types-sealed + internal widget constructors, and
+  version single-sourcing via source/Directory.Build.props.
+- `./bin/dev check-version` already reports 1.0.0-beta.13 as published — the version bump
+  to 1.0.0 should happen only after blockers (at minimum) are resolved.
+
+## Session
+
+- Created + review: 096d9aa9-8cec-4987-a576-91698523d859 (2026-07-03)
