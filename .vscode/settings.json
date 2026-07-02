@@ -19,5 +19,6 @@
     "titleBar.activeForeground": "#e7e7e7",
     "titleBar.inactiveBackground": "#07be5399",
     "titleBar.inactiveForeground": "#e7e7e799"
-  }
+  },
+  "window.title": "timewarp-terminal · ${rootName}${separator}${activeEditorShort}"
 }
