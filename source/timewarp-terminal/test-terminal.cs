@@ -8,6 +8,10 @@ namespace TimeWarp.Terminal;
 #region Design
 // Captures output via StringWriter instances for both stdout and stderr.
 // Queues individual ConsoleKeyInfo for ReadKey — simulates real keystroke-by-keystroke REPL input.
+// Read, ReadKey, and KeyAvailable fall back to unread constructor input when the key queue is empty,
+// matching System.Console semantics where Read/ReadLine/ReadKey share one input source.
+// QueueKey honors modifiers for letters: shift produces an uppercase KeyChar and ctrl produces the
+// control character (char)(key - ConsoleKey.A + 1); QueueKeys sets the shift flag for uppercase letters.
 // Clear() writes "[CLEAR]" marker so tests can verify it was called without losing captured output.
 // IsInteractive defaults to false; SupportsColor defaults to true for color verification.
 // IDisposable cleans up StringReader and StringWriter resources.
@@ -242,7 +246,7 @@ public sealed class TestTerminal : ITerminal, IDisposable
       return keyInfo.KeyChar;
     }
 
-    return -1;
+    return InputReader.Read();
   }
 
   /// <inheritdoc />
@@ -453,7 +457,7 @@ public sealed class TestTerminal : ITerminal, IDisposable
   public string Title { get; set; } = string.Empty;
 
   /// <inheritdoc />
-  public bool KeyAvailable => KeyQueue.Count > 0;
+  public bool KeyAvailable => KeyQueue.Count > 0 || InputReader.Peek() != -1;
 
   // ========== Test Helper Methods ==========
 
@@ -513,6 +517,19 @@ public sealed class TestTerminal : ITerminal, IDisposable
       _ => '\0'
     };
 
+    if (key is >= ConsoleKey.A and <= ConsoleKey.Z)
+    {
+      if (ctrl)
+      {
+        // Real terminals produce control characters for Ctrl+A through Ctrl+Z
+        keyChar = (char)(key - ConsoleKey.A + 1);
+      }
+      else if (shift)
+      {
+        keyChar = char.ToUpperInvariant(keyChar);
+      }
+    }
+
     KeyQueue.Enqueue(new ConsoleKeyInfo(keyChar, key, shift, alt, ctrl));
   }
 
@@ -533,7 +550,8 @@ public sealed class TestTerminal : ITerminal, IDisposable
     foreach (char c in text)
     {
       ConsoleKey key = CharToConsoleKey(c);
-      KeyQueue.Enqueue(new ConsoleKeyInfo(c, key, false, false, false));
+      bool shift = char.IsAsciiLetterUpper(c);
+      KeyQueue.Enqueue(new ConsoleKeyInfo(c, key, shift, false, false));
     }
   }
 

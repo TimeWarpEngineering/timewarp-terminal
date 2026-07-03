@@ -167,6 +167,34 @@ namespace TimeWarp.Terminal.Tests.Core.TableWidgetGrow
       await Task.CompletedTask;
     }
 
+    public static async Task Should_keep_grow_column_at_min_width_in_tight_terminal()
+    {
+      // Regression: when fixed columns consumed the full terminal width,
+      // grow columns were hard-set to width 0 and their content silently vanished.
+      // A grow column must never be sized below max(4, MinWidth).
+      // Arrange
+      TableColumn growColumn = new("Grow") { Grow = true, MinWidth = 6 };
+      Table table = new TableBuilder()
+        .AddColumn(new TableColumn("Fixed"))
+        .AddColumn(growColumn)
+        .AddRow(new string('x', 50), "GrowDataValue")
+        .Border(BorderStyle.Rounded)
+        .Build();
+
+      // Act - fixed column alone exceeds the 30-char terminal
+      string[] lines = table.Render(30);
+
+      // Assert - grow column keeps MinWidth 6: content truncates instead of vanishing
+      string dataRow = lines[3];
+      dataRow.ShouldContain("Gro...");
+
+      // Fixed column absorbs the shrink so the table still fits the terminal
+      int topLineWidth = AnsiStringUtils.GetVisibleLength(lines[0]);
+      topLineWidth.ShouldBeLessThanOrEqualTo(30);
+
+      await Task.CompletedTask;
+    }
+
     public static async Task Should_keep_grow_column_natural_width_when_no_remaining_space()
     {
       // Bug: When terminal is narrower than fixed columns + grow column natural width,

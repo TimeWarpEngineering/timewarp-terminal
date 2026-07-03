@@ -144,14 +144,40 @@ public sealed class TableBuilder : IBuilder<Table>
   }
 
   /// <summary>
-  /// Builds the configured <see cref="Table"/> instance.
+  /// Builds a <see cref="Table"/> snapshot of the current builder state.
+  /// Each call returns an independent table; mutating the builder afterwards
+  /// does not affect previously built tables.
   /// </summary>
   /// <returns>The configured table.</returns>
-  public Table Build() => Table;
+  public Table Build()
+  {
+    Table snapshot = new()
+    {
+      Border = Table.Border,
+      BorderColor = Table.BorderColor,
+      ShowHeaders = Table.ShowHeaders,
+      ShowRowSeparators = Table.ShowRowSeparators,
+      Expand = Table.Expand
+    };
+
+    // Copy the lists so the snapshot is independent of the builder.
+    // TableColumn instances are settings objects and may be shared.
+    foreach (TableColumn column in Table.Columns)
+    {
+      _ = snapshot.AddColumn(column);
+    }
+
+    foreach (string[] row in Table.Rows)
+    {
+      _ = snapshot.AddRow(row);
+    }
+
+    return snapshot;
+  }
 
   /// <summary>
-  /// Converts the builder to a <see cref="Table"/>.
-  /// Alternate method for languages that don't support implicit operators.
+  /// Builds a <see cref="Table"/> snapshot of the current builder state.
+  /// Explicit alternative to <see cref="Build"/>.
   /// </summary>
   /// <returns>The configured table.</returns>
   public Table ToTable() => Build();

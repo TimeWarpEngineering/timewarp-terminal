@@ -136,6 +136,7 @@ public sealed class Table
   /// </remarks>
   internal Table AddRow(params string[] cells)
   {
+    ArgumentNullException.ThrowIfNull(cells);
     RowsList.Add(cells);
     return this;
   }
@@ -214,29 +215,52 @@ public sealed class Table
         }
       }
 
-      int availableForGrow = terminalWidth - overhead - fixedContentWidth;
-      int growCount = ColumnsList.Count(c => c.Grow);
-
-      if (availableForGrow > 0)
+      // A grow column is never sized below max(4, MinWidth)
+      int[] growMinWidths = new int[ColumnsList.Count];
+      int totalGrowMin = 0;
+      int growCount = 0;
+      for (int i = 0; i < ColumnsList.Count; i++)
       {
-        // Distribute remaining space evenly among grow columns
-        int perGrowColumn = availableForGrow / growCount;
-        int remainder = availableForGrow % growCount;
+        if (ColumnsList[i].Grow)
+        {
+          growMinWidths[i] = Math.Max(4, ColumnsList[i].MinWidth ?? 4);
+          totalGrowMin += growMinWidths[i];
+          growCount++;
+        }
+      }
+
+      int availableForGrow = terminalWidth - overhead - fixedContentWidth;
+
+      if (availableForGrow >= totalGrowMin)
+      {
+        // Give each grow column its minimum, then distribute the surplus evenly
+        int surplus = availableForGrow - totalGrowMin;
+        int perGrowColumn = surplus / growCount;
+        int remainder = surplus % growCount;
         int growIndex = 0;
 
         for (int i = 0; i < ColumnsList.Count; i++)
         {
           if (ColumnsList[i].Grow)
           {
-            widths[i] = perGrowColumn + (growIndex < remainder ? 1 : 0);
+            widths[i] = growMinWidths[i] + perGrowColumn + (growIndex < remainder ? 1 : 0);
             growIndex++;
           }
         }
       }
       else
       {
-        // Not enough space — shrink fixed columns first, then grow columns
-        int excessWidth = overhead + fixedContentWidth - terminalWidth;
+        // Not enough space — grow columns hold at their minimum width and the
+        // remaining overflow is shrunk out of the fixed columns proportionally
+        for (int i = 0; i < ColumnsList.Count; i++)
+        {
+          if (ColumnsList[i].Grow)
+          {
+            widths[i] = growMinWidths[i];
+          }
+        }
+
+        int excessWidth = overhead + fixedContentWidth + totalGrowMin - terminalWidth;
 
         if (excessWidth > 0)
         {
@@ -246,7 +270,7 @@ public sealed class Table
             minWidths[i] = ColumnsList[i].MinWidth ?? 4;
           }
 
-          // Shrink fixed columns proportionally first
+          // Shrink fixed columns proportionally (grow columns are already at minimum)
           int[] shrinkableAmounts = new int[ColumnsList.Count];
           int totalShrinkable = 0;
           for (int i = 0; i < ColumnsList.Count; i++)
@@ -271,15 +295,6 @@ public sealed class Table
             }
           }
         }
-
-        // Grow columns get zero width — fixed columns already consumed all available space
-        for (int i = 0; i < ColumnsList.Count; i++)
-        {
-          if (ColumnsList[i].Grow)
-          {
-            widths[i] = 0;
-          }
-        }
       }
 
       return widths;
@@ -292,15 +307,38 @@ public sealed class Table
     if (Expand && Border != BorderStyle.None && totalWidth < terminalWidth)
     {
       int extraWidth = terminalWidth - totalWidth;
-      int perColumn = extraWidth / ColumnsList.Count;
-      int remainder = extraWidth % ColumnsList.Count;
 
-      for (int i = 0; i < ColumnsList.Count; i++)
+      // Distribute extra width among columns that are not capped at MaxWidth.
+      // Loop because a round can push a column to its cap, requiring its
+      // unused share to be redistributed to the remaining uncapped columns.
+      while (extraWidth > 0)
       {
-        widths[i] += perColumn;
-        if (i < remainder)
+        List<int> expandableIndices = [];
+        for (int i = 0; i < ColumnsList.Count; i++)
         {
-          widths[i]++;
+          int? maxWidth = ColumnsList[i].MaxWidth;
+          if (!maxWidth.HasValue || widths[i] < maxWidth.Value)
+          {
+            expandableIndices.Add(i);
+          }
+        }
+
+        if (expandableIndices.Count == 0)
+        {
+          break; // All columns capped at MaxWidth — stop distributing
+        }
+
+        int perColumn = extraWidth / expandableIndices.Count;
+        int remainder = extraWidth % expandableIndices.Count;
+
+        for (int j = 0; j < expandableIndices.Count; j++)
+        {
+          int i = expandableIndices[j];
+          int share = perColumn + (j < remainder ? 1 : 0);
+          int? maxWidth = ColumnsList[i].MaxWidth;
+          int addition = maxWidth.HasValue ? Math.Min(share, maxWidth.Value - widths[i]) : share;
+          widths[i] += addition;
+          extraWidth -= addition;
         }
       }
     }

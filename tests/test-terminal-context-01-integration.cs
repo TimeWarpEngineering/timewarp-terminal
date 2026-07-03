@@ -119,6 +119,26 @@ namespace TimeWarp.Terminal.Tests.Core.TestTerminalContextIntegration
       await Task.CompletedTask;
     }
 
+    public static async Task Should_reset_instance_to_default_when_clearing_without_snapshot()
+    {
+      // Arrange - set Terminal.Instance directly (bypassing SetCurrent, so no snapshot exists)
+      ITerminal original = TimeWarp.Terminal.Terminal.Instance;
+      using TestTerminal testTerminal = new();
+      TimeWarp.Terminal.Terminal.Instance = testTerminal;
+
+      // Act - ClearCurrent with an empty snapshot stack
+      TestTerminalContext.ClearCurrent();
+
+      // Assert - Instance must not remain pointing at the test terminal
+      TimeWarp.Terminal.Terminal.Instance.ShouldNotBe(testTerminal);
+      TimeWarp.Terminal.Terminal.Instance.ShouldBeOfType<TimeWarpTerminal>();
+
+      // Cleanup
+      TimeWarp.Terminal.Terminal.Instance = original;
+
+      await Task.CompletedTask;
+    }
+
     public static async Task Should_restore_on_use_scope_dispose()
     {
       // Arrange

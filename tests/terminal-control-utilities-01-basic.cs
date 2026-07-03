@@ -203,6 +203,29 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalControlUtilities
 
       await Task.CompletedTask;
     }
+
+    public static async Task Should_key_available_true_with_constructor_input()
+    {
+      // Arrange - no queued keys, but unread constructor input remains
+      using TestTerminal terminal = new("x");
+
+      // Assert - ReadKey would synthesize keys from the constructor input
+      terminal.KeyAvailable.ShouldBeTrue();
+
+      // Act - consume 'x' (ReadKey also queues the synthesized Enter)
+      terminal.ReadKey();
+
+      // Assert - Enter still queued
+      terminal.KeyAvailable.ShouldBeTrue();
+
+      // Act - consume Enter
+      terminal.ReadKey();
+
+      // Assert - queue empty and constructor input exhausted
+      terminal.KeyAvailable.ShouldBeFalse();
+
+      await Task.CompletedTask;
+    }
   }
 
 } // namespace TimeWarp.Terminal.Tests.Core.TerminalControlUtilities

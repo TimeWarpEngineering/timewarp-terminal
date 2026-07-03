@@ -69,6 +69,46 @@ using TestTerminal terminal2 = new();
 terminal2.SimulateCancelKeyPress(); // No handler attached
 Console.WriteLine("✓ No exception when no handler attached");
 
+// Test static Terminal facade forwards CancelKeyPress add/remove to the current Instance
+ITerminal originalInstance = Terminal.Instance;
+using TestTerminal facadeTerminal = new();
+bool staticEventRaised = false;
+ConsoleSpecialKey staticSpecialKey = ConsoleSpecialKey.ControlBreak;
+
+try
+{
+  Terminal.Instance = facadeTerminal;
+
+  // Subscribe via the static facade; the handler lands on the instance
+  Terminal.CancelKeyPress += StaticHandler;
+  facadeTerminal.SimulateCancelKeyPress(ConsoleSpecialKey.ControlC);
+
+  if (!staticEventRaised || staticSpecialKey != ConsoleSpecialKey.ControlC)
+  {
+    Console.WriteLine("❌ FAILED: Static facade add did not forward to Instance");
+    return;
+  }
+
+  Console.WriteLine("✓ Static Terminal.CancelKeyPress add forwards to Instance");
+
+  // Unsubscribe via the static facade; the handler is removed from the instance
+  Terminal.CancelKeyPress -= StaticHandler;
+  staticEventRaised = false;
+  facadeTerminal.SimulateCancelKeyPress();
+
+  if (staticEventRaised)
+  {
+    Console.WriteLine("❌ FAILED: Static facade remove did not forward to Instance");
+    return;
+  }
+
+  Console.WriteLine("✓ Static Terminal.CancelKeyPress remove forwards to Instance");
+}
+finally
+{
+  Terminal.Instance = originalInstance;
+}
+
 Console.WriteLine("\n🧪 All CancelKeyPress tests passed!");
 
 void Handler(object? sender, ConsoleCancelEventArgs args)
@@ -76,4 +116,10 @@ void Handler(object? sender, ConsoleCancelEventArgs args)
   eventRaised = true;
   receivedSpecialKey = args.SpecialKey;
   receivedCancel = args.Cancel;
+}
+
+void StaticHandler(object? sender, ConsoleCancelEventArgs args)
+{
+  staticEventRaised = true;
+  staticSpecialKey = args.SpecialKey;
 }

@@ -203,6 +203,48 @@ namespace TimeWarp.Terminal.Tests.Core.TableWidget
 
       await Task.CompletedTask;
     }
+
+    public static async Task Should_throw_when_adding_null_row()
+    {
+      // Regression: AddRow stored a null cells array without validation,
+      // deferring the failure to Render far from the call site.
+      // Arrange
+      TableBuilder builder = new TableBuilder()
+        .AddColumn("Name");
+
+      // Act & Assert
+      Should.Throw<ArgumentNullException>(() => builder.AddRow(null!));
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_build_independent_snapshots()
+    {
+      // Regression: Build() returned the live table instance, so building twice
+      // returned the same object and post-Build builder calls mutated it.
+      // Arrange
+      TableBuilder builder = new TableBuilder()
+        .AddColumn("Name")
+        .AddRow("First");
+
+      // Act
+      Table first = builder.Build();
+
+      _ = builder
+        .AddColumn("Extra")
+        .AddRow("Second", "X");
+
+      Table second = builder.Build();
+
+      // Assert - each Build() returns a distinct, independent table
+      ReferenceEquals(first, second).ShouldBeFalse();
+      first.Columns.Count.ShouldBe(1);
+      first.Rows.Count.ShouldBe(1);
+      second.Columns.Count.ShouldBe(2);
+      second.Rows.Count.ShouldBe(2);
+
+      await Task.CompletedTask;
+    }
   }
 
 } // namespace TimeWarp.Terminal.Tests.Core.TableWidget

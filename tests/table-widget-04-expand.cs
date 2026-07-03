@@ -79,6 +79,55 @@ namespace TimeWarp.Terminal.Tests.Core.TableWidgetExpand
       await Task.CompletedTask;
     }
 
+    public static async Task Should_not_expand_columns_beyond_max_width()
+    {
+      // Regression: Expand distributed extra width to every column, pushing
+      // MaxWidth-capped columns past their cap.
+      // Arrange
+      TableColumn cappedColumn = new("A") { MaxWidth = 5 };
+      Table table = new TableBuilder()
+        .AddColumn(cappedColumn)
+        .AddColumn("B")
+        .AddRow("abc", "1")
+        .Expand()
+        .Build();
+
+      // Act
+      string[] lines = table.Render(50);
+
+      // Assert - table still fills the terminal; the uncapped column absorbs the extra
+      int topLineWidth = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(lines[0]);
+      topLineWidth.ShouldBe(50);
+
+      // Capped column stays at MaxWidth 5: first border segment is 5 content + 2 padding,
+      // so the first T-junction sits at index 8 (after "┌" + 7 horizontals)
+      lines[0].IndexOf('┬').ShouldBe(8);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_stop_expanding_when_all_columns_are_capped()
+    {
+      // Arrange - every column has a MaxWidth, so expansion must stop at the caps
+      TableColumn col1 = new("A") { MaxWidth = 5 };
+      TableColumn col2 = new("B") { MaxWidth = 5 };
+      Table table = new TableBuilder()
+        .AddColumn(col1)
+        .AddColumn(col2)
+        .AddRow("abc", "1")
+        .Expand()
+        .Build();
+
+      // Act
+      string[] lines = table.Render(80);
+
+      // Assert - 2 borders + 1 separator + 4 padding + 2*5 content = 17, not 80
+      int topLineWidth = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(lines[0]);
+      topLineWidth.ShouldBe(17);
+
+      await Task.CompletedTask;
+    }
+
     public static async Task Should_not_expand_borderless_table()
     {
       // Arrange

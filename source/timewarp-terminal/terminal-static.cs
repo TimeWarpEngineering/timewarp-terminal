@@ -927,6 +927,19 @@ public static class Terminal
   }
 
   /// <summary>
+  /// Occurs when the Ctrl+C key combination is pressed.
+  /// </summary>
+  /// <remarks>
+  /// This event allows graceful handling of Ctrl+C for interactive applications like REPLs.
+  /// Subscriptions are forwarded to the current <see cref="Instance"/>.
+  /// </remarks>
+  public static event ConsoleCancelEventHandler? CancelKeyPress
+  {
+    add => Instance.CancelKeyPress += value;
+    remove => Instance.CancelKeyPress -= value;
+  }
+
+  /// <summary>
   /// Gets or sets the title to display in the console title bar.
   /// </summary>
   /// <value>The string to display in the title bar of the console.</value>

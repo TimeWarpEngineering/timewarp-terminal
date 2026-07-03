@@ -27,8 +27,48 @@ public static class AnsiHyperlinks
   /// <param name="displayText">The text to display.</param>
   /// <param name="url">The URL to link to.</param>
   /// <returns>An OSC 8 formatted hyperlink string.</returns>
+  /// <remarks>
+  /// The URL is sanitized before being embedded in the escape sequence:
+  /// every C0 control character (below U+0020) and DEL (U+007F) is percent-encoded
+  /// as %XX (uppercase hexadecimal). This prevents characters such as ESC or BEL in an
+  /// attacker-influenced URL from terminating the OSC 8 sequence and injecting
+  /// arbitrary terminal escape sequences. Normal URLs pass through unchanged.
+  /// The display text is outside the OSC payload and is not modified.
+  /// </remarks>
   public static string CreateLink(string displayText, string url)
-    => $"{LinkStart}{url}{LinkEnd}{displayText}{LinkStart}{LinkEnd}";
+    => $"{LinkStart}{SanitizeUrl(url)}{LinkEnd}{displayText}{LinkStart}{LinkEnd}";
+
+  /// <summary>
+  /// Percent-encodes every C0 control character (below U+0020) and DEL (U+007F)
+  /// in the URL as %XX (uppercase hexadecimal) so the URL cannot prematurely
+  /// terminate the OSC 8 escape sequence. Returns the original string when no
+  /// encoding is required.
+  /// </summary>
+  /// <param name="url">The URL to sanitize.</param>
+  /// <returns>The sanitized URL, safe to embed in an OSC 8 payload.</returns>
+  private static string SanitizeUrl(string url)
+  {
+    ArgumentNullException.ThrowIfNull(url);
+
+    StringBuilder? builder = null;
+
+    for (int i = 0; i < url.Length; i++)
+    {
+      char c = url[i];
+
+      if (c is < '\x20' or '\x7f')
+      {
+        builder ??= new StringBuilder(url.Length + 8).Append(url, 0, i);
+        _ = builder.Append('%').Append(((int)c).ToString("X2", CultureInfo.InvariantCulture));
+      }
+      else
+      {
+        _ = builder?.Append(c);
+      }
+    }
+
+    return builder?.ToString() ?? url;
+  }
 }
 
 /// <summary>
@@ -56,6 +96,11 @@ public static class AnsiHyperlinkExtensions
     /// </summary>
     /// <param name="url">The URL to link to.</param>
     /// <returns>The text wrapped in OSC 8 hyperlink escape sequences.</returns>
+    /// <remarks>
+    /// The URL is sanitized before being embedded: C0 control characters (below U+0020)
+    /// and DEL (U+007F) are percent-encoded as %XX (uppercase hexadecimal) to prevent
+    /// terminal escape injection. Normal URLs pass through unchanged.
+    /// </remarks>
     /// <example>
     /// <code>
     /// // Simple hyperlink

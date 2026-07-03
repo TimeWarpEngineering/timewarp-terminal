@@ -176,6 +176,49 @@ namespace TimeWarp.Terminal.Tests.Core.Hyperlink
       await Task.CompletedTask;
     }
 
+    public static async Task Should_percent_encode_control_characters_in_url()
+    {
+      // Arrange - URL with embedded ESC and BEL that could terminate the OSC 8 sequence
+      string displayText = "Click here";
+      string url = "https://example.com/\x1bmalicious\x07path";
+
+      // Act
+      string result = AnsiHyperlinks.CreateLink(displayText, url);
+
+      // Assert - ESC and BEL inside the OSC payload must be percent-encoded
+      result.ShouldContain("%1B");
+      result.ShouldContain("%07");
+
+      // The only raw ESC characters allowed are the OSC 8 framing sequences themselves
+      string expected = $"\x1b]8;;https://example.com/%1Bmalicious%07path\x1b\\{displayText}\x1b]8;;\x1b\\";
+      result.ShouldBe(expected);
+
+      // The OSC payload (between LinkStart and LinkEnd) must contain no raw ESC or BEL
+      int payloadStart = "\x1b]8;;".Length;
+      int payloadEnd = result.IndexOf("\x1b\\", payloadStart, StringComparison.Ordinal);
+      string payload = result[payloadStart..payloadEnd];
+      payload.ShouldNotContain("\x1b");
+      payload.ShouldNotContain("\x07");
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_leave_normal_url_unchanged()
+    {
+      // Arrange
+      string displayText = "GitHub";
+      string url = "https://github.com/TimeWarpEngineering/timewarp-terminal?tab=readme#usage";
+
+      // Act
+      string result = AnsiHyperlinks.CreateLink(displayText, url);
+
+      // Assert - URL embedded verbatim, no encoding applied
+      string expected = $"\x1b]8;;{url}\x1b\\{displayText}\x1b]8;;\x1b\\";
+      result.ShouldBe(expected);
+
+      await Task.CompletedTask;
+    }
+
     public static async Task Should_test_terminal_default_hyperlink_support_is_false()
     {
       // Arrange

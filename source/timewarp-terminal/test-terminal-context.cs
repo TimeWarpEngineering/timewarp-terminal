@@ -88,6 +88,9 @@ public static class TestTerminalContext
 
   /// <summary>
   /// Clears the current context and restores the previous <see cref="TimeWarp.Terminal.Terminal.Instance"/>.
+  /// When no snapshot is available (context was never set via <see cref="SetCurrent"/>),
+  /// <see cref="TimeWarp.Terminal.Terminal.Instance"/> is reset to a fresh <see cref="TimeWarpTerminal"/>
+  /// so the global never points at a stale (possibly disposed) <see cref="TestTerminal"/>.
   /// </summary>
   public static void ClearCurrent()
   {
@@ -95,6 +98,7 @@ public static class TestTerminalContext
     if (stack is null || stack.Count == 0)
     {
       Context.Value = null;
+      TimeWarp.Terminal.Terminal.Instance = new TimeWarpTerminal();
       return;
     }
 

@@ -251,6 +251,103 @@ namespace TimeWarp.Terminal.Tests.Core.RichInput
 
       await Task.CompletedTask;
     }
+
+    public static async Task Should_read_constructor_input_when_key_queue_empty()
+    {
+      // Arrange
+      using TestTerminal terminal = new("abc");
+
+      // Act & Assert
+      terminal.Read().ShouldBe('a');
+      terminal.Read().ShouldBe('b');
+      terminal.Read().ShouldBe('c');
+      terminal.Read().ShouldBe(-1);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_interleave_read_with_readline_on_constructor_input()
+    {
+      // Arrange
+      using TestTerminal terminal = new("abc\ndef");
+
+      // Act & Assert
+      terminal.Read().ShouldBe('a');
+      terminal.ReadLine().ShouldBe("bc");
+      terminal.ReadLine().ShouldBe("def");
+      terminal.Read().ShouldBe(-1);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_prefer_key_queue_over_constructor_input_on_read()
+    {
+      // Arrange
+      using TestTerminal terminal = new("y");
+      terminal.QueueKeys("x");
+
+      // Act & Assert
+      terminal.Read().ShouldBe('x');
+      terminal.Read().ShouldBe('y');
+      terminal.Read().ShouldBe(-1);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_produce_uppercase_key_char_when_queue_key_shift()
+    {
+      // Arrange
+      using TestTerminal terminal = new();
+      terminal.QueueKey(ConsoleKey.A, shift: true);
+
+      // Act
+      ConsoleKeyInfo keyInfo = terminal.ReadKey();
+
+      // Assert
+      keyInfo.Key.ShouldBe(ConsoleKey.A);
+      keyInfo.KeyChar.ShouldBe('A');
+      keyInfo.Modifiers.ShouldBe(ConsoleModifiers.Shift);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_produce_control_char_when_queue_key_ctrl()
+    {
+      // Arrange
+      using TestTerminal terminal = new();
+      terminal.QueueKey(ConsoleKey.C, ctrl: true);
+
+      // Act
+      ConsoleKeyInfo keyInfo = terminal.ReadKey();
+
+      // Assert
+      keyInfo.Key.ShouldBe(ConsoleKey.C);
+      keyInfo.KeyChar.ShouldBe('\u0003');
+      keyInfo.Modifiers.ShouldBe(ConsoleModifiers.Control);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_set_shift_flag_when_queue_keys_uppercase()
+    {
+      // Arrange
+      using TestTerminal terminal = new();
+      terminal.QueueKeys("Ab");
+
+      // Act
+      ConsoleKeyInfo upper = terminal.ReadKey();
+      ConsoleKeyInfo lower = terminal.ReadKey();
+
+      // Assert
+      upper.Key.ShouldBe(ConsoleKey.A);
+      upper.KeyChar.ShouldBe('A');
+      upper.Modifiers.ShouldBe(ConsoleModifiers.Shift);
+      lower.Key.ShouldBe(ConsoleKey.B);
+      lower.KeyChar.ShouldBe('b');
+      lower.Modifiers.ShouldBe((ConsoleModifiers)0);
+
+      await Task.CompletedTask;
+    }
   }
 
 } // namespace TimeWarp.Terminal.Tests.Core.RichInput

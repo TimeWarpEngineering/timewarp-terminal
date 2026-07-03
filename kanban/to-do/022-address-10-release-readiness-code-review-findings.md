@@ -54,10 +54,13 @@ calls — triage each.
       throws InvalidOperationException when stdin is redirected — crashes in exactly the
       redirected scenario the fallback exists for.
       FIXED: InvalidOperationException now also caught, returning false.
-- [ ] `iterminal.cs:262` (and members) — interface XML docs promise unconditional behavior
+- [x] `iterminal.cs:262` (and members) — interface XML docs promise unconditional behavior
       while TimeWarpTerminal silently no-ops on non-Windows and swallows exceptions;
       document the actual contract before it freezes at 1.0.
 
+      FIXED: <remarks> added to every ITerminal member whose implementation platform-gates
+      or swallows exceptions (18 members documented; IConsole members verified as pure
+      pass-throughs needing no change).
 ### Static facade
 - [ ] `terminal-static.cs:60-64` + `test-terminal-context.cs:86` — Terminal.Instance is a
       process-global mutable static; TestTerminalContext stores Current in AsyncLocal but
@@ -72,27 +75,39 @@ calls — triage each.
 - [ ] `terminal-static.cs:591-599` — static Terminal.WriteLink always emits raw OSC 8,
       while the same-named ITerminal.WriteLink extension checks SupportsHyperlinks and
       falls back to plain text; two same-named APIs with different behavior.
-- [ ] `terminal-static.cs` — facade exposes TreatControlCAsInput but omits the
+- [x] `terminal-static.cs` — facade exposes TreatControlCAsInput but omits the
       CancelKeyPress event both ITerminal and System.Console provide; Ctrl+C handling
       requires reaching through Terminal.Instance.
-- [ ] `ansi-hyperlink-extensions.cs:30` — CreateLink does no URI validation/escaping; a
+      FIXED: static Terminal.CancelKeyPress event added, forwarding add/remove to Instance;
+      forwarding covered by new tests in cancel-key-press-01-basic.cs.
+- [x] `ansi-hyperlink-extensions.cs:30` — CreateLink does no URI validation/escaping; a
       URL containing ESC/BEL/ST terminates the OSC 8 sequence early = terminal
       escape-injection vector via attacker-influenced URLs.
 
+      FIXED: URLs are sanitized before embedding — C0 controls and DEL percent-encoded —
+      and all OSC 8 builders route through the single sanitizer; regression tests added.
 ### Test doubles (shipped public API)
-- [ ] `test-terminal-context.cs:94-99` — ClearCurrent with an empty snapshot stack nulls
+- [x] `test-terminal-context.cs:94-99` — ClearCurrent with an empty snapshot stack nulls
       Context.Value but never restores Terminal.Instance; AsyncLocal writes don't flow
       back from async helpers, so Instance can be left pointing at a disposed
       TestTerminal for the rest of the run (ObjectDisposedException in later tests).
-- [ ] `test-terminal.cs:237-246` — Read() only drains KeyQueue and returns -1, never
+      FIXED: ClearCurrent with no snapshot resets Terminal.Instance to a fresh
+      TimeWarpTerminal instead of leaving a disposed TestTerminal installed; test added.
+- [x] `test-terminal.cs:237-246` — Read() only drains KeyQueue and returns -1, never
       consuming constructor input: `new TestTerminal("abc").Read()` returns -1 while
       ReadLine() returns "abc"; contradicts Console where both consume the same stream.
-- [ ] `test-terminal.cs:456` — KeyAvailable reflects only KeyQueue even though ReadKey()
+      FIXED: Read() falls back to InputReader when the KeyQueue is empty, matching Console
+      shared-stream semantics; interleaving tests added.
+- [x] `test-terminal.cs:456` — KeyAvailable reflects only KeyQueue even though ReadKey()
       synthesizes keys from constructor input, so `while (KeyAvailable) ReadKey()` loops
       behave opposite to a real console.
-- [ ] `test-terminal.cs:469-514,536` — QueueKey ignores shift/ctrl when computing KeyChar
+      FIXED: KeyAvailable now also reflects unread constructor input, mirroring ReadKey's
+      sources; test added.
+- [x] `test-terminal.cs:469-514,536` — QueueKey ignores shift/ctrl when computing KeyChar
       (shift:true yields 'a' not 'A'; ctrl:true yields 'a' not ''); QueueKeys("A")
       produces shift:false.
+      FIXED: shift produces uppercase KeyChar, ctrl produces the control character for A-Z,
+      QueueKeys sets shift for uppercase letters; tests added.
 - [ ] `test-console.cs:200-201` — TestConsole.ReadKey() throws NotSupportedException
       while inheriting IConsole docs that promise a value; first-party implementation
       violates its own contract (suggests ReadKey belongs on ITerminal — breaking to move
@@ -117,13 +132,17 @@ calls — triage each.
 - [ ] `widgets/table-widget.cs:569` — TruncateWithEllipsis strips all ANSI codes in every
       branch despite the line-493 comment claiming codes are preserved; truncated cells
       silently lose colors.
-- [ ] `widgets/table-widget.cs:276-282,223-234` — Grow columns hard-set to width 0 when
+- [x] `widgets/table-widget.cs:276-282,223-234` — Grow columns hard-set to width 0 when
       fixed columns fill the terminal (content silently vanishes) and MinWidth is never
       consulted, contradicting table-column.cs docs.
-- [ ] `widgets/table-builder.cs:150` — Build() returns the live Table instance (no
+      FIXED: Grow columns are floored at max(4, MinWidth) and overflow is absorbed by the
+      existing proportional shrink; tight-terminal regression test added.
+- [x] `widgets/table-builder.cs:150` — Build() returns the live Table instance (no
       snapshot); building twice yields the same object and post-Build builder calls
       mutate the "built" table.
 
+      FIXED: Build() returns an independent snapshot (copied settings and lists); snapshot
+      independence test added.
 ### Packaging / release pipeline
 - [x] `tools/dev-cli/endpoints/workflow.cs:121` — release pipeline is
       clean→build→check-version→pack→push with no test or verify-samples step; 1.0.0
@@ -188,19 +207,22 @@ calls — triage each.
       same SGR code (Red/DarkRed both 31; bright 91-97 unused; background likewise).
 - [ ] `widgets/ansi-string-utils.cs:74-137` — Pad*/Center with negative width throw
       ArgumentOutOfRangeException from `new string(c, negative)`; clamp or document.
-- [ ] `widgets/table-widget.cs:139` — AddRow stores null params array without check; NRE
+- [x] `widgets/table-widget.cs:139` — AddRow stores null params array without check; NRE
       at Render far from call site (AddColumns throws eagerly by contrast).
+      FIXED: AddRow now throws ArgumentNullException eagerly; test added.
 - [ ] `widgets/terminal-table-extensions.cs:93-96` — WriteTable fg/bg prefix is cancelled
       by the first embedded AnsiColors.Reset (border/cell colors), so the color overload
       malfunctions when combined with BorderColor or colored cells.
 - [ ] `widgets/table-widget.cs:292` — Expand silently ignored when Border is None;
       undocumented.
-- [ ] `widgets/table-widget.cs:298-305` — Expand distributes width to MaxWidth-capped
+- [x] `widgets/table-widget.cs:298-305` — Expand distributes width to MaxWidth-capped
       columns, violating the MaxWidth contract.
+      FIXED: Expand skips capped columns and redistributes to uncapped ones; tests added.
 - [ ] `widgets/table-widget.cs:198-199` — 3-char overhead reserved for Grow columns that
       later collapse to width 0, over-shrinking fixed columns.
-- [ ] `widgets/table-builder.cs:153-157` — ToTable() doc references an implicit operator
+- [x] `widgets/table-builder.cs:153-157` — ToTable() doc references an implicit operator
       that doesn't exist.
+      FIXED: doc rewritten as an explicit alternative to Build().
 - [ ] Overload pairs differing only by trailing optional ConsoleColor params
       (`terminal-table-extensions.cs:36/57,78/112`, `terminal-panel-extensions.cs:31-56,
       109-141,149-173`, facade equivalents) — optional-param overloads are unreachable
