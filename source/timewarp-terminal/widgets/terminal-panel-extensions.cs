@@ -183,9 +183,10 @@ public static class TerminalPanelExtensions
 
   private static void WriteLinesWithColor(ITerminal terminal, string[] lines, ConsoleColor? foregroundColor, ConsoleColor? backgroundColor)
   {
+    bool useColor = (foregroundColor.HasValue || backgroundColor.HasValue) && terminal.SupportsColor;
     foreach (string line in lines)
     {
-      if (foregroundColor.HasValue || backgroundColor.HasValue)
+      if (useColor)
       {
         string coloredLine = (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
                              (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +

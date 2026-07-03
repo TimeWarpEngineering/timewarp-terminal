@@ -11,7 +11,8 @@ namespace TimeWarp.Terminal;
 // Dedicated format overloads for 1-3 args avoid array allocation (params variant for 4+).
 // Format overloads use FormatProvider ?? CurrentCulture (resolved per call), matching
 // System.Console's culture behavior while allowing an invariant override for determinism.
-// Color methods use AnsiColors to wrap messages with ANSI escape sequences.
+// Color methods use AnsiColors to wrap messages with ANSI escape sequences, applied only
+// when Instance.SupportsColor is true (NO_COLOR / redirected output degrade to plain text).
 // CA1054 suppressed for WriteLink: OSC 8 hyperlinks use raw URL strings by design.
 #endregion
 
@@ -110,10 +111,21 @@ public static class Terminal
   /// Terminal.Write("Success!", ConsoleColor.Green);
   /// </code>
   /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// </remarks>
   public static void Write(string? message, ConsoleColor foregroundColor)
   {
+    ITerminal instance = Instance;
+    if (!instance.SupportsColor)
+    {
+      _ = instance.Write(message ?? string.Empty);
+      return;
+    }
+
     string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
-    _ = Instance.Write(coloredMessage);
+    _ = instance.Write(coloredMessage);
   }
 
   /// <summary>
@@ -128,10 +140,21 @@ public static class Terminal
   /// Terminal.WriteLine("Success!", ConsoleColor.Green);
   /// </code>
   /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// </remarks>
   public static void WriteLine(string? message, ConsoleColor foregroundColor)
   {
+    ITerminal instance = Instance;
+    if (!instance.SupportsColor)
+    {
+      _ = instance.WriteLine(message ?? string.Empty);
+      return;
+    }
+
     string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
-    _ = Instance.WriteLine(coloredMessage);
+    _ = instance.WriteLine(coloredMessage);
   }
 
   /// <summary>
@@ -146,13 +169,24 @@ public static class Terminal
   /// Terminal.WriteLine("Highlighted text", ConsoleColor.Black, ConsoleColor.Yellow);
   /// </code>
   /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// </remarks>
   public static void WriteLine(string? message, ConsoleColor foregroundColor, ConsoleColor backgroundColor)
   {
+    ITerminal instance = Instance;
+    if (!instance.SupportsColor)
+    {
+      _ = instance.WriteLine(message ?? string.Empty);
+      return;
+    }
+
     string coloredMessage = AnsiColors.GetForeground(foregroundColor) +
                             AnsiColors.GetBackground(backgroundColor) +
                             (message ?? string.Empty) +
                             AnsiColors.Reset;
-    _ = Instance.WriteLine(coloredMessage);
+    _ = instance.WriteLine(coloredMessage);
   }
 
   /// <summary>
@@ -181,10 +215,21 @@ public static class Terminal
   /// Terminal.WriteErrorLine("Error: File not found", ConsoleColor.Red);
   /// </code>
   /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// </remarks>
   public static void WriteErrorLine(string? message, ConsoleColor foregroundColor)
   {
+    ITerminal instance = Instance;
+    if (!instance.SupportsColor)
+    {
+      _ = instance.WriteErrorLine(message ?? string.Empty);
+      return;
+    }
+
     string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
-    _ = Instance.WriteErrorLine(coloredMessage);
+    _ = instance.WriteErrorLine(coloredMessage);
   }
 
   /// <summary>
@@ -405,14 +450,19 @@ public static class Terminal
   /// Terminal.WriteTable(table, ConsoleColor.White, ConsoleColor.DarkBlue);
   /// </code>
   /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// </remarks>
   public static void WriteTable(Table table, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
   {
     ArgumentNullException.ThrowIfNull(table);
 
+    bool useColor = (foregroundColor.HasValue || backgroundColor.HasValue) && Instance.SupportsColor;
     string[] lines = table.Render(WindowWidth);
     foreach (string line in lines)
     {
-      if (foregroundColor.HasValue || backgroundColor.HasValue)
+      if (useColor)
       {
         string coloredLine = (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
                              (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +
@@ -515,14 +565,19 @@ public static class Terminal
   /// Terminal.WritePanel(panel, ConsoleColor.White, ConsoleColor.DarkBlue);
   /// </code>
   /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// </remarks>
   public static void WritePanel(Panel panel, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
   {
     ArgumentNullException.ThrowIfNull(panel);
 
+    bool useColor = (foregroundColor.HasValue || backgroundColor.HasValue) && Instance.SupportsColor;
     string[] lines = panel.Render(WindowWidth);
     foreach (string line in lines)
     {
-      if (foregroundColor.HasValue || backgroundColor.HasValue)
+      if (useColor)
       {
         string coloredLine = (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
                              (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +

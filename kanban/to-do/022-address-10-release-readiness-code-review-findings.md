@@ -66,9 +66,15 @@ calls — triage each.
       process-global mutable static; TestTerminalContext stores Current in AsyncLocal but
       still swaps the global, so the documented "parallel test isolation" guarantee is
       false — parallel tests last-writer-win and can restore stale instances.
-- [ ] `terminal-static.cs:92-135,163` — colored Write/WriteLine/WriteErrorLine emit ANSI
+- [x] `terminal-static.cs:92-135,163` — colored Write/WriteLine/WriteErrorLine emit ANSI
       unconditionally, ignoring SupportsColor / NO_COLOR / redirection; raw escapes land
       in piped output.
+      DECIDED + FIXED (2026-07-03): all ConsoleColor-parameter paths now consult
+      SupportsColor and degrade to plain text when unsupported — the four facade
+      Write/WriteLine/WriteErrorLine overloads, static WritePanel/WriteTable, and the
+      ITerminal WritePanel/WriteTable extension helpers. Caller-embedded ANSI strings
+      (e.g. "text".Cyan(), BorderColor) remain the caller's responsibility. Regression
+      tests added in terminal-static-06-color.cs.
 - [x] `terminal-static.cs:184-290` — format overloads use InvariantCulture where
       System.Console uses current culture; silent formatting differences for migrated
       code, undocumented.

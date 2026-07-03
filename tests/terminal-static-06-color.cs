@@ -244,6 +244,62 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalStaticColor
 
       await Task.CompletedTask;
     }
+
+    // ========== SupportsColor Gating Tests ==========
+
+    public static async Task Should_write_plain_text_when_color_not_supported()
+    {
+      // Arrange
+      ITerminal original = Terminal.Instance;
+      using TestTerminal testTerminal = new() { SupportsColor = false };
+      Terminal.Instance = testTerminal;
+
+      try
+      {
+        // Act
+        Terminal.Write("no color", ConsoleColor.Red);
+        Terminal.WriteLine("still none", ConsoleColor.Green, ConsoleColor.Black);
+        Terminal.WriteErrorLine("error plain", ConsoleColor.Yellow);
+
+        // Assert - no escape sequences anywhere
+        testTerminal.AllOutput.ShouldNotContain("\u001b");
+        testTerminal.Output.ShouldContain("no color");
+        testTerminal.Output.ShouldContain("still none");
+        testTerminal.ErrorOutput.ShouldContain("error plain");
+      }
+      finally
+      {
+        Terminal.Instance = original;
+      }
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_write_widgets_plain_when_color_not_supported()
+    {
+      // Arrange
+      ITerminal original = Terminal.Instance;
+      using TestTerminal testTerminal = new() { WindowWidth = 40, SupportsColor = false };
+      Terminal.Instance = testTerminal;
+
+      try
+      {
+        // Act
+        Terminal.WritePanel("panel content", header: null, foregroundColor: ConsoleColor.White, backgroundColor: ConsoleColor.DarkBlue);
+        Terminal.WriteTable(t => t.AddColumn("H").AddRow("V"), ConsoleColor.Cyan);
+        testTerminal.WriteTable(t => t.AddColumn("X").AddRow("Y"), ConsoleColor.Red);
+
+        // Assert
+        testTerminal.Output.ShouldNotContain("\u001b");
+        testTerminal.Output.ShouldContain("panel content");
+      }
+      finally
+      {
+        Terminal.Instance = original;
+      }
+
+      await Task.CompletedTask;
+    }
   }
 
 } // namespace TimeWarp.Terminal.Tests.Core.TerminalStaticColor
