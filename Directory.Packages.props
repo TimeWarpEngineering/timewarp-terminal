@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup Label="TimeWarp Packages">
     <PackageVersion Include="TimeWarp.Amuru" Version="1.0.0-beta.34" />
-    <PackageVersion Include="TimeWarp.Builder" Version="1.0.0-beta.3" />
+    <PackageVersion Include="TimeWarp.Builder" Version="1.0.0" />
     <!-- Jaribu beta.12 pulls Amuru beta.21 -> StreamJsonRpc -> MessagePack 2.5.198,
          which trips NU1902/NU1903 under our TreatWarningsAsErrors policy -->
     <PackageVersion Include="TimeWarp.Jaribu" Version="1.0.0-beta.13" />

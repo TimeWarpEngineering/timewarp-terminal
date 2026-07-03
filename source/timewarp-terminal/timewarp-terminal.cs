@@ -218,11 +218,8 @@ public sealed class TimeWarpTerminal : ITerminal
     }
     set
     {
-      if (!OperatingSystem.IsWindows())
-      {
-        return;
-      }
-
+      // Console.CursorVisible's setter is supported on all platforms
+      // (only the getter is Windows-only)
       try
       {
         Console.CursorVisible = value;

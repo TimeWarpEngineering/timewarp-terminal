@@ -53,65 +53,40 @@ public sealed class Rule
   /// <returns>The rendered rule string.</returns>
   public string Render(int terminalWidth = 80)
   {
-    int width = Width ?? terminalWidth;
+    int width = Math.Max(0, Width ?? terminalWidth);
     char lineChar = LineChars.GetHorizontal(Style);
+    bool hasColor = !string.IsNullOrEmpty(Color);
 
-    string line;
     if (string.IsNullOrEmpty(Title))
     {
       // Simple line without title
-      line = new string(lineChar, width);
+      string line = new(lineChar, width);
+      return hasColor ? Color + line + AnsiColors.Reset : line;
     }
-    else
+
+    // Line with centered title
+    int titleVisibleLength = AnsiStringUtils.GetVisibleLength(Title);
+
+    // Need at least: 1 char + space + title + space + 1 char
+    int minimumWidth = titleVisibleLength + 4;
+    if (width < minimumWidth)
     {
-      // Line with centered title
-      int titleVisibleLength = AnsiStringUtils.GetVisibleLength(Title);
-
-      // Need at least: 1 char + space + title + space + 1 char
-      int minimumWidth = titleVisibleLength + 4;
-      if (width < minimumWidth)
-      {
-        // Not enough space, just show the title
-        line = Title;
-      }
-      else
-      {
-        // Calculate padding for centered title
-        int availableForLines = width - titleVisibleLength - 2; // -2 for spaces around title
-        int leftLineLength = availableForLines / 2;
-        int rightLineLength = availableForLines - leftLineLength;
-
-        string leftLine = new(lineChar, leftLineLength);
-        string rightLine = new(lineChar, rightLineLength);
-
-        line = $"{leftLine} {Title} {rightLine}";
-      }
+      // Not enough space, just show the title
+      return Title;
     }
 
-    // Apply color if specified
-    if (!string.IsNullOrEmpty(Color))
-    {
-      // Only colorize the line characters, not the title (title may have its own colors)
-      if (string.IsNullOrEmpty(Title))
-      {
-        line = Color + line + AnsiColors.Reset;
-      }
-      else
-      {
-        // Colorize just the line parts, preserve title styling
-        int titleVisibleLength = AnsiStringUtils.GetVisibleLength(Title);
-        int availableForLines = width - titleVisibleLength - 2;
-        int leftLineLength = availableForLines / 2;
-        int rightLineLength = availableForLines - leftLineLength;
+    // Calculate padding for centered title
+    int availableForLines = width - titleVisibleLength - 2; // -2 for spaces around title
+    int leftLineLength = availableForLines / 2;
+    int rightLineLength = availableForLines - leftLineLength;
 
-        string leftLine = new(lineChar, leftLineLength);
-        string rightLine = new(lineChar, rightLineLength);
+    string leftLine = new(lineChar, leftLineLength);
+    string rightLine = new(lineChar, rightLineLength);
 
-        line = $"{Color}{leftLine}{AnsiColors.Reset} {Title} {Color}{rightLine}{AnsiColors.Reset}";
-      }
-    }
-
-    return line;
+    // Only colorize the line characters, not the title (title may have its own colors)
+    return hasColor
+      ? $"{Color}{leftLine}{AnsiColors.Reset} {Title} {Color}{rightLine}{AnsiColors.Reset}"
+      : $"{leftLine} {Title} {rightLine}";
   }
 }
 

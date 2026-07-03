@@ -22,17 +22,24 @@ calls — triage each.
       4-param overload covers every previously-compilable call) and added a positional
       regression test in tests/terminal-static-05-widgets.cs; the ambiguity had zero test
       coverage because existing tests only used named args or the ITerminal extension.
-- [ ] `widgets/rule-widget.cs:102-110` — colored rule with a title longer than the width
+- [x] `widgets/rule-widget.cs:102-110` — colored rule with a title longer than the width
       recomputes negative left/right line lengths and `new string(char, -n)` throws
       ArgumentOutOfRangeException, bypassing the min-width fallback computed at line 74.
-- [ ] `timewarp-terminal.cs:219` — CursorVisible setter is gated behind
+      FIXED: Render now computes the layout once so the title-only fallback covers the
+      colored path too; width is also clamped to >= 0 (fixes the related negative-width
+      minor). Regression test added in tests/rule-widget-01-basic.cs.
+- [x] `timewarp-terminal.cs:219` — CursorVisible setter is gated behind
       `OperatingSystem.IsWindows()` and silently no-ops on Linux/macOS, but
       `Console.CursorVisible`'s *setter* is supported on Unix (only the getter throws).
       Hide/show cursor is core REPL functionality broken on the primary platforms.
-- [ ] `Directory.Packages.props:9` — stable 1.0.0 would depend on prerelease
+      FIXED: Windows gate removed from the setter (getter keeps its gate — that one IS
+      Windows-only); verified under a pseudo-TTY on Linux that ESC[?25l/ESC[?25h are now
+      emitted.
+- [x] `Directory.Packages.props:9` — stable 1.0.0 would depend on prerelease
       TimeWarp.Builder 1.0.0-beta.3 (non-private; IBuilder<T> is implemented by public
       builder types) and trip NU5104. Needs a stable TimeWarp.Builder or the dependency
       removed/internalized.
+      FIXED: bumped to the stable TimeWarp.Builder 1.0.0 published on NuGet; builds clean.
 
 ## Checklist — Major (fix or explicitly accept; behavioral contracts freeze at 1.0)
 

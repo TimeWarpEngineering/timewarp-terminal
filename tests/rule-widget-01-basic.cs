@@ -122,6 +122,25 @@ namespace TimeWarp.Terminal.Tests.Core.RuleWidget
       await Task.CompletedTask;
     }
 
+    // Regression: the colored path used to recompute negative line lengths and throw
+    // ArgumentOutOfRangeException instead of falling back to showing just the title
+    public static async Task Should_handle_colored_title_longer_than_width()
+    {
+      // Arrange
+      Rule rule = new RuleBuilder()
+        .Title("This is a very long title")
+        .Color(AnsiColors.Yellow)
+        .Build();
+
+      // Act
+      string rendered = rule.Render(20);
+
+      // Assert - Should just show the title if not enough space
+      rendered.ShouldContain("This is a very long title");
+
+      await Task.CompletedTask;
+    }
+
     public static async Task Should_preserve_title_ansi_codes_when_colored()
     {
       // Arrange
