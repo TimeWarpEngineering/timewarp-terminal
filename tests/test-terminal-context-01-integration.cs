@@ -119,24 +119,63 @@ namespace TimeWarp.Terminal.Tests.Core.TestTerminalContextIntegration
       await Task.CompletedTask;
     }
 
-    public static async Task Should_reset_instance_to_default_when_clearing_without_snapshot()
+    public static async Task Should_not_touch_global_instance_when_clearing_without_snapshot()
     {
-      // Arrange - set Terminal.Instance directly (bypassing SetCurrent, so no snapshot exists)
+      // Arrange - set the process-global Instance directly (bypassing SetCurrent)
       ITerminal original = TimeWarp.Terminal.Terminal.Instance;
       using TestTerminal testTerminal = new();
       TimeWarp.Terminal.Terminal.Instance = testTerminal;
 
-      // Act - ClearCurrent with an empty snapshot stack
-      TestTerminalContext.ClearCurrent();
+      try
+      {
+        // Act - ClearCurrent only manages the async-local context
+        TestTerminalContext.ClearCurrent();
 
-      // Assert - Instance must not remain pointing at the test terminal
-      TimeWarp.Terminal.Terminal.Instance.ShouldNotBe(testTerminal);
-      TimeWarp.Terminal.Terminal.Instance.ShouldBeOfType<TimeWarpTerminal>();
-
-      // Cleanup
-      TimeWarp.Terminal.Terminal.Instance = original;
+        // Assert - the directly-assigned global is not TestTerminalContext's to clean
+        TimeWarp.Terminal.Terminal.Instance.ShouldBe(testTerminal);
+      }
+      finally
+      {
+        TimeWarp.Terminal.Terminal.Instance = original;
+      }
 
       await Task.CompletedTask;
+    }
+
+    public static async Task Should_isolate_parallel_contexts()
+    {
+      // Arrange - two async flows, each with its own context; the global is never mutated
+      ITerminal original = TimeWarp.Terminal.Terminal.Instance;
+      using TestTerminal terminalA = new();
+      using TestTerminal terminalB = new();
+
+      // Act
+      Task taskA = Task.Run(async () =>
+      {
+        using IDisposable scope = TestTerminalContext.Use(terminalA);
+        await Task.Delay(10);
+        TimeWarp.Terminal.Terminal.WriteLine("from A");
+        await Task.Delay(10);
+        TimeWarp.Terminal.Terminal.WriteLine("A again");
+      });
+      Task taskB = Task.Run(async () =>
+      {
+        using IDisposable scope = TestTerminalContext.Use(terminalB);
+        await Task.Delay(10);
+        TimeWarp.Terminal.Terminal.WriteLine("from B");
+        await Task.Delay(10);
+        TimeWarp.Terminal.Terminal.WriteLine("B again");
+      });
+      await Task.WhenAll(taskA, taskB);
+
+      // Assert - each context saw only its own writes and the global never changed
+      terminalA.Output.ShouldContain("from A");
+      terminalA.Output.ShouldContain("A again");
+      terminalA.Output.ShouldNotContain("from B");
+      terminalB.Output.ShouldContain("from B");
+      terminalB.Output.ShouldContain("B again");
+      terminalB.Output.ShouldNotContain("from A");
+      TimeWarp.Terminal.Terminal.Instance.ShouldBe(original);
     }
 
     public static async Task Should_restore_format_provider_on_clear()

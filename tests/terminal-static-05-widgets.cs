@@ -267,9 +267,9 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalStaticWidget
 
     public static async Task Should_write_hyperlink()
     {
-      // Arrange
+      // Arrange - WriteLink only emits OSC 8 when the terminal supports hyperlinks
       ITerminal original = Terminal.Instance;
-      using TestTerminal testTerminal = new() { WindowWidth = 40 };
+      using TestTerminal testTerminal = new() { WindowWidth = 40, SupportsHyperlinks = true };
       Terminal.Instance = testTerminal;
 
       try

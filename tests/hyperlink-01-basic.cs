@@ -229,6 +229,35 @@ namespace TimeWarp.Terminal.Tests.Core.Hyperlink
 
       await Task.CompletedTask;
     }
+
+    public static async Task Should_write_plain_text_when_facade_hyperlinks_not_supported()
+    {
+      // Arrange - static facade must honor SupportsHyperlinks like the extension does
+      ITerminal original = TimeWarp.Terminal.Terminal.Instance;
+      using TestTerminal noLinks = new();  // SupportsHyperlinks defaults to false
+      using TestTerminal withLinks = new() { SupportsHyperlinks = true };
+
+      try
+      {
+        // Act + Assert - unsupported: plain display text, no OSC 8 escapes
+        TimeWarp.Terminal.Terminal.Instance = noLinks;
+        TimeWarp.Terminal.Terminal.WriteLink("https://example.com", "Example");
+        noLinks.Output.ShouldBe("Example");
+        noLinks.Output.ShouldNotContain("\u001b");
+
+        // supported: OSC 8 sequence emitted
+        TimeWarp.Terminal.Terminal.Instance = withLinks;
+        TimeWarp.Terminal.Terminal.WriteLink("https://example.com", "Example");
+        withLinks.Output.ShouldContain("\u001b]8;;https://example.com");
+        withLinks.Output.ShouldContain("Example");
+      }
+      finally
+      {
+        TimeWarp.Terminal.Terminal.Instance = original;
+      }
+
+      await Task.CompletedTask;
+    }
   }
 
 } // namespace TimeWarp.Terminal.Tests.Core.Hyperlink

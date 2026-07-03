@@ -57,12 +57,15 @@ public static class Terminal
   /// <value>The current terminal implementation.</value>
   /// <exception cref="ArgumentNullException">Thrown when attempting to set a null value.</exception>
   /// <remarks>
-  /// Replace this instance with a test implementation (such as <c>TestTerminal</c>)
-  /// to capture output and simulate input during unit tests.
+  /// The getter resolves the async-local <c>TestTerminalContext.Current</c> first, falling
+  /// back to the process-global instance assigned via the setter. This makes
+  /// <c>TestTerminalContext.SetCurrent</c>/<c>Use</c> safe for parallel test execution —
+  /// each async flow sees its own terminal — while direct assignment
+  /// (<c>Terminal.Instance = new TestTerminal()</c>) keeps working for serial tests.
   /// </remarks>
   public static ITerminal Instance
   {
-    get;
+    get => TestTerminalContext.Current ?? field;
     set => field = value ?? throw new ArgumentNullException(nameof(value));
   } = TimeWarpTerminal.Default;
 
@@ -638,6 +641,11 @@ public static class Terminal
   /// </summary>
   /// <param name="url">The URL to link to.</param>
   /// <param name="text">The text to display (clickable in supported terminals).</param>
+  /// <remarks>
+  /// If the terminal does not support hyperlinks (<see cref="ITerminal.SupportsHyperlinks"/>
+  /// is false), only the display text is written without the hyperlink escape sequences,
+  /// consistent with the <c>ITerminal.WriteLink</c> extension.
+  /// </remarks>
   /// <example>
   /// <code>
   /// Terminal.WriteLink("https://github.com", "GitHub Repository");
@@ -651,8 +659,15 @@ public static class Terminal
     ArgumentNullException.ThrowIfNull(url);
     ArgumentNullException.ThrowIfNull(text);
 
+    ITerminal instance = Instance;
+    if (!instance.SupportsHyperlinks)
+    {
+      _ = instance.Write(text);
+      return;
+    }
+
     string link = AnsiHyperlinks.CreateLink(text, url);
-    _ = Instance.Write(link);
+    _ = instance.Write(link);
   }
 
   // Stream Access Methods (IConsole)

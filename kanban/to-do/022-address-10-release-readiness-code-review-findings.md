@@ -62,10 +62,17 @@ calls — triage each.
       or swallows exceptions (18 members documented; IConsole members verified as pure
       pass-throughs needing no change).
 ### Static facade
-- [ ] `terminal-static.cs:60-64` + `test-terminal-context.cs:86` — Terminal.Instance is a
+- [x] `terminal-static.cs:60-64` + `test-terminal-context.cs:86` — Terminal.Instance is a
       process-global mutable static; TestTerminalContext stores Current in AsyncLocal but
       still swaps the global, so the documented "parallel test isolation" guarantee is
       false — parallel tests last-writer-win and can restore stale instances.
+      DECIDED + FIXED (2026-07-03): "AsyncLocal wins" — Terminal.Instance's getter returns
+      TestTerminalContext.Current ?? the process-global field; SetCurrent/Use/ClearCurrent
+      now only touch the AsyncLocal (the global is never mutated by the context), so the
+      documented parallel isolation is actually true, and direct Terminal.Instance = x
+      still works for serial tests. This also moots the earlier disposed-terminal leak fix
+      (the context never installs anything into the global). FormatProvider snapshot/restore
+      retained. Parallel-isolation regression test added (two concurrent Use scopes).
 - [x] `terminal-static.cs:92-135,163` — colored Write/WriteLine/WriteErrorLine emit ANSI
       unconditionally, ignoring SupportsColor / NO_COLOR / redirection; raw escapes land
       in piped output.
@@ -86,9 +93,12 @@ calls — triage each.
       class) for discoverability. TestTerminalContext snapshots/restores it alongside
       Instance. NOTE for release notes: default behavior changes from invariant to
       current culture (Console parity).
-- [ ] `terminal-static.cs:591-599` — static Terminal.WriteLink always emits raw OSC 8,
+- [x] `terminal-static.cs:591-599` — static Terminal.WriteLink always emits raw OSC 8,
       while the same-named ITerminal.WriteLink extension checks SupportsHyperlinks and
       falls back to plain text; two same-named APIs with different behavior.
+      DECIDED + FIXED (2026-07-03): static WriteLink now checks SupportsHyperlinks and
+      writes the plain display text when unsupported, identical to the extension.
+      Regression test added in hyperlink-01-basic.cs.
 - [x] `terminal-static.cs` — facade exposes TreatControlCAsInput but omits the
       CancelKeyPress event both ITerminal and System.Console provide; Ctrl+C handling
       requires reaching through Terminal.Instance.
@@ -214,6 +224,8 @@ calls — triage each.
       property values; duplicated summary doc block at 606-611; no cursor/window arg
       validation vs Console's ArgumentOutOfRangeException; TestTerminalContext class doc
       mentions DI resolution Resolve() doesn't implement (test-terminal-context.cs:21).
+      PARTIAL: duplicated Dispose summary removed and the class-doc DI-resolution claim
+      rewritten (2026-07-03); Dispose-of-consumer-streams and arg validation still open.
 - [ ] `widgets/ansi-string-utils.cs:387-418` — wrap state machine never clears OSC 8
       hyperlink state on the end sequence and SGR reset wrongly wipes hyperlink state;
       wrapped lines re-open closed hyperlinks.
