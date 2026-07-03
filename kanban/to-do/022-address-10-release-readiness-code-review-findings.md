@@ -44,13 +44,16 @@ calls — triage each.
 ## Checklist — Major (fix or explicitly accept; behavioral contracts freeze at 1.0)
 
 ### Platform gating & core correctness
-- [ ] `timewarp-terminal.cs:825` — Title setter Windows-gated but Console.Title's setter
+- [x] `timewarp-terminal.cs:825` — Title setter Windows-gated but Console.Title's setter
       works on Unix; silently no-ops on Linux/macOS.
-- [ ] `timewarp-terminal.cs:789` — parameterless Beep() Windows-gated but Console.Beep()
+      FIXED: gate removed from the setter (getter keeps it — the BCL getter is Windows-only).
+- [x] `timewarp-terminal.cs:789` — parameterless Beep() Windows-gated but Console.Beep()
       is cross-platform (BEL on Unix); only Beep(freq, duration) is Windows-only.
-- [ ] `timewarp-terminal.cs:835` — KeyAvailable catches only IOException but Console
+      FIXED: gate removed from Beep(); the (freq, duration) overload keeps its gate.
+- [x] `timewarp-terminal.cs:835` — KeyAvailable catches only IOException but Console
       throws InvalidOperationException when stdin is redirected — crashes in exactly the
       redirected scenario the fallback exists for.
+      FIXED: InvalidOperationException now also caught, returning false.
 - [ ] `iterminal.cs:262` (and members) — interface XML docs promise unconditional behavior
       while TimeWarpTerminal silently no-ops on non-Windows and swallows exceptions;
       document the actual contract before it freezes at 1.0.
@@ -122,19 +125,28 @@ calls — triage each.
       mutate the "built" table.
 
 ### Packaging / release pipeline
-- [ ] `tools/dev-cli/endpoints/workflow.cs:121` — release pipeline is
+- [x] `tools/dev-cli/endpoints/workflow.cs:121` — release pipeline is
       clean→build→check-version→pack→push with no test or verify-samples step; 1.0.0
       could publish from a commit whose tests never ran on the release event.
-- [ ] `timewarp-terminal.csproj:23` — README.md is packed as a file but PackageReadmeFile
+      FIXED: release path is now clean→build→verify-samples→test→check-version→pack.
+      Bonus: `dev test` (and both pipeline paths) previously ran `dotnet test` on a
+      solution with zero VSTest projects — a false green. The test step now runs the
+      tests/*.cs runfiles and fails on any failure.
+- [x] `timewarp-terminal.csproj:23` — README.md is packed as a file but PackageReadmeFile
       is never set, so nuget.org shows no readme.
+      FIXED: PackageReadmeFile set; verified <readme> lands in the nuspec.
 - [ ] `Directory.Build.props:66` + `csproj:13` — IsAotCompatible=true is claimed while
       all trim/AOT diagnostics (IL2026/IL2067/IL2070/IL2075/IL3050/IL2104/IL3053) are
       globally NoWarn'd "not yet implemented"; the package advertises AOT compat that is
       unverified.
-- [ ] `README.md:193` — Table quickstart calls `.Shrink()` which does not exist on
+- [x] `README.md:193` — Table quickstart calls `.Shrink()` which does not exist on
       TableBuilder; front-page sample does not compile.
-- [ ] `tools/dev-cli/endpoints/workflow.cs:204` — no symbol package (snupkg) and no
+      FIXED: sample now ends at .Expand() with a note that shrink-to-fit is automatic.
+- [x] `tools/dev-cli/endpoints/workflow.cs:204` — no symbol package (snupkg) and no
       ContinuousIntegrationBuild; no debugger symbols published for 1.0.
+      FIXED: IncludeSymbols + snupkg set in the csproj, pack passes
+      ContinuousIntegrationBuild=true; verified .snupkg is produced and the nuspec
+      repository element carries the commit.
 
 ## Checklist — Minor (triage)
 

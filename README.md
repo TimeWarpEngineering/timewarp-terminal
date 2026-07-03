@@ -189,8 +189,7 @@ terminal.WriteTable(t => t
     .AddRow("GuardClauses", "12M", "/home/user/packages/guard")
     .Border(BorderStyle.Rounded)
     .BorderColor(AnsiColors.Cyan)
-    .Expand()
-    .Shrink());
+    .Expand());  // tables shrink to fit the terminal automatically
 
 terminal.WriteTable(table);
 ```

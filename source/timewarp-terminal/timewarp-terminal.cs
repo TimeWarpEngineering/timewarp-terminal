@@ -785,9 +785,15 @@ public sealed class TimeWarpTerminal : ITerminal
   /// <inheritdoc />
   public void Beep()
   {
-    if (OperatingSystem.IsWindows())
+    // Console.Beep() is cross-platform (emits BEL on Unix);
+    // only the (frequency, duration) overload is Windows-only
+    try
     {
       Console.Beep();
+    }
+    catch (IOException)
+    {
+      // Silently ignore if console is redirected
     }
   }
 
@@ -821,9 +827,15 @@ public sealed class TimeWarpTerminal : ITerminal
     }
     set
     {
-      if (OperatingSystem.IsWindows())
+      // Console.Title's setter is supported on all platforms
+      // (only the getter is Windows-only)
+      try
       {
         Console.Title = value;
+      }
+      catch (IOException)
+      {
+        // Silently ignore if console is redirected
       }
     }
   }
@@ -839,6 +851,12 @@ public sealed class TimeWarpTerminal : ITerminal
       }
       catch (IOException)
       {
+        return false;
+      }
+      catch (InvalidOperationException)
+      {
+        // Console.KeyAvailable throws InvalidOperationException when
+        // standard input is redirected from a file or pipe
         return false;
       }
     }

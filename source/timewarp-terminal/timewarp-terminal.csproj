@@ -8,6 +8,9 @@
 
     <!-- Package settings -->
     <IsPackable>true</IsPackable>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
     <!-- AOT Compatibility -->
     <IsAotCompatible>true</IsAotCompatible>
