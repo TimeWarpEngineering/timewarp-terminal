@@ -8,9 +8,17 @@ namespace TimeWarp.Terminal;
 #region Design
 // Captures output via StringWriter instances for both stdout and stderr.
 // Queues individual ConsoleKeyInfo for ReadKey — simulates real keystroke-by-keystroke REPL input.
+// Read, ReadKey, and KeyAvailable fall back to unread constructor input when the key queue is empty,
+// matching System.Console semantics where Read/ReadLine/ReadKey share one input source.
+// QueueKey honors modifiers for letters: shift produces an uppercase KeyChar and ctrl produces the
+// control character (char)(key - ConsoleKey.A + 1); QueueKeys sets the shift flag for uppercase letters.
 // Clear() writes "[CLEAR]" marker so tests can verify it was called without losing captured output.
 // IsInteractive defaults to false; SupportsColor defaults to true for color verification.
-// IDisposable cleans up StringReader and StringWriter resources.
+// IDisposable cleans up StringReader and StringWriter resources, plus only the constructor-created
+// MemoryStreams (tracked in Owned* fields) — consumer-assigned Standard*Stream values are never disposed.
+// SimulateCancelKeyPress throws InvalidOperationException instead of silently no-oping if the
+// non-public ConsoleCancelEventArgs constructor cannot be found or invoked (BCL internals changed).
+// Not thread-safe by design (unlike System.Console); single-threaded test flows only.
 #endregion
 
 /// <summary>
@@ -38,6 +46,12 @@ namespace TimeWarp.Terminal;
 /// Assert.Contains("hello", terminal.Output);
 /// </code>
 /// </example>
+/// <para>
+/// Unlike <see cref="System.Console"/>, whose members are documented as thread-safe, this test
+/// double is intended for single-threaded test flows: the key queue and captured-output writers
+/// are unsynchronized, and members are not thread-safe. Tests driving a multi-threaded CLI must
+/// synchronize access to the <see cref="TestTerminal"/> externally.
+/// </para>
 /// </remarks>
 public sealed class TestTerminal : ITerminal, IDisposable
 {
@@ -45,13 +59,10 @@ public sealed class TestTerminal : ITerminal, IDisposable
   private readonly StringWriter OutputWriter;
   private readonly StringWriter ErrorWriter;
   private readonly Queue<ConsoleKeyInfo> KeyQueue;
-  private int CursorLeftField;
-  private int CursorTopField;
-  private int CursorSizeField = 100;
+  private readonly MemoryStream OwnedStandardInputStream;
+  private readonly MemoryStream OwnedStandardOutputStream;
+  private readonly MemoryStream OwnedStandardErrorStream;
   private bool Disposed;
-  private TextReader InReader;
-  private TextWriter OutWriter;
-  private TextWriter ErrorWriterField;
 
   /// <summary>
   /// Gets or sets the mock standard input stream.
@@ -111,25 +122,25 @@ public sealed class TestTerminal : ITerminal, IDisposable
     => StandardErrorStream;
 
   /// <inheritdoc />
-  public TextReader In => InReader;
+  public TextReader In { get; private set; }
 
   /// <inheritdoc />
-  public TextWriter Out => OutWriter;
+  public TextWriter Out { get; private set; }
 
   /// <inheritdoc />
-  public TextWriter Error => ErrorWriterField;
+  public TextWriter Error { get; private set; }
 
   /// <inheritdoc />
   public void SetIn(TextReader reader)
-    => InReader = reader ?? throw new ArgumentNullException(nameof(reader));
+    => In = reader ?? throw new ArgumentNullException(nameof(reader));
 
   /// <inheritdoc />
   public void SetOut(TextWriter writer)
-    => OutWriter = writer ?? throw new ArgumentNullException(nameof(writer));
+    => Out = writer ?? throw new ArgumentNullException(nameof(writer));
 
   /// <inheritdoc />
   public void SetError(TextWriter writer)
-    => ErrorWriterField = writer ?? throw new ArgumentNullException(nameof(writer));
+    => Error = writer ?? throw new ArgumentNullException(nameof(writer));
 
   /// <summary>
   /// Initializes a new instance of <see cref="TestTerminal"/> with optional scripted line input.
@@ -147,46 +158,29 @@ public sealed class TestTerminal : ITerminal, IDisposable
     WindowWidth = 80;
     IsInteractive = false; // Testing is non-interactive by default
     SupportsColor = true;
-    InReader = InputReader;
-    OutWriter = OutputWriter;
-    ErrorWriterField = ErrorWriter;
-    StandardInputStream = new MemoryStream();
-    StandardOutputStream = new MemoryStream();
-    StandardErrorStream = new MemoryStream();
+    In = InputReader;
+    Out = OutputWriter;
+    Error = ErrorWriter;
+    OwnedStandardInputStream = new MemoryStream();
+    OwnedStandardOutputStream = new MemoryStream();
+    OwnedStandardErrorStream = new MemoryStream();
+    StandardInputStream = OwnedStandardInputStream;
+    StandardOutputStream = OwnedStandardOutputStream;
+    StandardErrorStream = OwnedStandardErrorStream;
 
     // Suppress unused field warnings - these fields will be used when REPL is updated to use ITerminal
-    _ = CursorLeftField;
-    _ = CursorTopField;
+    _ = CursorLeft;
+    _ = CursorTop;
   }
 
   /// <inheritdoc />
-  public int CursorLeft
-  {
-    get => CursorLeftField;
-    set => CursorLeftField = value;
-  }
+  public int CursorLeft { get; set; }
 
   /// <inheritdoc />
-  public int CursorTop
-  {
-    get => CursorTopField;
-    set => CursorTopField = value;
-  }
+  public int CursorTop { get; set; }
 
   /// <inheritdoc />
   public bool CursorVisible { get; set; } = true;
-
-  /// <inheritdoc />
-  public int CursorSize
-  {
-    get => CursorSizeField;
-    set
-    {
-      if (value < 1 || value > 100)
-        throw new ArgumentOutOfRangeException(nameof(value), value, "CursorSize must be between 1 and 100.");
-      CursorSizeField = value;
-    }
-  }
 
   /// <summary>
   /// Gets all standard output written to this terminal.
@@ -253,18 +247,32 @@ public sealed class TestTerminal : ITerminal, IDisposable
       return keyInfo.KeyChar;
     }
 
-    return -1;
+    return InputReader.Read();
   }
 
   /// <inheritdoc />
+  /// <remarks>
+  /// When both the key queue and the constructor-supplied input are exhausted, this method does not
+  /// block or throw: it returns a Ctrl+D (EOF) <see cref="ConsoleKeyInfo"/> — KeyChar <c>'\u0004'</c>,
+  /// <see cref="ConsoleKey.D"/> with the Control modifier — on every subsequent call. Loops driving a
+  /// REPL should treat <c>'\u0004'</c> as end-of-input to terminate.
+  /// </remarks>
   public ConsoleKeyInfo ReadKey()
     => ReadKey(false);
 
   /// <inheritdoc />
+  /// <remarks>
+  /// When both the key queue and the constructor-supplied input are exhausted, this method does not
+  /// block or throw: it returns a Ctrl+D (EOF) <see cref="ConsoleKeyInfo"/> — KeyChar <c>'\u0004'</c>,
+  /// <see cref="ConsoleKey.D"/> with the Control modifier — on every subsequent call. Loops driving a
+  /// REPL should treat <c>'\u0004'</c> as end-of-input to terminate.
+  /// </remarks>
   public ConsoleKeyInfo ReadKey(bool intercept)
   {
     if (KeyQueue.Count > 0)
+    {
       return KeyQueue.Dequeue();
+    }
 
     // If no keys queued, try to read from input as a line
     string? line = InputReader.ReadLine();
@@ -292,80 +300,33 @@ public sealed class TestTerminal : ITerminal, IDisposable
   /// <inheritdoc />
   public void SetCursorPosition(int left, int top)
   {
-    CursorLeftField = left;
-    CursorTopField = top;
+    CursorLeft = left;
+    CursorTop = top;
   }
 
   /// <inheritdoc />
   public (int Left, int Top) GetCursorPosition()
-    => (CursorLeftField, CursorTopField);
-
-  /// <inheritdoc />
-  public int WindowWidth { get; set; }
-
-  /// <inheritdoc />
-  public int WindowHeight { get; set; } = 24;
-
-  /// <inheritdoc />
-  public int WindowLeft { get; set; }
-
-  /// <inheritdoc />
-  public int WindowTop { get; set; }
-
-  /// <inheritdoc />
-  public int BufferWidth { get; set; } = 80;
-
-  /// <inheritdoc />
-  public int BufferHeight { get; set; } = 300;
-
-  /// <inheritdoc />
-  public int LargestWindowWidth { get; set; } = 120;
-
-  /// <inheritdoc />
-  public int LargestWindowHeight { get; set; } = 40;
+    => (CursorLeft, CursorTop);
 
   /// <summary>
-  /// Gets the number of times <see cref="MoveBufferArea"/> has been called.
+  /// Gets or sets the width of the terminal window. Settable so tests can control layout.
   /// </summary>
-  public int MoveBufferAreaCallCount { get; private set; }
+  public int WindowWidth { get; set; }
 
-  /// <inheritdoc />
-  public void SetWindowSize(int width, int height)
-  {
-    WindowWidth = width;
-    WindowHeight = height;
-  }
+  /// <summary>
+  /// Gets or sets the height of the terminal window. Settable so tests can control layout.
+  /// </summary>
+  public int WindowHeight { get; set; } = 24;
 
-  /// <inheritdoc />
-  public void SetWindowPosition(int left, int top)
-  {
-    WindowLeft = left;
-    WindowTop = top;
-  }
+  /// <summary>
+  /// Gets or sets the buffer width. Settable so tests can control layout.
+  /// </summary>
+  public int BufferWidth { get; set; } = 80;
 
-  /// <inheritdoc />
-  public void SetBufferSize(int width, int height)
-  {
-    BufferWidth = width;
-    BufferHeight = height;
-  }
-
-  /// <inheritdoc />
-  public void MoveBufferArea
-  (
-    int sourceLeft,
-    int sourceTop,
-    int sourceWidth,
-    int sourceHeight,
-    int targetLeft,
-    int targetTop,
-    char sourceChar,
-    ConsoleColor sourceForeColor,
-    ConsoleColor sourceBackColor
-  )
-  {
-    MoveBufferAreaCallCount++;
-  }
+  /// <summary>
+  /// Gets or sets the buffer height. Settable so tests can control layout.
+  /// </summary>
+  public int BufferHeight { get; set; } = 300;
 
   /// <inheritdoc />
   public bool IsInteractive { get; set; }
@@ -405,24 +366,55 @@ public sealed class TestTerminal : ITerminal, IDisposable
   /// <remarks>
   /// Uses reflection to create ConsoleCancelEventArgs since it has no public constructor.
   /// </remarks>
+  /// <exception cref="InvalidOperationException">
+  /// The non-public <see cref="ConsoleCancelEventArgs"/> constructor could not be found or invoked,
+  /// meaning the BCL internals have changed and this helper cannot construct the event args.
+  /// </exception>
   public void SimulateCancelKeyPress(ConsoleSpecialKey specialKey = ConsoleSpecialKey.ControlC)
   {
     if (CancelKeyPressHandler is null)
+    {
       return;
+    }
 
     // ConsoleCancelEventArgs has no public constructor, so we use reflection
     System.Reflection.ConstructorInfo? constructor = typeof(ConsoleCancelEventArgs)
       .GetConstructor(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance, [typeof(ConsoleSpecialKey)]);
 
-    if (constructor is not null)
+    if (constructor is null)
     {
-      ConsoleCancelEventArgs args = (ConsoleCancelEventArgs)constructor.Invoke([specialKey]);
-      CancelKeyPressHandler.Invoke(this, args);
+      throw new InvalidOperationException
+      (
+        "The internal ConsoleCancelEventArgs(ConsoleSpecialKey) constructor was not found. " +
+        "The BCL internals have changed and SimulateCancelKeyPress cannot construct ConsoleCancelEventArgs."
+      );
     }
+
+    ConsoleCancelEventArgs args;
+    try
+    {
+      args = (ConsoleCancelEventArgs)constructor.Invoke([specialKey]);
+    }
+    catch (Exception exception) when (exception is System.Reflection.TargetInvocationException or MemberAccessException)
+    {
+      throw new InvalidOperationException
+      (
+        "Invoking the internal ConsoleCancelEventArgs(ConsoleSpecialKey) constructor failed. " +
+        "The BCL internals have changed and SimulateCancelKeyPress cannot construct ConsoleCancelEventArgs.",
+        exception
+      );
+    }
+
+    CancelKeyPressHandler.Invoke(this, args);
   }
 
   /// <inheritdoc />
-
+  /// <remarks>
+  /// Does not erase captured output: output history is preserved so tests can assert on everything
+  /// written before the clear. Instead, the marker line <c>[CLEAR]</c> is appended to the captured
+  /// output to record that <see cref="Clear"/> was called. Use <see cref="ClearOutput"/> to actually
+  /// discard captured output.
+  /// </remarks>
   public void Clear()
     => OutputWriter.WriteLine("[CLEAR]");
 
@@ -460,12 +452,12 @@ public sealed class TestTerminal : ITerminal, IDisposable
   public string Title { get; set; } = string.Empty;
 
   /// <inheritdoc />
-  public bool KeyAvailable => KeyQueue.Count > 0;
+  public bool KeyAvailable => KeyQueue.Count > 0 || InputReader.Peek() != -1;
 
   // ========== Test Helper Methods ==========
 
   /// <summary>
-  /// Queues a single key press for the next <see cref="ReadKey"/> call.
+  /// Queues a single key press for the next <see cref="ReadKey()"/> call.
   /// </summary>
   /// <param name="key">The console key to queue.</param>
   /// <param name="shift">Whether Shift is pressed.</param>
@@ -480,10 +472,58 @@ public sealed class TestTerminal : ITerminal, IDisposable
       ConsoleKey.Escape => '\u001b',
       ConsoleKey.Backspace => '\b',
       ConsoleKey.Spacebar => ' ',
-      >= ConsoleKey.A and <= ConsoleKey.Z => (char)('a' + (key - ConsoleKey.A)),
-      >= ConsoleKey.D0 and <= ConsoleKey.D9 => (char)('0' + (key - ConsoleKey.D0)),
+      ConsoleKey.A or ConsoleKey.B or ConsoleKey.C or ConsoleKey.D or ConsoleKey.E or ConsoleKey.F
+        or ConsoleKey.G or ConsoleKey.H or ConsoleKey.I or ConsoleKey.J or ConsoleKey.K or ConsoleKey.L
+        or ConsoleKey.M or ConsoleKey.N or ConsoleKey.O or ConsoleKey.P or ConsoleKey.Q or ConsoleKey.R
+        or ConsoleKey.S or ConsoleKey.T or ConsoleKey.U or ConsoleKey.V or ConsoleKey.W or ConsoleKey.X
+        or ConsoleKey.Y or ConsoleKey.Z => (char)('a' + (key - ConsoleKey.A)),
+      ConsoleKey.D0 or ConsoleKey.D1 or ConsoleKey.D2 or ConsoleKey.D3 or ConsoleKey.D4
+        or ConsoleKey.D5 or ConsoleKey.D6 or ConsoleKey.D7 or ConsoleKey.D8
+        or ConsoleKey.D9 => (char)('0' + (key - ConsoleKey.D0)),
+      ConsoleKey.None or ConsoleKey.Clear or ConsoleKey.Pause
+        or ConsoleKey.PageUp or ConsoleKey.PageDown or ConsoleKey.End or ConsoleKey.Home
+        or ConsoleKey.LeftArrow or ConsoleKey.UpArrow or ConsoleKey.RightArrow or ConsoleKey.DownArrow
+        or ConsoleKey.Select or ConsoleKey.Print or ConsoleKey.Execute or ConsoleKey.PrintScreen
+        or ConsoleKey.Insert or ConsoleKey.Delete or ConsoleKey.Help
+        or ConsoleKey.LeftWindows or ConsoleKey.RightWindows or ConsoleKey.Applications or ConsoleKey.Sleep
+        or ConsoleKey.NumPad0 or ConsoleKey.NumPad1 or ConsoleKey.NumPad2 or ConsoleKey.NumPad3
+        or ConsoleKey.NumPad4 or ConsoleKey.NumPad5 or ConsoleKey.NumPad6 or ConsoleKey.NumPad7
+        or ConsoleKey.NumPad8 or ConsoleKey.NumPad9
+        or ConsoleKey.Multiply or ConsoleKey.Add or ConsoleKey.Separator or ConsoleKey.Subtract
+        or ConsoleKey.Decimal or ConsoleKey.Divide
+        or ConsoleKey.F1 or ConsoleKey.F2 or ConsoleKey.F3 or ConsoleKey.F4 or ConsoleKey.F5
+        or ConsoleKey.F6 or ConsoleKey.F7 or ConsoleKey.F8 or ConsoleKey.F9 or ConsoleKey.F10
+        or ConsoleKey.F11 or ConsoleKey.F12 or ConsoleKey.F13 or ConsoleKey.F14 or ConsoleKey.F15
+        or ConsoleKey.F16 or ConsoleKey.F17 or ConsoleKey.F18 or ConsoleKey.F19 or ConsoleKey.F20
+        or ConsoleKey.F21 or ConsoleKey.F22 or ConsoleKey.F23 or ConsoleKey.F24
+        or ConsoleKey.BrowserBack or ConsoleKey.BrowserForward or ConsoleKey.BrowserRefresh
+        or ConsoleKey.BrowserStop or ConsoleKey.BrowserSearch or ConsoleKey.BrowserFavorites
+        or ConsoleKey.BrowserHome
+        or ConsoleKey.VolumeMute or ConsoleKey.VolumeDown or ConsoleKey.VolumeUp
+        or ConsoleKey.MediaNext or ConsoleKey.MediaPrevious or ConsoleKey.MediaStop or ConsoleKey.MediaPlay
+        or ConsoleKey.LaunchMail or ConsoleKey.LaunchMediaSelect or ConsoleKey.LaunchApp1 or ConsoleKey.LaunchApp2
+        or ConsoleKey.Oem1 or ConsoleKey.OemPlus or ConsoleKey.OemComma or ConsoleKey.OemMinus
+        or ConsoleKey.OemPeriod or ConsoleKey.Oem2 or ConsoleKey.Oem3 or ConsoleKey.Oem4
+        or ConsoleKey.Oem5 or ConsoleKey.Oem6 or ConsoleKey.Oem7 or ConsoleKey.Oem8 or ConsoleKey.Oem102
+        or ConsoleKey.Process or ConsoleKey.Packet or ConsoleKey.Attention
+        or ConsoleKey.CrSel or ConsoleKey.ExSel or ConsoleKey.EraseEndOfFile
+        or ConsoleKey.Play or ConsoleKey.Zoom or ConsoleKey.NoName or ConsoleKey.Pa1
+        or ConsoleKey.OemClear => '\0',
       _ => '\0'
     };
+
+    if (key is >= ConsoleKey.A and <= ConsoleKey.Z)
+    {
+      if (ctrl)
+      {
+        // Real terminals produce control characters for Ctrl+A through Ctrl+Z
+        keyChar = (char)(key - ConsoleKey.A + 1);
+      }
+      else if (shift)
+      {
+        keyChar = char.ToUpperInvariant(keyChar);
+      }
+    }
 
     KeyQueue.Enqueue(new ConsoleKeyInfo(keyChar, key, shift, alt, ctrl));
   }
@@ -505,7 +545,8 @@ public sealed class TestTerminal : ITerminal, IDisposable
     foreach (char c in text)
     {
       ConsoleKey key = CharToConsoleKey(c);
-      KeyQueue.Enqueue(new ConsoleKeyInfo(c, key, false, false, false));
+      bool shift = char.IsAsciiLetterUpper(c);
+      KeyQueue.Enqueue(new ConsoleKeyInfo(c, key, shift, false, false));
     }
   }
 
@@ -537,8 +578,8 @@ public sealed class TestTerminal : ITerminal, IDisposable
   /// </summary>
   public void ClearOutput()
   {
-    OutputWriter.GetStringBuilder().Clear();
-    ErrorWriter.GetStringBuilder().Clear();
+    _ = OutputWriter.GetStringBuilder().Clear();
+    _ = ErrorWriter.GetStringBuilder().Clear();
   }
 
   /// <summary>
@@ -576,15 +617,14 @@ public sealed class TestTerminal : ITerminal, IDisposable
   public int KeysInQueue => KeyQueue.Count;
 
   /// <summary>
-  /// Disposes the resources used by this instance.
-  /// </summary>
-  /// <summary>
   /// Disposes the resources used by this instance and clears the test context if this is the current terminal.
   /// </summary>
   public void Dispose()
   {
     if (Disposed)
+    {
       return;
+    }
 
     // Clear context if this is the current terminal (restores previous Terminal.Instance)
     if (TestTerminalContext.Current == this)
@@ -595,9 +635,12 @@ public sealed class TestTerminal : ITerminal, IDisposable
     InputReader.Dispose();
     OutputWriter.Dispose();
     ErrorWriter.Dispose();
-    StandardInputStream.Dispose();
-    StandardOutputStream.Dispose();
-    StandardErrorStream.Dispose();
+
+    // Dispose only the streams this instance created in its constructor.
+    // Consumer-assigned Standard*Stream replacements are owned by the consumer and must not be disposed here.
+    OwnedStandardInputStream.Dispose();
+    OwnedStandardOutputStream.Dispose();
+    OwnedStandardErrorStream.Dispose();
     Disposed = true;
   }
 

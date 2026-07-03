@@ -1,5 +1,20 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Table widget: renders formatted columnar data with headers, alignment, borders, and width management.
+#endregion
+
+#region Design
+// Cell truncation preserves ANSI escape codes for all TruncateMode values: codes within the kept
+// visible span stay in their original positions, and for Start/Middle the style established by the
+// discarded prefix is replayed before the kept tail (AnsiStringUtils.TakeVisibleFromEnd), so a
+// color opened before the cut still styles the kept text. The ellipsis is always PLAIN: any style
+// active at a cut boundary is closed with a reset (AnsiStringUtils.TakeVisibleFromStart) so
+// styling never bleeds into the ellipsis, padding, or borders. Cuts are grapheme-aware and never
+// split a wide (two-column) grapheme; a straddling grapheme is dropped and AlignCell pads the
+// shortfall.
+#endregion
+
 /// <summary>
 /// Represents a table widget for rendering formatted columnar data with headers, alignment, and borders.
 /// </summary>
@@ -53,6 +68,9 @@ public sealed class Table
   /// Gets or sets a value indicating whether the table should expand to fill the terminal width.
   /// Defaults to <c>false</c>.
   /// </summary>
+  /// <remarks>
+  /// Has no effect when <see cref="Border"/> is <see cref="BorderStyle.None"/>; borderless tables always render at their natural width.
+  /// </remarks>
   public bool Expand { get; set; }
 
   /// <summary>
@@ -136,6 +154,7 @@ public sealed class Table
   /// </remarks>
   internal Table AddRow(params string[] cells)
   {
+    ArgumentNullException.ThrowIfNull(cells);
     RowsList.Add(cells);
     return this;
   }
@@ -148,7 +167,9 @@ public sealed class Table
   public string[] Render(int terminalWidth = 80)
   {
     if (ColumnsList.Count == 0)
+    {
       return [];
+    }
 
     int[] columnWidths = CalculateColumnWidths(terminalWidth);
 
@@ -207,40 +228,67 @@ public sealed class Table
       for (int i = 0; i < ColumnsList.Count; i++)
       {
         if (!ColumnsList[i].Grow)
+        {
           fixedContentWidth += widths[i];
+        }
+      }
+
+      // A grow column is never sized below max(4, MinWidth)
+      int[] growMinWidths = new int[ColumnsList.Count];
+      int totalGrowMin = 0;
+      int growCount = 0;
+      for (int i = 0; i < ColumnsList.Count; i++)
+      {
+        if (ColumnsList[i].Grow)
+        {
+          growMinWidths[i] = Math.Max(4, ColumnsList[i].MinWidth ?? 4);
+          totalGrowMin += growMinWidths[i];
+          growCount++;
+        }
       }
 
       int availableForGrow = terminalWidth - overhead - fixedContentWidth;
-      int growCount = ColumnsList.Count(c => c.Grow);
 
-      if (availableForGrow > 0)
+      if (availableForGrow >= totalGrowMin)
       {
-        // Distribute remaining space evenly among grow columns
-        int perGrowColumn = availableForGrow / growCount;
-        int remainder = availableForGrow % growCount;
+        // Give each grow column its minimum, then distribute the surplus evenly
+        int surplus = availableForGrow - totalGrowMin;
+        int perGrowColumn = surplus / growCount;
+        int remainder = surplus % growCount;
         int growIndex = 0;
 
         for (int i = 0; i < ColumnsList.Count; i++)
         {
           if (ColumnsList[i].Grow)
           {
-            widths[i] = perGrowColumn + (growIndex < remainder ? 1 : 0);
+            widths[i] = growMinWidths[i] + perGrowColumn + (growIndex < remainder ? 1 : 0);
             growIndex++;
           }
         }
       }
       else
       {
-        // Not enough space — shrink fixed columns first, then grow columns
-        int excessWidth = overhead + fixedContentWidth - terminalWidth;
+        // Not enough space — grow columns hold at their minimum width and the
+        // remaining overflow is shrunk out of the fixed columns proportionally
+        for (int i = 0; i < ColumnsList.Count; i++)
+        {
+          if (ColumnsList[i].Grow)
+          {
+            widths[i] = growMinWidths[i];
+          }
+        }
+
+        int excessWidth = overhead + fixedContentWidth + totalGrowMin - terminalWidth;
 
         if (excessWidth > 0)
         {
           int[] minWidths = new int[ColumnsList.Count];
           for (int i = 0; i < ColumnsList.Count; i++)
+          {
             minWidths[i] = ColumnsList[i].MinWidth ?? 4;
+          }
 
-          // Shrink fixed columns proportionally first
+          // Shrink fixed columns proportionally (grow columns are already at minimum)
           int[] shrinkableAmounts = new int[ColumnsList.Count];
           int totalShrinkable = 0;
           for (int i = 0; i < ColumnsList.Count; i++)
@@ -265,13 +313,6 @@ public sealed class Table
             }
           }
         }
-
-        // Grow columns get zero width — fixed columns already consumed all available space
-        for (int i = 0; i < ColumnsList.Count; i++)
-        {
-          if (ColumnsList[i].Grow)
-            widths[i] = 0;
-        }
       }
 
       return widths;
@@ -284,15 +325,38 @@ public sealed class Table
     if (Expand && Border != BorderStyle.None && totalWidth < terminalWidth)
     {
       int extraWidth = terminalWidth - totalWidth;
-      int perColumn = extraWidth / ColumnsList.Count;
-      int remainder = extraWidth % ColumnsList.Count;
 
-      for (int i = 0; i < ColumnsList.Count; i++)
+      // Distribute extra width among columns that are not capped at MaxWidth.
+      // Loop because a round can push a column to its cap, requiring its
+      // unused share to be redistributed to the remaining uncapped columns.
+      while (extraWidth > 0)
       {
-        widths[i] += perColumn;
-        if (i < remainder)
+        List<int> expandableIndices = [];
+        for (int i = 0; i < ColumnsList.Count; i++)
         {
-          widths[i]++;
+          int? maxWidth = ColumnsList[i].MaxWidth;
+          if (!maxWidth.HasValue || widths[i] < maxWidth.Value)
+          {
+            expandableIndices.Add(i);
+          }
+        }
+
+        if (expandableIndices.Count == 0)
+        {
+          break; // All columns capped at MaxWidth — stop distributing
+        }
+
+        int perColumn = extraWidth / expandableIndices.Count;
+        int remainder = extraWidth % expandableIndices.Count;
+
+        for (int j = 0; j < expandableIndices.Count; j++)
+        {
+          int i = expandableIndices[j];
+          int share = perColumn + (j < remainder ? 1 : 0);
+          int? maxWidth = ColumnsList[i].MaxWidth;
+          int addition = maxWidth.HasValue ? Math.Min(share, maxWidth.Value - widths[i]) : share;
+          widths[i] += addition;
+          extraWidth -= addition;
         }
       }
     }
@@ -421,15 +485,18 @@ public sealed class Table
     string colorEnd = !string.IsNullOrEmpty(BorderColor) ? AnsiColors.Reset : "";
 
     StringBuilder sb = new();
-    sb.Append(colorStart);
-    sb.Append(left);
+    _ = sb.Append(colorStart);
+    _ = sb.Append(left);
 
     for (int i = 0; i < columnWidths.Length; i++)
     {
-      if (columnWidths[i] == 0) continue;
+      if (columnWidths[i] == 0)
+      {
+        continue;
+      }
 
       // Each cell has padding (1 space on each side) plus content width
-      sb.Append(horizontal, columnWidths[i] + 2);
+      _ = sb.Append(horizontal, columnWidths[i] + 2);
 
       if (i < columnWidths.Length - 1)
       {
@@ -441,12 +508,14 @@ public sealed class Table
         }
 
         if (hasNextNonZero)
-          sb.Append(junction);
+        {
+          _ = sb.Append(junction);
+        }
       }
     }
 
-    sb.Append(right);
-    sb.Append(colorEnd);
+    _ = sb.Append(right);
+    _ = sb.Append(colorEnd);
 
     return sb.ToString();
   }
@@ -457,13 +526,16 @@ public sealed class Table
     string colorEnd = !string.IsNullOrEmpty(BorderColor) ? AnsiColors.Reset : "";
 
     StringBuilder sb = new();
-    sb.Append(colorStart);
-    sb.Append(vertical);
-    sb.Append(colorEnd);
+    _ = sb.Append(colorStart);
+    _ = sb.Append(vertical);
+    _ = sb.Append(colorEnd);
 
     for (int i = 0; i < columnWidths.Length; i++)
     {
-      if (columnWidths[i] == 0) continue;
+      if (columnWidths[i] == 0)
+      {
+        continue;
+      }
 
       string cellValue = i < cells.Length ? cells[i] ?? "" : "";
       TableColumn column = ColumnsList[i];
@@ -484,12 +556,12 @@ public sealed class Table
       // Apply alignment
       string alignedCell = AlignCell(cellValue, columnWidths[i], column.Alignment);
 
-      sb.Append(' '); // Left padding
-      sb.Append(alignedCell);
-      sb.Append(' '); // Right padding
-      sb.Append(colorStart);
-      sb.Append(vertical);
-      sb.Append(colorEnd);
+      _ = sb.Append(' '); // Left padding
+      _ = sb.Append(alignedCell);
+      _ = sb.Append(' '); // Right padding
+      _ = sb.Append(colorStart);
+      _ = sb.Append(vertical);
+      _ = sb.Append(colorEnd);
     }
 
     return sb.ToString();
@@ -522,10 +594,10 @@ public sealed class Table
 
       if (i > 0)
       {
-        sb.Append("  "); // Column separator for borderless tables
+        _ = sb.Append("  "); // Column separator for borderless tables
       }
 
-      sb.Append(alignedCell);
+      _ = sb.Append(alignedCell);
     }
 
     return sb.ToString();
@@ -549,19 +621,20 @@ public sealed class Table
       return new string('.', maxWidth);
     }
 
-    // Strip ANSI codes to get plain text
-    string plainText = AnsiStringUtils.StripAnsiCodes(text);
-
-    if (UnicodeWidth.GetTextWidth(plainText) <= maxWidth)
+    if (AnsiStringUtils.GetVisibleLength(text) <= maxWidth)
     {
       return text; // No truncation needed
     }
 
+    // ANSI codes in the kept visible span stay in place; the ellipsis is always plain:
+    // TakeVisibleFromStart closes any style active at the cut, and TakeVisibleFromEnd replays
+    // the style established by the discarded prefix so the kept tail keeps its color.
     return mode switch
     {
-      TruncateMode.Start => "..." + TakeGraphemesFromEnd(plainText, maxWidth - 3),
-      TruncateMode.Middle => TruncateMiddle(plainText, maxWidth),
-      _ => TakeGraphemesFromStart(plainText, maxWidth - 3) + "..."
+      TruncateMode.Start => "..." + AnsiStringUtils.TakeVisibleFromEnd(text, maxWidth - 3),
+      TruncateMode.Middle => TruncateMiddle(text, maxWidth),
+      TruncateMode.End => AnsiStringUtils.TakeVisibleFromStart(text, maxWidth - 3) + "...",
+      _ => AnsiStringUtils.TakeVisibleFromStart(text, maxWidth - 3) + "..."
     };
   }
 
@@ -571,59 +644,6 @@ public sealed class Table
     int startWidth = (availableWidth + 1) / 2;
     int endWidth = availableWidth - startWidth;
 
-    return TakeGraphemesFromStart(text, startWidth) + "..." + TakeGraphemesFromEnd(text, endWidth);
-  }
-
-  private static string TakeGraphemesFromStart(string text, int maxColumns)
-  {
-    StringBuilder sb = new();
-    int width = 0;
-    TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(text);
-    while (enumerator.MoveNext())
-    {
-      string grapheme = enumerator.GetTextElement();
-      int gw = UnicodeWidth.GetTextWidth(grapheme);
-      if (width + gw > maxColumns)
-        break;
-      sb.Append(grapheme);
-      width += gw;
-    }
-
-    return sb.ToString();
-  }
-
-  private static string TakeGraphemesFromEnd(string text, int maxColumns)
-  {
-    // Collect all grapheme clusters, then take from end
-    List<string> graphemes = [];
-    TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(text);
-    while (enumerator.MoveNext())
-      graphemes.Add(enumerator.GetTextElement());
-
-    StringBuilder sb = new();
-    int width = 0;
-    for (int i = graphemes.Count - 1; i >= 0; i--)
-    {
-      int gw = UnicodeWidth.GetTextWidth(graphemes[i]);
-      if (width + gw > maxColumns)
-        break;
-      width += gw;
-    }
-
-    // Now collect from the correct starting position
-    int skipWidth = UnicodeWidth.GetTextWidth(text) - width;
-    int accumulated = 0;
-    sb.Clear();
-    enumerator = StringInfo.GetTextElementEnumerator(text);
-    while (enumerator.MoveNext())
-    {
-      string grapheme = enumerator.GetTextElement();
-      int gw = UnicodeWidth.GetTextWidth(grapheme);
-      accumulated += gw;
-      if (accumulated > skipWidth)
-        sb.Append(grapheme);
-    }
-
-    return sb.ToString();
+    return AnsiStringUtils.TakeVisibleFromStart(text, startWidth) + "..." + AnsiStringUtils.TakeVisibleFromEnd(text, endWidth);
   }
 }

@@ -35,7 +35,7 @@ public static class TerminalRuleExtensions
 
     Rule rule = new() { Style = style };
     string rendered = rule.Render(terminal.WindowWidth);
-    terminal.WriteLine(rendered);
+    _ = terminal.WriteLine(rendered);
     return terminal;
   }
 
@@ -52,7 +52,7 @@ public static class TerminalRuleExtensions
 
     Rule rule = new() { Title = title, Style = style };
     string rendered = rule.Render(terminal.WindowWidth);
-    terminal.WriteLine(rendered);
+    _ = terminal.WriteLine(rendered);
     return terminal;
   }
 
@@ -80,7 +80,7 @@ public static class TerminalRuleExtensions
 
     Rule rule = builder.Build();
     string rendered = rule.Render(terminal.WindowWidth);
-    terminal.WriteLine(rendered);
+    _ = terminal.WriteLine(rendered);
     return terminal;
   }
 
@@ -96,7 +96,7 @@ public static class TerminalRuleExtensions
     ArgumentNullException.ThrowIfNull(rule);
 
     string rendered = rule.Render(terminal.WindowWidth);
-    terminal.WriteLine(rendered);
+    _ = terminal.WriteLine(rendered);
     return terminal;
   }
 }

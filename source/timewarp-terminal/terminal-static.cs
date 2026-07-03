@@ -9,8 +9,14 @@ namespace TimeWarp.Terminal;
 // Static API mimics System.Console for easy migration from existing code.
 // Instance property allows swapping implementation for testing without DI container.
 // Dedicated format overloads for 1-3 args avoid array allocation (params variant for 4+).
-// Color methods use AnsiColors to wrap messages with ANSI escape sequences.
-// CA1054 suppressed for WriteLink: OSC 8 hyperlinks use raw URL strings by design.
+// Format overloads use FormatProvider ?? CurrentCulture (resolved per call), matching
+// System.Console's culture behavior while allowing an invariant override for determinism.
+// Color methods use AnsiColors to wrap messages with ANSI escape sequences, applied only
+// when Instance.SupportsColor is true (NO_COLOR / redirected output degrade to plain text).
+// A null message writes plain (no color prefix/reset), matching the non-colored overloads.
+// Colored widget output re-applies the color prefix after every embedded SGR reset (from
+// BorderColor or styled cells) so the requested colors survive styled segments in a line.
+// CA1054 suppressed for WriteLink/WriteLinkLine: OSC 8 hyperlinks use raw URL strings by design.
 #endregion
 
 using System.Globalization;
@@ -47,8 +53,6 @@ using System.Globalization;
 /// </remarks>
 public static class Terminal
 {
-  private static ITerminal s_Instance = TimeWarpTerminal.Default;
-
   /// <summary>
   /// Gets or sets the terminal instance used by all static methods.
   /// Defaults to <see cref="TimeWarpTerminal.Default"/> for production use.
@@ -56,14 +60,36 @@ public static class Terminal
   /// <value>The current terminal implementation.</value>
   /// <exception cref="ArgumentNullException">Thrown when attempting to set a null value.</exception>
   /// <remarks>
-  /// Replace this instance with a test implementation (such as <c>TestTerminal</c>)
-  /// to capture output and simulate input during unit tests.
+  /// The getter resolves the async-local <c>TestTerminalContext.Current</c> first, falling
+  /// back to the process-global instance assigned via the setter. This makes
+  /// <c>TestTerminalContext.SetCurrent</c>/<c>Use</c> safe for parallel test execution —
+  /// each async flow sees its own terminal — while direct assignment
+  /// (<c>Terminal.Instance = new TestTerminal()</c>) keeps working for serial tests.
   /// </remarks>
   public static ITerminal Instance
   {
-    get => s_Instance;
-    set => s_Instance = value ?? throw new ArgumentNullException(nameof(value));
-  }
+    get => TestTerminalContext.Current ?? field;
+    set => field = value ?? throw new ArgumentNullException(nameof(value));
+  } = TimeWarpTerminal.Default;
+
+  /// <summary>
+  /// Gets or sets the format provider used by the format overloads of
+  /// <see cref="Write(string, object?)"/>, <see cref="WriteLine(string, object?)"/>,
+  /// and <see cref="WriteErrorLine(string, object?)"/>.
+  /// </summary>
+  /// <value>
+  /// The provider to format with, or <c>null</c> to use <see cref="CultureInfo.CurrentCulture"/>
+  /// as resolved at the time of each call. Defaults to <c>null</c>, matching
+  /// <see cref="System.Console"/>'s current-culture formatting behavior.
+  /// </value>
+  /// <remarks>
+  /// Set to <see cref="CultureInfo.InvariantCulture"/> for deterministic output in tests or logs.
+  /// This is process-global startup configuration; <c>TestTerminalContext</c> snapshots and
+  /// restores it alongside <see cref="Instance"/>.
+  /// </remarks>
+  public static IFormatProvider? FormatProvider { get; set; }
+
+  private static IFormatProvider ActiveFormatProvider => FormatProvider ?? CultureInfo.CurrentCulture;
 
   // Output Methods
 
@@ -83,7 +109,7 @@ public static class Terminal
   /// <summary>
   /// Writes the specified string value to the standard output stream with the specified foreground color.
   /// </summary>
-  /// <param name="message">The value to write. If null, an empty string is written.</param>
+  /// <param name="message">The value to write. If null, an empty string is written without color codes.</param>
   /// <param name="foregroundColor">The foreground color to apply.</param>
   /// <example>
   /// <code>
@@ -91,17 +117,60 @@ public static class Terminal
   /// Terminal.Write("Success!", ConsoleColor.Green);
   /// </code>
   /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// </remarks>
   public static void Write(string? message, ConsoleColor foregroundColor)
   {
-    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
-    Instance.Write(coloredMessage);
+    ITerminal instance = Instance;
+    if (message is null || !instance.SupportsColor)
+    {
+      _ = instance.Write(message ?? string.Empty);
+      return;
+    }
+
+    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + message + AnsiColors.Reset;
+    _ = instance.Write(coloredMessage);
+  }
+
+  /// <summary>
+  /// Writes the specified string value to the standard output stream with the specified
+  /// foreground and background colors.
+  /// </summary>
+  /// <param name="message">The value to write. If null, an empty string is written without color codes.</param>
+  /// <param name="foregroundColor">The foreground color to apply.</param>
+  /// <param name="backgroundColor">The background color to apply.</param>
+  /// <example>
+  /// <code>
+  /// Terminal.Write("Highlighted text", ConsoleColor.Black, ConsoleColor.Yellow);
+  /// </code>
+  /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// </remarks>
+  public static void Write(string? message, ConsoleColor foregroundColor, ConsoleColor backgroundColor)
+  {
+    ITerminal instance = Instance;
+    if (message is null || !instance.SupportsColor)
+    {
+      _ = instance.Write(message ?? string.Empty);
+      return;
+    }
+
+    string coloredMessage = AnsiColors.GetForeground(foregroundColor) +
+                            AnsiColors.GetBackground(backgroundColor) +
+                            message +
+                            AnsiColors.Reset;
+    _ = instance.Write(coloredMessage);
   }
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
   /// to the standard output stream with the specified foreground color.
   /// </summary>
-  /// <param name="message">The value to write. If null, only the line terminator is written.</param>
+  /// <param name="message">The value to write. If null, only the line terminator is written (no color codes).</param>
   /// <param name="foregroundColor">The foreground color to apply.</param>
   /// <example>
   /// <code>
@@ -109,17 +178,28 @@ public static class Terminal
   /// Terminal.WriteLine("Success!", ConsoleColor.Green);
   /// </code>
   /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// </remarks>
   public static void WriteLine(string? message, ConsoleColor foregroundColor)
   {
-    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
-    Instance.WriteLine(coloredMessage);
+    ITerminal instance = Instance;
+    if (message is null || !instance.SupportsColor)
+    {
+      _ = instance.WriteLine(message);
+      return;
+    }
+
+    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + message + AnsiColors.Reset;
+    _ = instance.WriteLine(coloredMessage);
   }
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
   /// to the standard output stream with the specified foreground and background colors.
   /// </summary>
-  /// <param name="message">The value to write. If null, only the line terminator is written.</param>
+  /// <param name="message">The value to write. If null, only the line terminator is written (no color codes).</param>
   /// <param name="foregroundColor">The foreground color to apply.</param>
   /// <param name="backgroundColor">The background color to apply.</param>
   /// <example>
@@ -127,13 +207,24 @@ public static class Terminal
   /// Terminal.WriteLine("Highlighted text", ConsoleColor.Black, ConsoleColor.Yellow);
   /// </code>
   /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// </remarks>
   public static void WriteLine(string? message, ConsoleColor foregroundColor, ConsoleColor backgroundColor)
   {
+    ITerminal instance = Instance;
+    if (message is null || !instance.SupportsColor)
+    {
+      _ = instance.WriteLine(message);
+      return;
+    }
+
     string coloredMessage = AnsiColors.GetForeground(foregroundColor) +
                             AnsiColors.GetBackground(backgroundColor) +
-                            (message ?? string.Empty) +
+                            message +
                             AnsiColors.Reset;
-    Instance.WriteLine(coloredMessage);
+    _ = instance.WriteLine(coloredMessage);
   }
 
   /// <summary>
@@ -155,17 +246,60 @@ public static class Terminal
   /// Writes the specified string value, followed by the current line terminator,
   /// to the standard error stream with the specified foreground color.
   /// </summary>
-  /// <param name="message">The value to write. If null, only the line terminator is written.</param>
+  /// <param name="message">The value to write. If null, only the line terminator is written (no color codes).</param>
   /// <param name="foregroundColor">The foreground color to apply.</param>
   /// <example>
   /// <code>
   /// Terminal.WriteErrorLine("Error: File not found", ConsoleColor.Red);
   /// </code>
   /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// </remarks>
   public static void WriteErrorLine(string? message, ConsoleColor foregroundColor)
   {
-    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
-    Instance.WriteErrorLine(coloredMessage);
+    ITerminal instance = Instance;
+    if (message is null || !instance.SupportsColor)
+    {
+      _ = instance.WriteErrorLine(message);
+      return;
+    }
+
+    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + message + AnsiColors.Reset;
+    _ = instance.WriteErrorLine(coloredMessage);
+  }
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard error stream with the specified foreground and background colors.
+  /// </summary>
+  /// <param name="message">The value to write. If null, only the line terminator is written (no color codes).</param>
+  /// <param name="foregroundColor">The foreground color to apply.</param>
+  /// <param name="backgroundColor">The background color to apply.</param>
+  /// <example>
+  /// <code>
+  /// Terminal.WriteErrorLine("Fatal error", ConsoleColor.White, ConsoleColor.Red);
+  /// </code>
+  /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// </remarks>
+  public static void WriteErrorLine(string? message, ConsoleColor foregroundColor, ConsoleColor backgroundColor)
+  {
+    ITerminal instance = Instance;
+    if (message is null || !instance.SupportsColor)
+    {
+      _ = instance.WriteErrorLine(message);
+      return;
+    }
+
+    string coloredMessage = AnsiColors.GetForeground(foregroundColor) +
+                            AnsiColors.GetBackground(backgroundColor) +
+                            message +
+                            AnsiColors.Reset;
+    _ = instance.WriteErrorLine(coloredMessage);
   }
 
   /// <summary>
@@ -184,7 +318,7 @@ public static class Terminal
   /// <param name="format">A composite format string.</param>
   /// <param name="arg0">The object to format.</param>
   public static void Write(string format, object? arg0)
-    => Instance.Write(string.Format(CultureInfo.InvariantCulture, format, arg0));
+    => Instance.Write(string.Format(ActiveFormatProvider, format, arg0));
 
   /// <summary>
   /// Writes the specified string value to the standard output stream, using the specified format information.
@@ -193,7 +327,7 @@ public static class Terminal
   /// <param name="arg0">The first object to format.</param>
   /// <param name="arg1">The second object to format.</param>
   public static void Write(string format, object? arg0, object? arg1)
-    => Instance.Write(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1));
+    => Instance.Write(string.Format(ActiveFormatProvider, format, arg0, arg1));
 
   /// <summary>
   /// Writes the specified string value to the standard output stream, using the specified format information.
@@ -203,7 +337,7 @@ public static class Terminal
   /// <param name="arg1">The second object to format.</param>
   /// <param name="arg2">The third object to format.</param>
   public static void Write(string format, object? arg0, object? arg1, object? arg2)
-    => Instance.Write(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1, arg2));
+    => Instance.Write(string.Format(ActiveFormatProvider, format, arg0, arg1, arg2));
 
   /// <summary>
   /// Writes the specified string value to the standard output stream, using the specified format information.
@@ -211,7 +345,7 @@ public static class Terminal
   /// <param name="format">A composite format string.</param>
   /// <param name="args">An array of objects to format.</param>
   public static void Write(string format, params object?[] args)
-    => Instance.Write(string.Format(CultureInfo.InvariantCulture, format, args));
+    => Instance.Write(string.Format(ActiveFormatProvider, format, args));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -220,7 +354,7 @@ public static class Terminal
   /// <param name="format">A composite format string.</param>
   /// <param name="arg0">The object to format.</param>
   public static void WriteLine(string format, object? arg0)
-    => Instance.WriteLine(string.Format(CultureInfo.InvariantCulture, format, arg0));
+    => Instance.WriteLine(string.Format(ActiveFormatProvider, format, arg0));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -230,7 +364,7 @@ public static class Terminal
   /// <param name="arg0">The first object to format.</param>
   /// <param name="arg1">The second object to format.</param>
   public static void WriteLine(string format, object? arg0, object? arg1)
-    => Instance.WriteLine(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1));
+    => Instance.WriteLine(string.Format(ActiveFormatProvider, format, arg0, arg1));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -241,7 +375,7 @@ public static class Terminal
   /// <param name="arg1">The second object to format.</param>
   /// <param name="arg2">The third object to format.</param>
   public static void WriteLine(string format, object? arg0, object? arg1, object? arg2)
-    => Instance.WriteLine(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1, arg2));
+    => Instance.WriteLine(string.Format(ActiveFormatProvider, format, arg0, arg1, arg2));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -250,7 +384,7 @@ public static class Terminal
   /// <param name="format">A composite format string.</param>
   /// <param name="args">An array of objects to format.</param>
   public static void WriteLine(string format, params object?[] args)
-    => Instance.WriteLine(string.Format(CultureInfo.InvariantCulture, format, args));
+    => Instance.WriteLine(string.Format(ActiveFormatProvider, format, args));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -259,7 +393,7 @@ public static class Terminal
   /// <param name="format">A composite format string.</param>
   /// <param name="arg0">The object to format.</param>
   public static void WriteErrorLine(string format, object? arg0)
-    => Instance.WriteErrorLine(string.Format(CultureInfo.InvariantCulture, format, arg0));
+    => Instance.WriteErrorLine(string.Format(ActiveFormatProvider, format, arg0));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -269,7 +403,7 @@ public static class Terminal
   /// <param name="arg0">The first object to format.</param>
   /// <param name="arg1">The second object to format.</param>
   public static void WriteErrorLine(string format, object? arg0, object? arg1)
-    => Instance.WriteErrorLine(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1));
+    => Instance.WriteErrorLine(string.Format(ActiveFormatProvider, format, arg0, arg1));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -280,7 +414,7 @@ public static class Terminal
   /// <param name="arg1">The second object to format.</param>
   /// <param name="arg2">The third object to format.</param>
   public static void WriteErrorLine(string format, object? arg0, object? arg1, object? arg2)
-    => Instance.WriteErrorLine(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1, arg2));
+    => Instance.WriteErrorLine(string.Format(ActiveFormatProvider, format, arg0, arg1, arg2));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -289,7 +423,7 @@ public static class Terminal
   /// <param name="format">A composite format string.</param>
   /// <param name="args">An array of objects to format.</param>
   public static void WriteErrorLine(string format, params object?[] args)
-    => Instance.WriteErrorLine(string.Format(CultureInfo.InvariantCulture, format, args));
+    => Instance.WriteErrorLine(string.Format(ActiveFormatProvider, format, args));
 
   // Widget Methods
 
@@ -315,7 +449,9 @@ public static class Terminal
     Table table = builder.Build();
     string[] lines = table.Render(WindowWidth);
     foreach (string line in lines)
-      Instance.WriteLine(line);
+    {
+      _ = Instance.WriteLine(line);
+    }
   }
 
   /// <summary>
@@ -338,7 +474,9 @@ public static class Terminal
 
     string[] lines = table.Render(WindowWidth);
     foreach (string line in lines)
-      Instance.WriteLine(line);
+    {
+      _ = Instance.WriteLine(line);
+    }
   }
 
   /// <summary>
@@ -382,24 +520,34 @@ public static class Terminal
   /// Terminal.WriteTable(table, ConsoleColor.White, ConsoleColor.DarkBlue);
   /// </code>
   /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// The color prefix is re-applied after any embedded SGR reset (from border colors or styled
+  /// cells) so the requested colors are not cancelled mid-line.
+  /// </remarks>
   public static void WriteTable(Table table, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
   {
     ArgumentNullException.ThrowIfNull(table);
 
+    bool useColor = (foregroundColor.HasValue || backgroundColor.HasValue) && Instance.SupportsColor;
+    string colorPrefix = useColor
+      ? (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
+        (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "")
+      : "";
     string[] lines = table.Render(WindowWidth);
     foreach (string line in lines)
     {
-      if (foregroundColor.HasValue || backgroundColor.HasValue)
+      if (useColor)
       {
-        string coloredLine = (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
-                             (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +
-                             line +
+        string coloredLine = colorPrefix +
+                             line.Replace(AnsiColors.Reset, AnsiColors.Reset + colorPrefix, StringComparison.Ordinal) +
                              AnsiColors.Reset;
-        Instance.WriteLine(coloredLine);
+        _ = Instance.WriteLine(coloredLine);
       }
       else
       {
-        Instance.WriteLine(line);
+        _ = Instance.WriteLine(line);
       }
     }
   }
@@ -426,26 +574,9 @@ public static class Terminal
     Panel panel = builder.Build();
     string[] lines = panel.Render(WindowWidth);
     foreach (string line in lines)
-      Instance.WriteLine(line);
-  }
-
-  /// <summary>
-  /// Writes a panel with content and optional header to the terminal.
-  /// </summary>
-  /// <param name="content">The content to display inside the panel.</param>
-  /// <param name="header">The header to display in the top border. Defaults to <c>null</c>.</param>
-  /// <example>
-  /// <code>
-  /// Terminal.WritePanel("This is important information");
-  /// Terminal.WritePanel("Content here", header: "Notice");
-  /// </code>
-  /// </example>
-  public static void WritePanel(string content, string? header = null)
-  {
-    Panel panel = new() { Content = content, Header = header };
-    string[] lines = panel.Render(WindowWidth);
-    foreach (string line in lines)
-      Instance.WriteLine(line);
+    {
+      _ = Instance.WriteLine(line);
+    }
   }
 
   /// <summary>
@@ -482,6 +613,8 @@ public static class Terminal
   /// <param name="backgroundColor">The background color to apply to panel content. Defaults to <c>null</c> (no color).</param>
   /// <example>
   /// <code>
+  /// Terminal.WritePanel("This is important information");
+  /// Terminal.WritePanel("Content here", "Notice");
   /// Terminal.WritePanel("This is important information", header: "Notice",
   ///     foregroundColor: ConsoleColor.White, backgroundColor: ConsoleColor.DarkBlue);
   /// </code>
@@ -507,24 +640,34 @@ public static class Terminal
   /// Terminal.WritePanel(panel, ConsoleColor.White, ConsoleColor.DarkBlue);
   /// </code>
   /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// The color prefix is re-applied after any embedded SGR reset (from border colors or styled
+  /// content) so the requested colors are not cancelled mid-line.
+  /// </remarks>
   public static void WritePanel(Panel panel, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
   {
     ArgumentNullException.ThrowIfNull(panel);
 
+    bool useColor = (foregroundColor.HasValue || backgroundColor.HasValue) && Instance.SupportsColor;
+    string colorPrefix = useColor
+      ? (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
+        (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "")
+      : "";
     string[] lines = panel.Render(WindowWidth);
     foreach (string line in lines)
     {
-      if (foregroundColor.HasValue || backgroundColor.HasValue)
+      if (useColor)
       {
-        string coloredLine = (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
-                             (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +
-                             line +
+        string coloredLine = colorPrefix +
+                             line.Replace(AnsiColors.Reset, AnsiColors.Reset + colorPrefix, StringComparison.Ordinal) +
                              AnsiColors.Reset;
-        Instance.WriteLine(coloredLine);
+        _ = Instance.WriteLine(coloredLine);
       }
       else
       {
-        Instance.WriteLine(line);
+        _ = Instance.WriteLine(line);
       }
     }
   }
@@ -543,7 +686,7 @@ public static class Terminal
   {
     Rule rule = new() { Title = title };
     string rendered = rule.Render(WindowWidth);
-    Instance.WriteLine(rendered);
+    _ = Instance.WriteLine(rendered);
   }
 
   /// <summary>
@@ -567,7 +710,7 @@ public static class Terminal
 
     Rule rule = builder.Build();
     string rendered = rule.Render(WindowWidth);
-    Instance.WriteLine(rendered);
+    _ = Instance.WriteLine(rendered);
   }
 
   /// <summary>
@@ -575,6 +718,11 @@ public static class Terminal
   /// </summary>
   /// <param name="url">The URL to link to.</param>
   /// <param name="text">The text to display (clickable in supported terminals).</param>
+  /// <remarks>
+  /// If the terminal does not support hyperlinks (<see cref="ITerminal.SupportsHyperlinks"/>
+  /// is false), only the display text is written without the hyperlink escape sequences,
+  /// consistent with the <c>ITerminal.WriteLink</c> extension.
+  /// </remarks>
   /// <example>
   /// <code>
   /// Terminal.WriteLink("https://github.com", "GitHub Repository");
@@ -588,8 +736,50 @@ public static class Terminal
     ArgumentNullException.ThrowIfNull(url);
     ArgumentNullException.ThrowIfNull(text);
 
-    string link = AnsiHyperlinks.CreateLink(text, url);
-    Instance.Write(link);
+    ITerminal instance = Instance;
+    if (!instance.SupportsHyperlinks)
+    {
+      _ = instance.Write(text);
+      return;
+    }
+
+    string link = AnsiHyperlinks.CreateLink(url, text);
+    _ = instance.Write(link);
+  }
+
+  /// <summary>
+  /// Writes a clickable hyperlink to the terminal using OSC 8 sequences,
+  /// followed by the current line terminator.
+  /// </summary>
+  /// <param name="url">The URL to link to.</param>
+  /// <param name="text">The text to display (clickable in supported terminals).</param>
+  /// <remarks>
+  /// If the terminal does not support hyperlinks (<see cref="ITerminal.SupportsHyperlinks"/>
+  /// is false), only the display text is written (followed by the line terminator) without
+  /// the hyperlink escape sequences, consistent with <see cref="WriteLink"/>.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// Terminal.WriteLinkLine("https://github.com", "GitHub Repository");
+  /// </code>
+  /// </example>
+  // CA1054: OSC 8 hyperlinks use raw URL strings by design for ergonomic API
+#pragma warning disable CA1054
+  public static void WriteLinkLine(string url, string text)
+#pragma warning restore CA1054
+  {
+    ArgumentNullException.ThrowIfNull(url);
+    ArgumentNullException.ThrowIfNull(text);
+
+    ITerminal instance = Instance;
+    if (!instance.SupportsHyperlinks)
+    {
+      _ = instance.WriteLine(text);
+      return;
+    }
+
+    string link = AnsiHyperlinks.CreateLink(url, text);
+    _ = instance.WriteLine(link);
   }
 
   // Stream Access Methods (IConsole)
@@ -774,127 +964,25 @@ public static class Terminal
     set => Instance.CursorVisible = value;
   }
 
-  /// <summary>
-  /// Gets or sets the height of the cursor within a character cell.
-  /// </summary>
-  /// <value>The cursor size as a percentage from 1 to 100.</value>
-  public static int CursorSize
-  {
-    get => Instance.CursorSize;
-    set => Instance.CursorSize = value;
-  }
-
   // Window/Buffer Geometry Properties (ITerminal)
 
   /// <summary>
-  /// Gets or sets the height of the terminal window in characters.
+  /// Gets the height of the terminal window in characters.
   /// </summary>
   /// <value>The height of the terminal window measured in rows.</value>
-  public static int WindowHeight
-  {
-    get => Instance.WindowHeight;
-    set => Instance.WindowHeight = value;
-  }
+  public static int WindowHeight => Instance.WindowHeight;
 
   /// <summary>
-  /// Gets or sets the left position of the console window area.
-  /// </summary>
-  /// <value>The leftmost position of the console window.</value>
-  public static int WindowLeft
-  {
-    get => Instance.WindowLeft;
-    set => Instance.WindowLeft = value;
-  }
-
-  /// <summary>
-  /// Gets or sets the top position of the console window area.
-  /// </summary>
-  /// <value>The topmost position of the console window.</value>
-  public static int WindowTop
-  {
-    get => Instance.WindowTop;
-    set => Instance.WindowTop = value;
-  }
-
-  /// <summary>
-  /// Gets or sets the width of the buffer area.
+  /// Gets the width of the buffer area.
   /// </summary>
   /// <value>The width of the buffer area measured in columns.</value>
-  public static int BufferWidth
-  {
-    get => Instance.BufferWidth;
-    set => Instance.BufferWidth = value;
-  }
+  public static int BufferWidth => Instance.BufferWidth;
 
   /// <summary>
-  /// Gets or sets the height of the buffer area.
+  /// Gets the height of the buffer area.
   /// </summary>
   /// <value>The height of the buffer area measured in rows.</value>
-  public static int BufferHeight
-  {
-    get => Instance.BufferHeight;
-    set => Instance.BufferHeight = value;
-  }
-
-  /// <summary>
-  /// Gets the largest possible number of console window columns.
-  /// </summary>
-  /// <value>The maximum width of the console window measured in columns.</value>
-  public static int LargestWindowWidth => Instance.LargestWindowWidth;
-
-  /// <summary>
-  /// Gets the largest possible number of console window rows.
-  /// </summary>
-  /// <value>The maximum height of the console window measured in rows.</value>
-  public static int LargestWindowHeight => Instance.LargestWindowHeight;
-
-  // Window/Buffer Geometry Methods (ITerminal)
-
-  /// <summary>
-  /// Sets the dimensions of the console window to the specified values.
-  /// </summary>
-  /// <param name="width">The width of the console window measured in columns.</param>
-  /// <param name="height">The height of the console window measured in rows.</param>
-  public static void SetWindowSize(int width, int height) => Instance.SetWindowSize(width, height);
-
-  /// <summary>
-  /// Sets the position of the console window relative to the screen buffer.
-  /// </summary>
-  /// <param name="left">The column position of the upper left corner of the console window.</param>
-  /// <param name="top">The row position of the upper left corner of the console window.</param>
-  public static void SetWindowPosition(int left, int top) => Instance.SetWindowPosition(left, top);
-
-  /// <summary>
-  /// Sets the height and width of the screen buffer area to the specified values.
-  /// </summary>
-  /// <param name="width">The width of the buffer area measured in columns.</param>
-  /// <param name="height">The height of the buffer area measured in rows.</param>
-  public static void SetBufferSize(int width, int height) => Instance.SetBufferSize(width, height);
-
-  /// <summary>
-  /// Moves a specified source screen buffer area to a specified destination screen buffer area.
-  /// </summary>
-  /// <param name="sourceLeft">The leftmost column of the source area.</param>
-  /// <param name="sourceTop">The topmost row of the source area.</param>
-  /// <param name="sourceWidth">The number of columns in the source area.</param>
-  /// <param name="sourceHeight">The number of rows in the source area.</param>
-  /// <param name="targetLeft">The leftmost column of the destination area.</param>
-  /// <param name="targetTop">The topmost row of the destination area.</param>
-  /// <param name="sourceChar">The character used to fill the source area.</param>
-  /// <param name="sourceForeColor">The foreground color used to fill the source area.</param>
-  /// <param name="sourceBackColor">The background color used to fill the source area.</param>
-  public static void MoveBufferArea
-  (
-    int sourceLeft,
-    int sourceTop,
-    int sourceWidth,
-    int sourceHeight,
-    int targetLeft,
-    int targetTop,
-    char sourceChar,
-    ConsoleColor sourceForeColor,
-    ConsoleColor sourceBackColor
-  ) => Instance.MoveBufferArea(sourceLeft, sourceTop, sourceWidth, sourceHeight, targetLeft, targetTop, sourceChar, sourceForeColor, sourceBackColor);
+  public static int BufferHeight => Instance.BufferHeight;
 
   // Color State Properties (ITerminal)
 
@@ -931,12 +1019,25 @@ public static class Terminal
   /// </summary>
   /// <value>
   /// <c>true</c> if Ctrl+C is treated as ordinary input; <c>false</c> if it raises
-  /// the <see cref="CancelKeyPress"/> event. The default is <c>false</c>.
+  /// the <see cref="ITerminal.CancelKeyPress"/> event. The default is <c>false</c>.
   /// </value>
   public static bool TreatControlCAsInput
   {
     get => Instance.TreatControlCAsInput;
     set => Instance.TreatControlCAsInput = value;
+  }
+
+  /// <summary>
+  /// Occurs when the Ctrl+C key combination is pressed.
+  /// </summary>
+  /// <remarks>
+  /// This event allows graceful handling of Ctrl+C for interactive applications like REPLs.
+  /// Subscriptions are forwarded to the current <see cref="Instance"/>.
+  /// </remarks>
+  public static event ConsoleCancelEventHandler? CancelKeyPress
+  {
+    add => Instance.CancelKeyPress += value;
+    remove => Instance.CancelKeyPress -= value;
   }
 
   /// <summary>
@@ -978,14 +1079,10 @@ public static class Terminal
   // Terminal Properties
 
   /// <summary>
-  /// Gets or sets the width of the terminal window in characters.
+  /// Gets the width of the terminal window in characters.
   /// </summary>
   /// <value>The width of the terminal window measured in columns.</value>
-  public static int WindowWidth
-  {
-    get => Instance.WindowWidth;
-    set => Instance.WindowWidth = value;
-  }
+  public static int WindowWidth => Instance.WindowWidth;
 
   /// <summary>
   /// Gets a value indicating whether the terminal is interactive.

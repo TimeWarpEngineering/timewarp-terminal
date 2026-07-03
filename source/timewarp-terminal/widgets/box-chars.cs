@@ -16,6 +16,7 @@ public static class BoxChars
     BorderStyle.Square => '┌',   // U+250C
     BorderStyle.Doubled => '╔',   // U+2554
     BorderStyle.Heavy => '┏',    // U+250F
+    BorderStyle.None => ' ',
     _ => ' '
   };
 
@@ -30,6 +31,7 @@ public static class BoxChars
     BorderStyle.Square => '┐',   // U+2510
     BorderStyle.Doubled => '╗',   // U+2557
     BorderStyle.Heavy => '┓',    // U+2513
+    BorderStyle.None => ' ',
     _ => ' '
   };
 
@@ -44,6 +46,7 @@ public static class BoxChars
     BorderStyle.Square => '└',   // U+2514
     BorderStyle.Doubled => '╚',   // U+255A
     BorderStyle.Heavy => '┗',    // U+2517
+    BorderStyle.None => ' ',
     _ => ' '
   };
 
@@ -58,6 +61,7 @@ public static class BoxChars
     BorderStyle.Square => '┘',   // U+2518
     BorderStyle.Doubled => '╝',   // U+255D
     BorderStyle.Heavy => '┛',    // U+251B
+    BorderStyle.None => ' ',
     _ => ' '
   };
 
@@ -72,6 +76,7 @@ public static class BoxChars
     BorderStyle.Square => '─',   // U+2500
     BorderStyle.Doubled => '═',   // U+2550
     BorderStyle.Heavy => '━',    // U+2501
+    BorderStyle.None => ' ',
     _ => ' '
   };
 
@@ -86,6 +91,7 @@ public static class BoxChars
     BorderStyle.Square => '│',   // U+2502
     BorderStyle.Doubled => '║',   // U+2551
     BorderStyle.Heavy => '┃',    // U+2503
+    BorderStyle.None => ' ',
     _ => ' '
   };
 
@@ -103,6 +109,7 @@ public static class BoxChars
     BorderStyle.Square => '┬',   // U+252C
     BorderStyle.Doubled => '╦',   // U+2566
     BorderStyle.Heavy => '┳',    // U+2533
+    BorderStyle.None => ' ',
     _ => ' '
   };
 
@@ -118,6 +125,7 @@ public static class BoxChars
     BorderStyle.Square => '┴',   // U+2534
     BorderStyle.Doubled => '╩',   // U+2569
     BorderStyle.Heavy => '┻',    // U+253B
+    BorderStyle.None => ' ',
     _ => ' '
   };
 
@@ -133,6 +141,7 @@ public static class BoxChars
     BorderStyle.Square => '├',   // U+251C
     BorderStyle.Doubled => '╠',   // U+2560
     BorderStyle.Heavy => '┣',    // U+2523
+    BorderStyle.None => ' ',
     _ => ' '
   };
 
@@ -148,6 +157,7 @@ public static class BoxChars
     BorderStyle.Square => '┤',   // U+2524
     BorderStyle.Doubled => '╣',   // U+2563
     BorderStyle.Heavy => '┫',    // U+252B
+    BorderStyle.None => ' ',
     _ => ' '
   };
 
@@ -163,6 +173,7 @@ public static class BoxChars
     BorderStyle.Square => '┼',   // U+253C
     BorderStyle.Doubled => '╬',   // U+256C
     BorderStyle.Heavy => '╋',    // U+254B
+    BorderStyle.None => ' ',
     _ => ' '
   };
 }

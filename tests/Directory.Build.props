@@ -16,8 +16,9 @@
          CA1052: Static holder types flexibility
          CA1707: Underscores in test method names allowed
          CS0050: Inconsistent accessibility (test helpers)
-         RCS1046, RCS1102, RCS1110: Roslynator formatting flexibility for tests -->
-    <NoWarn>$(NoWarn);CA1303;CA1307;CA2000;CA2007;CA1031;CA1515;CA1050;CA1052;CA1707;CS0050;RCS1046;RCS1102;RCS1110</NoWarn>
+         RCS1046, RCS1102, RCS1110: Roslynator formatting flexibility for tests
+         IDE0211: Test runfiles are file-based apps and require top-level statements -->
+    <NoWarn>$(NoWarn);CA1303;CA1307;CA2000;CA2007;CA1031;CA1515;CA1050;CA1052;CA1707;CS0050;RCS1046;RCS1102;RCS1110;IDE0211</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

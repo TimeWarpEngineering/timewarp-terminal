@@ -1,4 +1,4 @@
-#!/usr/bin/dotnet --
+#!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
 // Test Panel widget word wrapping functionality
@@ -10,193 +10,226 @@ return await RunAllTests();
 namespace TimeWarp.Terminal.Tests.Core.PanelWidgetWrap
 {
 
-[TestTag("Widgets")]
-public class PanelWidgetWordWrapTests
-{
-  [ModuleInitializer]
-  internal static void Register() => RegisterTests<PanelWidgetWordWrapTests>();
-
-  public static async Task Should_wrap_long_content_within_panel_width()
+  [TestTag("Widgets")]
+  public class PanelWidgetWordWrapTests
   {
-    // Arrange
-    string longText = "Learn how to get started with building web products with ASP.NET Core. This course covers the fundamentals of ASP.NET Core web development.";
-    Panel panel = new PanelBuilder().Content(longText).Width(80).Build();
+    [ModuleInitializer]
+    internal static void Register() => RegisterTests<PanelWidgetWordWrapTests>();
 
-    // Act
-    string[] lines = panel.Render(80);
-
-    // Assert - All content lines should fit within the panel width
-    foreach (string line in lines)
+    public static async Task Should_wrap_long_content_within_panel_width()
     {
-      int visibleLength = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line);
-      visibleLength.ShouldBeLessThanOrEqualTo(80);
+      // Arrange
+      string longText = "Learn how to get started with building web products with ASP.NET Core. This course covers the fundamentals of ASP.NET Core web development.";
+      Panel panel = new PanelBuilder().Content(longText).Width(80).Build();
+
+      // Act
+      string[] lines = panel.Render(80);
+
+      // Assert - All content lines should fit within the panel width
+      foreach (string line in lines)
+      {
+        int visibleLength = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line);
+        visibleLength.ShouldBeLessThanOrEqualTo(80);
+      }
+
+      // Should have multiple content lines due to wrapping (top + content lines + bottom)
+      lines.Length.ShouldBeGreaterThan(3);
+
+      await Task.CompletedTask;
     }
 
-    // Should have multiple content lines due to wrapping (top + content lines + bottom)
-    lines.Length.ShouldBeGreaterThan(3);
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_wrap_content_preserving_ansi_codes()
-  {
-    // Arrange
-    string styledText = $"{AnsiColors.Red}This is a very long red text that should wrap properly{AnsiColors.Reset} and continue with normal text that also needs wrapping.";
-    Panel panel = new PanelBuilder().Content(styledText).Width(40).Build();
-
-    // Act
-    string[] lines = panel.Render(40);
-
-    // Assert - All content lines should fit within panel width
-    foreach (string line in lines)
+    public static async Task Should_wrap_content_preserving_ansi_codes()
     {
-      int visibleLength = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line);
-      visibleLength.ShouldBeLessThanOrEqualTo(40);
+      // Arrange
+      string styledText = $"{AnsiColors.Red}This is a very long red text that should wrap properly{AnsiColors.Reset} and continue with normal text that also needs wrapping.";
+      Panel panel = new PanelBuilder().Content(styledText).Width(40).Build();
+
+      // Act
+      string[] lines = panel.Render(40);
+
+      // Assert - All content lines should fit within panel width
+      foreach (string line in lines)
+      {
+        int visibleLength = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line);
+        visibleLength.ShouldBeLessThanOrEqualTo(40);
+      }
+
+      // The styled text should be preserved (red color should appear)
+      string allContent = string.Concat(lines);
+      allContent.ShouldContain(AnsiColors.Red);
+
+      await Task.CompletedTask;
     }
 
-    // The styled text should be preserved (red color should appear)
-    string allContent = string.Concat(lines);
-    allContent.ShouldContain(AnsiColors.Red);
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_not_wrap_when_WordWrap_is_false()
-  {
-    // Arrange
-    string longText = "This is a very long line that would normally wrap but WordWrap is disabled.";
-    Panel panel = new PanelBuilder().Content(longText).Width(40).WordWrap(false).Build();
-
-    // Act
-    string[] lines = panel.Render(40);
-
-    // Assert - Should only have 3 lines: top border, content (not wrapped), bottom border
-    lines.Length.ShouldBe(3);
-
-    // Content line should contain the full text (even if it overflows)
-    lines[1].ShouldContain("This is a very long line");
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_wrap_content_with_hyperlinks()
-  {
-    // Arrange - OSC 8 hyperlink sequence
-    string hyperlink = "\x1b]8;;https://example.com\x1b\\Click here for more details and information about this topic\x1b]8;;\x1b\\";
-    Panel panel = new PanelBuilder().Content(hyperlink).Width(50).Build();
-
-    // Act
-    string[] lines = panel.Render(50);
-
-    // Assert - All lines should fit within width
-    foreach (string line in lines)
+    public static async Task Should_not_wrap_when_WordWrap_is_false()
     {
-      int visibleLength = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line);
-      visibleLength.ShouldBeLessThanOrEqualTo(50);
+      // Arrange
+      string longText = "This is a very long line that would normally wrap but WordWrap is disabled.";
+      Panel panel = new PanelBuilder().Content(longText).Width(40).WordWrap(false).Build();
+
+      // Act
+      string[] lines = panel.Render(40);
+
+      // Assert - Should only have 3 lines: top border, content (not wrapped), bottom border
+      lines.Length.ShouldBe(3);
+
+      // Content line should contain the full text (even if it overflows)
+      lines[1].ShouldContain("This is a very long line");
+
+      await Task.CompletedTask;
     }
 
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_wrap_very_long_word()
-  {
-    // Arrange - A single word that's longer than the content area
-    string longWord = "Supercalifragilisticexpialidocious";
-    Panel panel = new PanelBuilder().Content(longWord).Width(20).Build();
-
-    // Act
-    string[] lines = panel.Render(20);
-
-    // Assert - All lines should fit within panel width
-    foreach (string line in lines)
+    public static async Task Should_truncate_overlong_lines_when_WordWrap_is_false()
     {
-      int visibleLength = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line);
-      visibleLength.ShouldBeLessThanOrEqualTo(20);
+      // Arrange - plain and ANSI-colored lines both longer than the content area
+      string plainLong = "This plain line is far longer than the panel content area allows.";
+      string coloredLong = $"{AnsiColors.Red}This red line is also far longer than the content area allows.{AnsiColors.Reset}";
+      Panel panel = new PanelBuilder()
+        .Content($"{plainLong}\n{coloredLong}")
+        .Width(30)
+        .WordWrap(false)
+        .Build();
+
+      // Act
+      string[] lines = panel.Render(30);
+
+      // Assert - top border, two content rows, bottom border
+      lines.Length.ShouldBe(4);
+
+      // Every row renders at identical visible width with the right border intact
+      foreach (string line in lines)
+      {
+        TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line).ShouldBe(30);
+      }
+
+      lines[1].ShouldEndWith("│");
+      lines[2].ShouldEndWith("│");
+
+      // Color is preserved on the kept text and closed before the border
+      lines[2].ShouldContain(AnsiColors.Red);
+      lines[2].ShouldContain(AnsiColors.Reset + " │");
+
+      await Task.CompletedTask;
     }
 
-    // Should have multiple lines since the word is broken
-    lines.Length.ShouldBeGreaterThan(3);
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_preserve_explicit_newlines_while_wrapping()
-  {
-    // Arrange
-    string multilineText = "First paragraph with some long text that needs wrapping.\nSecond paragraph that also contains long text for wrapping.";
-    Panel panel = new PanelBuilder().Content(multilineText).Width(40).Build();
-
-    // Act
-    string[] lines = panel.Render(40);
-
-    // Assert - All lines should fit within panel width
-    foreach (string line in lines)
+    public static async Task Should_wrap_content_with_hyperlinks()
     {
-      int visibleLength = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line);
-      visibleLength.ShouldBeLessThanOrEqualTo(40);
+      // Arrange - OSC 8 hyperlink sequence
+      string hyperlink = "\x1b]8;;https://example.com\x1b\\Click here for more details and information about this topic\x1b]8;;\x1b\\";
+      Panel panel = new PanelBuilder().Content(hyperlink).Width(50).Build();
+
+      // Act
+      string[] lines = panel.Render(50);
+
+      // Assert - All lines should fit within width
+      foreach (string line in lines)
+      {
+        int visibleLength = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line);
+        visibleLength.ShouldBeLessThanOrEqualTo(50);
+      }
+
+      await Task.CompletedTask;
     }
 
-    // Should have more than 4 lines (top + at least 2 content lines per paragraph + bottom)
-    lines.Length.ShouldBeGreaterThan(4);
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_handle_empty_content_with_wrapping()
-  {
-    // Arrange
-    Panel panel = new PanelBuilder().Content("").Width(40).WordWrap(true).Build();
-
-    // Act
-    string[] lines = panel.Render(40);
-
-    // Assert - Should still render empty panel
-    lines.Length.ShouldBe(3); // top + empty content row + bottom
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_use_WordWrap_from_builder()
-  {
-    // Arrange
-    string longText = "This is a long line that would wrap if WordWrap was enabled.";
-    Panel panel = new PanelBuilder()
-      .Content(longText)
-      .Width(30)
-      .WordWrap(false)
-      .Build();
-
-    // Act
-    string[] lines = panel.Render(30);
-
-    // Assert - Should not wrap (3 lines: top, content, bottom)
-    lines.Length.ShouldBe(3);
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_wrap_with_proper_visible_width()
-  {
-    // Arrange - Content that's exactly at the boundary
-    string text = "Hello World! This is a test.";
-    Panel panel = new PanelBuilder().Content(text).Width(20).PaddingHorizontal(1).Build();
-
-    // Act
-    string[] lines = panel.Render(20);
-
-    // Assert - Content area is width(20) - 2 borders - 2 padding = 16 chars
-    // "Hello World! This " = 18 chars, which is > 16, so should wrap
-    lines.Length.ShouldBeGreaterThan(3);
-
-    // Each line should be exactly 20 visible chars
-    foreach (string line in lines)
+    public static async Task Should_wrap_very_long_word()
     {
-      int visibleLength = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line);
-      visibleLength.ShouldBe(20);
+      // Arrange - A single word that's longer than the content area
+      string longWord = "Supercalifragilisticexpialidocious";
+      Panel panel = new PanelBuilder().Content(longWord).Width(20).Build();
+
+      // Act
+      string[] lines = panel.Render(20);
+
+      // Assert - All lines should fit within panel width
+      foreach (string line in lines)
+      {
+        int visibleLength = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line);
+        visibleLength.ShouldBeLessThanOrEqualTo(20);
+      }
+
+      // Should have multiple lines since the word is broken
+      lines.Length.ShouldBeGreaterThan(3);
+
+      await Task.CompletedTask;
     }
 
-    await Task.CompletedTask;
+    public static async Task Should_preserve_explicit_newlines_while_wrapping()
+    {
+      // Arrange
+      string multilineText = "First paragraph with some long text that needs wrapping.\nSecond paragraph that also contains long text for wrapping.";
+      Panel panel = new PanelBuilder().Content(multilineText).Width(40).Build();
+
+      // Act
+      string[] lines = panel.Render(40);
+
+      // Assert - All lines should fit within panel width
+      foreach (string line in lines)
+      {
+        int visibleLength = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line);
+        visibleLength.ShouldBeLessThanOrEqualTo(40);
+      }
+
+      // Should have more than 4 lines (top + at least 2 content lines per paragraph + bottom)
+      lines.Length.ShouldBeGreaterThan(4);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_handle_empty_content_with_wrapping()
+    {
+      // Arrange
+      Panel panel = new PanelBuilder().Content("").Width(40).WordWrap(true).Build();
+
+      // Act
+      string[] lines = panel.Render(40);
+
+      // Assert - Should still render empty panel
+      lines.Length.ShouldBe(3); // top + empty content row + bottom
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_use_WordWrap_from_builder()
+    {
+      // Arrange
+      string longText = "This is a long line that would wrap if WordWrap was enabled.";
+      Panel panel = new PanelBuilder()
+        .Content(longText)
+        .Width(30)
+        .WordWrap(false)
+        .Build();
+
+      // Act
+      string[] lines = panel.Render(30);
+
+      // Assert - Should not wrap (3 lines: top, content, bottom)
+      lines.Length.ShouldBe(3);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_wrap_with_proper_visible_width()
+    {
+      // Arrange - Content that's exactly at the boundary
+      string text = "Hello World! This is a test.";
+      Panel panel = new PanelBuilder().Content(text).Width(20).PaddingHorizontal(1).Build();
+
+      // Act
+      string[] lines = panel.Render(20);
+
+      // Assert - Content area is width(20) - 2 borders - 2 padding = 16 chars
+      // "Hello World! This " = 18 chars, which is > 16, so should wrap
+      lines.Length.ShouldBeGreaterThan(3);
+
+      // Each line should be exactly 20 visible chars
+      foreach (string line in lines)
+      {
+        int visibleLength = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line);
+        visibleLength.ShouldBe(20);
+      }
+
+      await Task.CompletedTask;
+    }
   }
-}
 
 } // namespace TimeWarp.Terminal.Tests.Core.PanelWidgetWrap

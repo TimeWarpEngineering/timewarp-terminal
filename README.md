@@ -54,13 +54,25 @@ var (left, top) = GetCursorPosition();
 
 ### Testing with Static Terminal
 
+Use `TestTerminalContext` to redirect the static `Terminal` class in tests:
+
 ```csharp
-// Replace Instance for testing
+using TestTerminal terminal = new();
+using IDisposable scope = TestTerminalContext.Use(terminal);
+
+Terminal.WriteLine("Hello");
+terminal.OutputContains("Hello").ShouldBeTrue();
+```
+
+The scope is async-context isolated - each test flow sees only its own `TestTerminal`, so parallel tests never interfere with each other, and the global terminal is never mutated. Disposing the scope restores the previous context automatically.
+
+For serial tests you can also swap `Terminal.Instance` directly, but remember to restore it:
+
+```csharp
 using TestTerminal testTerminal = new();
 Terminal.Instance = testTerminal;
 
 Terminal.WriteLine("test output");
-
 Assert.Contains("test output", testTerminal.Output);
 
 // Restore after test
@@ -189,8 +201,7 @@ terminal.WriteTable(t => t
     .AddRow("GuardClauses", "12M", "/home/user/packages/guard")
     .Border(BorderStyle.Rounded)
     .BorderColor(AnsiColors.Cyan)
-    .Expand()
-    .Shrink());
+    .Expand());  // tables shrink to fit the terminal automatically
 
 terminal.WriteTable(table);
 ```

@@ -82,16 +82,6 @@ public interface IConsole
   int Read();
 
   /// <summary>
-  /// Obtains the next character or function key pressed by the user.
-  /// The pressed key is displayed in the console window.
-  /// </summary>
-  /// <returns>
-  /// An object that describes the <see cref="ConsoleKey"/> constant and Unicode character,
-  /// if any, that correspond to the pressed console key.
-  /// </returns>
-  ConsoleKeyInfo ReadKey();
-
-  /// <summary>
   /// Gets or sets the encoding the console uses to read input.
   /// </summary>
   /// <value>The encoding used to read console input.</value>

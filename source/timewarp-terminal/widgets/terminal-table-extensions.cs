@@ -86,19 +86,25 @@ public static class TerminalTableExtensions
 
   private static void WriteLinesWithColor(ITerminal terminal, string[] lines, ConsoleColor? foregroundColor, ConsoleColor? backgroundColor)
   {
+    bool useColor = (foregroundColor.HasValue || backgroundColor.HasValue) && terminal.SupportsColor;
+    string colorPrefix = useColor
+      ? (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
+        (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "")
+      : "";
     foreach (string line in lines)
     {
-      if (foregroundColor.HasValue || backgroundColor.HasValue)
+      if (useColor)
       {
-        string coloredLine = (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
-                             (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +
-                             line +
+        // Re-apply the color prefix after any embedded SGR reset (from BorderColor or styled
+        // cells) so the requested colors are not cancelled mid-line.
+        string coloredLine = colorPrefix +
+                             line.Replace(AnsiColors.Reset, AnsiColors.Reset + colorPrefix, StringComparison.Ordinal) +
                              AnsiColors.Reset;
-        terminal.WriteLine(coloredLine);
+        _ = terminal.WriteLine(coloredLine);
       }
       else
       {
-        terminal.WriteLine(line);
+        _ = terminal.WriteLine(line);
       }
     }
   }
@@ -123,7 +129,7 @@ public static class TerminalTableExtensions
     string[] lines = table.Render(terminal.WindowWidth);
     foreach (string line in lines)
     {
-      terminal.WriteLine(line);
+      _ = terminal.WriteLine(line);
     }
   }
 }

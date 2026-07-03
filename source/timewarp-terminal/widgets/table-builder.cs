@@ -31,7 +31,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddColumn(string header)
   {
-    Table.AddColumn(header);
+    _ = Table.AddColumn(header);
     return this;
   }
 
@@ -43,7 +43,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddColumn(string header, Alignment alignment)
   {
-    Table.AddColumn(header, alignment);
+    _ = Table.AddColumn(header, alignment);
     return this;
   }
 
@@ -54,7 +54,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddColumn(TableColumn column)
   {
-    Table.AddColumn(column);
+    _ = Table.AddColumn(column);
     return this;
   }
 
@@ -65,7 +65,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddColumns(params string[] headers)
   {
-    Table.AddColumns(headers);
+    _ = Table.AddColumns(headers);
     return this;
   }
 
@@ -76,7 +76,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddColumns(params TableColumn[] columns)
   {
-    Table.AddColumns(columns);
+    _ = Table.AddColumns(columns);
     return this;
   }
 
@@ -87,7 +87,7 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder AddRow(params string[] cells)
   {
-    Table.AddRow(cells);
+    _ = Table.AddRow(cells);
     return this;
   }
 
@@ -136,6 +136,9 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <summary>
   /// Expands the table to fill the terminal width.
   /// </summary>
+  /// <remarks>
+  /// Has no effect when the border style is <see cref="BorderStyle.None"/>; borderless tables always render at their natural width.
+  /// </remarks>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder Expand()
   {
@@ -144,15 +147,40 @@ public sealed class TableBuilder : IBuilder<Table>
   }
 
   /// <summary>
-  /// <summary>
-  /// Builds the configured <see cref="Table"/> instance.
+  /// Builds a <see cref="Table"/> snapshot of the current builder state.
+  /// Each call returns an independent table; mutating the builder afterwards
+  /// does not affect previously built tables.
   /// </summary>
   /// <returns>The configured table.</returns>
-  public Table Build() => Table;
+  public Table Build()
+  {
+    Table snapshot = new()
+    {
+      Border = Table.Border,
+      BorderColor = Table.BorderColor,
+      ShowHeaders = Table.ShowHeaders,
+      ShowRowSeparators = Table.ShowRowSeparators,
+      Expand = Table.Expand
+    };
+
+    // Copy the lists so the snapshot is independent of the builder.
+    // TableColumn instances are settings objects and may be shared.
+    foreach (TableColumn column in Table.Columns)
+    {
+      _ = snapshot.AddColumn(column);
+    }
+
+    foreach (string[] row in Table.Rows)
+    {
+      _ = snapshot.AddRow(row);
+    }
+
+    return snapshot;
+  }
 
   /// <summary>
-  /// Converts the builder to a <see cref="Table"/>.
-  /// Alternate method for languages that don't support implicit operators.
+  /// Builds a <see cref="Table"/> snapshot of the current builder state.
+  /// Explicit alternative to <see cref="Build"/>.
   /// </summary>
   /// <returns>The configured table.</returns>
   public Table ToTable() => Build();

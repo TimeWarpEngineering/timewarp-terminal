@@ -52,10 +52,6 @@ public sealed class TimeWarpConsole : IConsole
     => Console.Read();
 
   /// <inheritdoc />
-  public ConsoleKeyInfo ReadKey()
-    => Console.ReadKey(false);
-
-  /// <inheritdoc />
   public Encoding InputEncoding
   {
     get => Console.InputEncoding;

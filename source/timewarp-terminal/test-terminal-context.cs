@@ -2,40 +2,42 @@ namespace TimeWarp.Terminal;
 
 /// <summary>
 /// Provides an ambient context for <see cref="TestTerminal"/> that enables zero-configuration testing
-/// of CLI applications with automatic <see cref="TimeWarp.Terminal.Terminal.Instance"/> synchronization.
+/// of CLI applications. While a context is active, <see cref="TimeWarp.Terminal.Terminal.Instance"/>
+/// resolves to it without the process-global instance ever being mutated.
 /// </summary>
 /// <remarks>
 /// <para>
 /// This class uses <see cref="AsyncLocal{T}"/> to provide a test terminal that flows with the
-/// async execution context. This means each test gets its own isolated terminal even when
-/// running tests in parallel.
+/// async execution context, and <c>Terminal.Instance</c>'s getter consults it first. Because
+/// <see cref="SetCurrent"/> and <see cref="Use"/> never touch the process-global instance,
+/// each test gets its own isolated terminal even when running tests in parallel.
 /// </para>
 /// <para>
 /// Use <see cref="SetCurrent"/> and <see cref="ClearCurrent"/> for explicit lifecycle control,
 /// or <see cref="Use"/> for a scoped pattern that restores automatically.
 /// </para>
 /// <para>
-/// Resolution order when determining which terminal to use:
+/// Resolution order for <c>Terminal.Instance</c>:
 /// <list type="number">
-///   <item><description><see cref="Current"/> (if set)</description></item>
-///   <item><description><c>ITerminal</c> from DI (if registered)</description></item>
-///   <item><description><see cref="TimeWarpTerminal.Default"/> (fallback)</description></item>
+///   <item><description><see cref="Current"/> (if set for the current async flow)</description></item>
+///   <item><description>the process-global instance (assignable directly; defaults to
+///   <see cref="TimeWarpTerminal.Default"/>)</description></item>
 /// </list>
 /// </para>
 /// </remarks>
 /// <example>
-/// Scoped test pattern with automatic TimeWarp.Terminal.Terminal.Instance synchronization:
+/// Scoped test pattern:
 /// <code>
 /// public static async Task Should_display_greeting()
 /// {
 ///     using TestTerminal terminal = new();
 ///     using IDisposable scope = TestTerminalContext.Use(terminal);
-///     
-///     // TimeWarp.Terminal.Terminal.Instance is now set to terminal
+///
+///     // TimeWarp.Terminal.Terminal.Instance now resolves to terminal in this async flow
 ///     Terminal.WriteLine("Hello");  // Routes to test terminal
-///     
+///
 ///     await Program.Main(["greet", "World"]);
-///     
+///
 ///     terminal.OutputContains("Hello, World!").ShouldBeTrue();
 /// }
 /// </code>
@@ -48,7 +50,7 @@ public static class TestTerminalContext
   private sealed class ContextSnapshot
   {
     public required TestTerminal? PreviousContext { get; init; }
-    public required ITerminal PreviousInstance { get; init; }
+    public required IFormatProvider? PreviousFormatProvider { get; init; }
   }
 
   /// <summary>
@@ -65,7 +67,9 @@ public static class TestTerminalContext
   public static bool HasValue => Context.Value is not null;
 
   /// <summary>
-  /// Sets the current <see cref="TestTerminal"/> and synchronizes <see cref="TimeWarp.Terminal.Terminal.Instance"/>.
+  /// Sets the current <see cref="TestTerminal"/> for the async execution context.
+  /// <see cref="TimeWarp.Terminal.Terminal.Instance"/> resolves to it while the context is
+  /// active; the process-global instance is never mutated.
   /// </summary>
   /// <param name="terminal">The terminal to set as current.</param>
   public static void SetCurrent(TestTerminal terminal)
@@ -78,16 +82,18 @@ public static class TestTerminalContext
       new ContextSnapshot
       {
         PreviousContext = Context.Value,
-        PreviousInstance = TimeWarp.Terminal.Terminal.Instance
+        PreviousFormatProvider = TimeWarp.Terminal.Terminal.FormatProvider
       }
     );
 
     Context.Value = terminal;
-    TimeWarp.Terminal.Terminal.Instance = terminal;
   }
 
   /// <summary>
-  /// Clears the current context and restores the previous <see cref="TimeWarp.Terminal.Terminal.Instance"/>.
+  /// Clears the current context, restoring the previous context and
+  /// <see cref="TimeWarp.Terminal.Terminal.FormatProvider"/>. The process-global
+  /// <see cref="TimeWarp.Terminal.Terminal.Instance"/> is never touched — once the context
+  /// is cleared, resolution simply falls back to it.
   /// </summary>
   public static void ClearCurrent()
   {
@@ -100,10 +106,12 @@ public static class TestTerminalContext
 
     ContextSnapshot snapshot = stack.Pop();
     Context.Value = snapshot.PreviousContext;
-    TimeWarp.Terminal.Terminal.Instance = snapshot.PreviousInstance;
+    TimeWarp.Terminal.Terminal.FormatProvider = snapshot.PreviousFormatProvider;
 
     if (stack.Count == 0)
+    {
       SnapshotStack.Value = null;
+    }
   }
 
   /// <summary>
@@ -144,7 +152,9 @@ public static class TestTerminalContext
     public void Dispose()
     {
       if (Disposed)
+      {
         return;
+      }
 
       ClearCurrent();
       Disposed = true;

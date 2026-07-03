@@ -1,4 +1,4 @@
-#!/usr/bin/dotnet --
+#!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
 // Test Terminal static facade class
@@ -12,221 +12,221 @@ return await RunAllTests();
 namespace TimeWarp.Terminal.Tests.Core.TerminalStatic
 {
 
-[TestTag("Terminal")]
-public class TerminalStaticBasicTests
-{
-  [ModuleInitializer]
-  internal static void Register() => RegisterTests<TerminalStaticBasicTests>();
-
-  public static async Task Should_default_instance_to_timewarp_terminal()
+  [TestTag("Terminal")]
+  public class TerminalStaticBasicTests
   {
-    // Arrange & Act
-    ITerminal instance = Terminal.Instance;
+    [ModuleInitializer]
+    internal static void Register() => RegisterTests<TerminalStaticBasicTests>();
 
-    // Assert
-    instance.ShouldNotBeNull();
-    instance.ShouldBeOfType<TimeWarpTerminal>();
-
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_allow_setting_custom_instance()
-  {
-    // Arrange
-    ITerminal original = Terminal.Instance;
-    using TestTerminal testTerminal = new();
-
-    try
+    public static async Task Should_default_instance_to_timewarp_terminal()
     {
-      // Act
+      // Arrange & Act
+      ITerminal instance = Terminal.Instance;
+
+      // Assert
+      instance.ShouldNotBeNull();
+      instance.ShouldBeOfType<TimeWarpTerminal>();
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_allow_setting_custom_instance()
+    {
+      // Arrange
+      ITerminal original = Terminal.Instance;
+      using TestTerminal testTerminal = new();
+
+      try
+      {
+        // Act
+        Terminal.Instance = testTerminal;
+
+        // Assert
+        Terminal.Instance.ShouldBe(testTerminal);
+      }
+      finally
+      {
+        // Restore
+        Terminal.Instance = original;
+      }
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_throw_when_setting_null_instance()
+    {
+      // Arrange
+      ITerminal original = Terminal.Instance;
+
+      try
+      {
+        // Act & Assert
+        Should.Throw<ArgumentNullException>(() => Terminal.Instance = null!);
+      }
+      finally
+      {
+        Terminal.Instance = original;
+      }
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_write_to_instance()
+    {
+      // Arrange
+      ITerminal original = Terminal.Instance;
+      using TestTerminal testTerminal = new();
       Terminal.Instance = testTerminal;
 
-      // Assert
-      Terminal.Instance.ShouldBe(testTerminal);
-    }
-    finally
-    {
-      // Restore
-      Terminal.Instance = original;
-    }
+      try
+      {
+        // Act
+        Terminal.Write("Hello");
 
-    await Task.CompletedTask;
-  }
+        // Assert
+        testTerminal.Output.ShouldBe("Hello");
+      }
+      finally
+      {
+        Terminal.Instance = original;
+      }
 
-  public static async Task Should_throw_when_setting_null_instance()
-  {
-    // Arrange
-    ITerminal original = Terminal.Instance;
-
-    try
-    {
-      // Act & Assert
-      Should.Throw<ArgumentNullException>(() => Terminal.Instance = null!);
-    }
-    finally
-    {
-      Terminal.Instance = original;
+      await Task.CompletedTask;
     }
 
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_write_to_instance()
-  {
-    // Arrange
-    ITerminal original = Terminal.Instance;
-    using TestTerminal testTerminal = new();
-    Terminal.Instance = testTerminal;
-
-    try
+    public static async Task Should_write_empty_string_for_null()
     {
-      // Act
-      Terminal.Write("Hello");
+      // Arrange
+      ITerminal original = Terminal.Instance;
+      using TestTerminal testTerminal = new();
+      Terminal.Instance = testTerminal;
 
-      // Assert
-      testTerminal.Output.ShouldBe("Hello");
-    }
-    finally
-    {
-      Terminal.Instance = original;
-    }
+      try
+      {
+        // Act
+        Terminal.Write(null);
 
-    await Task.CompletedTask;
-  }
+        // Assert
+        testTerminal.Output.ShouldBe(string.Empty);
+      }
+      finally
+      {
+        Terminal.Instance = original;
+      }
 
-  public static async Task Should_write_empty_string_for_null()
-  {
-    // Arrange
-    ITerminal original = Terminal.Instance;
-    using TestTerminal testTerminal = new();
-    Terminal.Instance = testTerminal;
-
-    try
-    {
-      // Act
-      Terminal.Write(null);
-
-      // Assert
-      testTerminal.Output.ShouldBe(string.Empty);
-    }
-    finally
-    {
-      Terminal.Instance = original;
+      await Task.CompletedTask;
     }
 
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_writeline_to_instance()
-  {
-    // Arrange
-    ITerminal original = Terminal.Instance;
-    using TestTerminal testTerminal = new();
-    Terminal.Instance = testTerminal;
-
-    try
+    public static async Task Should_writeline_to_instance()
     {
-      // Act
-      Terminal.WriteLine("Hello");
+      // Arrange
+      ITerminal original = Terminal.Instance;
+      using TestTerminal testTerminal = new();
+      Terminal.Instance = testTerminal;
 
-      // Assert
-      testTerminal.Output.ShouldBe("Hello" + Environment.NewLine);
-    }
-    finally
-    {
-      Terminal.Instance = original;
-    }
+      try
+      {
+        // Act
+        Terminal.WriteLine("Hello");
 
-    await Task.CompletedTask;
-  }
+        // Assert
+        testTerminal.Output.ShouldBe("Hello" + Environment.NewLine);
+      }
+      finally
+      {
+        Terminal.Instance = original;
+      }
 
-  public static async Task Should_writeline_with_no_args()
-  {
-    // Arrange
-    ITerminal original = Terminal.Instance;
-    using TestTerminal testTerminal = new();
-    Terminal.Instance = testTerminal;
-
-    try
-    {
-      // Act
-      Terminal.WriteLine();
-
-      // Assert
-      testTerminal.Output.ShouldBe(Environment.NewLine);
-    }
-    finally
-    {
-      Terminal.Instance = original;
+      await Task.CompletedTask;
     }
 
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_writeline_async()
-  {
-    // Arrange
-    ITerminal original = Terminal.Instance;
-    using TestTerminal testTerminal = new();
-    Terminal.Instance = testTerminal;
-
-    try
+    public static async Task Should_writeline_with_no_args()
     {
-      // Act
-      await Terminal.WriteLineAsync("Async");
+      // Arrange
+      ITerminal original = Terminal.Instance;
+      using TestTerminal testTerminal = new();
+      Terminal.Instance = testTerminal;
 
-      // Assert
-      testTerminal.Output.ShouldBe("Async" + Environment.NewLine);
-    }
-    finally
-    {
-      Terminal.Instance = original;
-    }
-  }
+      try
+      {
+        // Act
+        Terminal.WriteLine();
 
-  public static async Task Should_write_error_line()
-  {
-    // Arrange
-    ITerminal original = Terminal.Instance;
-    using TestTerminal testTerminal = new();
-    Terminal.Instance = testTerminal;
+        // Assert
+        testTerminal.Output.ShouldBe(Environment.NewLine);
+      }
+      finally
+      {
+        Terminal.Instance = original;
+      }
 
-    try
-    {
-      // Act
-      Terminal.WriteErrorLine("Error");
-
-      // Assert
-      testTerminal.ErrorOutput.ShouldBe("Error" + Environment.NewLine);
-    }
-    finally
-    {
-      Terminal.Instance = original;
+      await Task.CompletedTask;
     }
 
-    await Task.CompletedTask;
-  }
-
-  public static async Task Should_write_error_line_async()
-  {
-    // Arrange
-    ITerminal original = Terminal.Instance;
-    using TestTerminal testTerminal = new();
-    Terminal.Instance = testTerminal;
-
-    try
+    public static async Task Should_writeline_async()
     {
-      // Act
-      await Terminal.WriteErrorLineAsync("AsyncError");
+      // Arrange
+      ITerminal original = Terminal.Instance;
+      using TestTerminal testTerminal = new();
+      Terminal.Instance = testTerminal;
 
-      // Assert
-      testTerminal.ErrorOutput.ShouldBe("AsyncError" + Environment.NewLine);
+      try
+      {
+        // Act
+        await Terminal.WriteLineAsync("Async");
+
+        // Assert
+        testTerminal.Output.ShouldBe("Async" + Environment.NewLine);
+      }
+      finally
+      {
+        Terminal.Instance = original;
+      }
     }
-    finally
+
+    public static async Task Should_write_error_line()
     {
-      Terminal.Instance = original;
+      // Arrange
+      ITerminal original = Terminal.Instance;
+      using TestTerminal testTerminal = new();
+      Terminal.Instance = testTerminal;
+
+      try
+      {
+        // Act
+        Terminal.WriteErrorLine("Error");
+
+        // Assert
+        testTerminal.ErrorOutput.ShouldBe("Error" + Environment.NewLine);
+      }
+      finally
+      {
+        Terminal.Instance = original;
+      }
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_write_error_line_async()
+    {
+      // Arrange
+      ITerminal original = Terminal.Instance;
+      using TestTerminal testTerminal = new();
+      Terminal.Instance = testTerminal;
+
+      try
+      {
+        // Act
+        await Terminal.WriteErrorLineAsync("AsyncError");
+
+        // Assert
+        testTerminal.ErrorOutput.ShouldBe("AsyncError" + Environment.NewLine);
+      }
+      finally
+      {
+        Terminal.Instance = original;
+      }
     }
   }
-}
 
 } // namespace TimeWarp.Terminal.Tests.Core.TerminalStatic

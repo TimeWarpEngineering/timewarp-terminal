@@ -10,7 +10,7 @@ namespace TimeWarp.Terminal;
 // Explicit interface implementations (IConsole.Write) hide base interface methods from public API.
 // IOExceptions silently swallowed because redirected output is a valid runtime scenario.
 // Hyperlink detection uses environment variable heuristics for major terminal emulators.
-// Color support respects NO_COLOR environment variable (de facto standard).
+// Color support respects the NO_COLOR spec (non-empty value disables color) and TERM=dumb.
 #endregion
 
 /// <summary>
@@ -203,7 +203,9 @@ public sealed class TimeWarpTerminal : ITerminal
     get
     {
       if (!OperatingSystem.IsWindows())
+      {
         return true;
+      }
 
       try
       {
@@ -216,47 +218,11 @@ public sealed class TimeWarpTerminal : ITerminal
     }
     set
     {
-      if (!OperatingSystem.IsWindows())
-        return;
-
+      // Console.CursorVisible's setter is supported on all platforms
+      // (only the getter is Windows-only)
       try
       {
         Console.CursorVisible = value;
-      }
-      catch (IOException)
-      {
-      }
-    }
-  }
-
-  /// <inheritdoc />
-  public int CursorSize
-  {
-    get
-    {
-      if (!OperatingSystem.IsWindows())
-        return 100;
-
-      try
-      {
-        return Console.CursorSize;
-      }
-      catch (IOException)
-      {
-        return 100;
-      }
-    }
-    set
-    {
-      if (!OperatingSystem.IsWindows())
-        return;
-
-      try
-      {
-        Console.CursorSize = value;
-      }
-      catch (ArgumentOutOfRangeException)
-      {
       }
       catch (IOException)
       {
@@ -286,7 +252,7 @@ public sealed class TimeWarpTerminal : ITerminal
   {
     try
     {
-      return (Console.CursorLeft, Console.CursorTop);
+      return Console.GetCursorPosition();
     }
     catch (IOException)
     {
@@ -309,22 +275,6 @@ public sealed class TimeWarpTerminal : ITerminal
         return 80;
       }
     }
-    set
-    {
-      if (!OperatingSystem.IsWindows())
-        return;
-
-      try
-      {
-        Console.WindowWidth = value;
-      }
-      catch (ArgumentOutOfRangeException)
-      {
-      }
-      catch (IOException)
-      {
-      }
-    }
   }
 
   /// <inheritdoc />
@@ -339,86 +289,6 @@ public sealed class TimeWarpTerminal : ITerminal
       catch (IOException)
       {
         return 24;
-      }
-    }
-    set
-    {
-      if (!OperatingSystem.IsWindows())
-        return;
-
-      try
-      {
-        Console.WindowHeight = value;
-      }
-      catch (ArgumentOutOfRangeException)
-      {
-      }
-      catch (IOException)
-      {
-      }
-    }
-  }
-
-  /// <inheritdoc />
-  public int WindowLeft
-  {
-    get
-    {
-      try
-      {
-        return Console.WindowLeft;
-      }
-      catch (IOException)
-      {
-        return 0;
-      }
-    }
-    set
-    {
-      if (!OperatingSystem.IsWindows())
-        return;
-
-      try
-      {
-        Console.WindowLeft = value;
-      }
-      catch (ArgumentOutOfRangeException)
-      {
-      }
-      catch (IOException)
-      {
-      }
-    }
-  }
-
-  /// <inheritdoc />
-  public int WindowTop
-  {
-    get
-    {
-      try
-      {
-        return Console.WindowTop;
-      }
-      catch (IOException)
-      {
-        return 0;
-      }
-    }
-    set
-    {
-      if (!OperatingSystem.IsWindows())
-        return;
-
-      try
-      {
-        Console.WindowTop = value;
-      }
-      catch (ArgumentOutOfRangeException)
-      {
-      }
-      catch (IOException)
-      {
       }
     }
   }
@@ -437,22 +307,6 @@ public sealed class TimeWarpTerminal : ITerminal
         return 80;
       }
     }
-    set
-    {
-      if (!OperatingSystem.IsWindows())
-        return;
-
-      try
-      {
-        Console.BufferWidth = value;
-      }
-      catch (ArgumentOutOfRangeException)
-      {
-      }
-      catch (IOException)
-      {
-      }
-    }
   }
 
   /// <inheritdoc />
@@ -469,154 +323,17 @@ public sealed class TimeWarpTerminal : ITerminal
         return 300;
       }
     }
-    set
-    {
-      if (!OperatingSystem.IsWindows())
-        return;
-
-      try
-      {
-        Console.BufferHeight = value;
-      }
-      catch (ArgumentOutOfRangeException)
-      {
-      }
-      catch (IOException)
-      {
-      }
-    }
-  }
-
-  /// <inheritdoc />
-  public void SetWindowSize(int width, int height)
-  {
-    if (!OperatingSystem.IsWindows())
-      return;
-
-    try
-    {
-      Console.SetWindowSize(width, height);
-    }
-    catch (ArgumentOutOfRangeException)
-    {
-    }
-    catch (IOException)
-    {
-    }
-  }
-
-  /// <inheritdoc />
-  public void SetWindowPosition(int left, int top)
-  {
-    if (!OperatingSystem.IsWindows())
-      return;
-
-    try
-    {
-      Console.SetWindowPosition(left, top);
-    }
-    catch (ArgumentOutOfRangeException)
-    {
-    }
-    catch (IOException)
-    {
-    }
-  }
-
-  /// <inheritdoc />
-  public void SetBufferSize(int width, int height)
-  {
-    if (!OperatingSystem.IsWindows())
-      return;
-
-    try
-    {
-      Console.SetBufferSize(width, height);
-    }
-    catch (ArgumentOutOfRangeException)
-    {
-    }
-    catch (IOException)
-    {
-    }
-  }
-
-  /// <inheritdoc />
-  public void MoveBufferArea
-  (
-    int sourceLeft,
-    int sourceTop,
-    int sourceWidth,
-    int sourceHeight,
-    int targetLeft,
-    int targetTop,
-    char sourceChar,
-    ConsoleColor sourceForeColor,
-    ConsoleColor sourceBackColor
-  )
-  {
-    if (!OperatingSystem.IsWindows())
-      return;
-
-    try
-    {
-      Console.MoveBufferArea
-      (
-        sourceLeft,
-        sourceTop,
-        sourceWidth,
-        sourceHeight,
-        targetLeft,
-        targetTop,
-        sourceChar,
-        sourceForeColor,
-        sourceBackColor
-      );
-    }
-    catch (IOException)
-    {
-    }
-  }
-
-  /// <inheritdoc />
-  public int LargestWindowWidth
-  {
-    get
-    {
-      try
-      {
-        return Console.LargestWindowWidth;
-      }
-      catch (IOException)
-      {
-        return 120;
-      }
-    }
-  }
-
-  /// <inheritdoc />
-  public int LargestWindowHeight
-  {
-    get
-    {
-      try
-      {
-        return Console.LargestWindowHeight;
-      }
-      catch (IOException)
-      {
-        return 40;
-      }
-    }
   }
 
   /// <inheritdoc />
   public bool IsInteractive
-    => !Console.IsInputRedirected;
+    => !Console.IsInputRedirected && !Console.IsOutputRedirected;
 
   /// <inheritdoc />
   public bool SupportsColor
-    => !Console.IsOutputRedirected && Environment.GetEnvironmentVariable("NO_COLOR") is null;
+    => !Console.IsOutputRedirected
+      && Environment.GetEnvironmentVariable("NO_COLOR") is not { Length: > 0 }
+      && !string.Equals(Environment.GetEnvironmentVariable("TERM"), "dumb", StringComparison.Ordinal);
 
   /// <inheritdoc />
   public bool SupportsHyperlinks => DetectHyperlinkSupport();
@@ -628,32 +345,46 @@ public sealed class TimeWarpTerminal : ITerminal
   {
     // No hyperlinks if output is redirected
     if (Console.IsOutputRedirected)
+    {
       return false;
+    }
 
     // Windows Terminal
     if (Environment.GetEnvironmentVariable("WT_SESSION") is not null)
+    {
       return true;
+    }
 
     // VS Code integrated terminal
     if (Environment.GetEnvironmentVariable("TERM_PROGRAM") == "vscode")
+    {
       return true;
+    }
 
     // iTerm2
     if (Environment.GetEnvironmentVariable("TERM_PROGRAM") == "iTerm.app")
+    {
       return true;
+    }
 
     // Konsole
     if (Environment.GetEnvironmentVariable("KONSOLE_VERSION") is not null)
+    {
       return true;
+    }
 
     // GNOME Terminal (VTE 0.50+ / version 5000+)
     string? vteVersion = Environment.GetEnvironmentVariable("VTE_VERSION");
     if (vteVersion is not null && int.TryParse(vteVersion, out int version) && version >= 5000)
+    {
       return true;
+    }
 
     // Hyper terminal
     if (Environment.GetEnvironmentVariable("TERM_PROGRAM") == "Hyper")
+    {
       return true;
+    }
 
     // Default: assume no support for unknown terminals
     return false;
@@ -746,22 +477,60 @@ public sealed class TimeWarpTerminal : ITerminal
   /// <inheritdoc />
   public void Beep()
   {
-    if (OperatingSystem.IsWindows())
+    // Console.Beep() is cross-platform (emits BEL on Unix);
+    // only the (frequency, duration) overload is Windows-only
+    try
+    {
       Console.Beep();
+    }
+    catch (IOException)
+    {
+      // Silently ignore if console is redirected
+    }
   }
 
   /// <inheritdoc />
   public void Beep(int frequency, int duration)
   {
     if (OperatingSystem.IsWindows())
+    {
       Console.Beep(frequency, duration);
+    }
   }
 
   /// <inheritdoc />
   public bool TreatControlCAsInput
   {
-    get => Console.TreatControlCAsInput;
-    set => Console.TreatControlCAsInput = value;
+    get
+    {
+      try
+      {
+        return Console.TreatControlCAsInput;
+      }
+      catch (IOException)
+      {
+        return false;
+      }
+      catch (InvalidOperationException)
+      {
+        // Thrown when no console is attached (e.g., redirected input)
+        return false;
+      }
+    }
+    set
+    {
+      try
+      {
+        Console.TreatControlCAsInput = value;
+      }
+      catch (IOException)
+      {
+      }
+      catch (InvalidOperationException)
+      {
+        // Silently ignore when no console is attached
+      }
+    }
   }
 
   /// <inheritdoc />
@@ -770,13 +539,24 @@ public sealed class TimeWarpTerminal : ITerminal
     get
     {
       if (OperatingSystem.IsWindows())
+      {
         return Console.Title;
+      }
+
       return string.Empty;
     }
     set
     {
-      if (OperatingSystem.IsWindows())
+      // Console.Title's setter is supported on all platforms
+      // (only the getter is Windows-only)
+      try
+      {
         Console.Title = value;
+      }
+      catch (IOException)
+      {
+        // Silently ignore if console is redirected
+      }
     }
   }
 
@@ -791,6 +571,12 @@ public sealed class TimeWarpTerminal : ITerminal
       }
       catch (IOException)
       {
+        return false;
+      }
+      catch (InvalidOperationException)
+      {
+        // Console.KeyAvailable throws InvalidOperationException when
+        // standard input is redirected from a file or pipe
         return false;
       }
     }

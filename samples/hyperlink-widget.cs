@@ -1,4 +1,4 @@
-#!/usr/bin/dotnet --
+#!/usr/bin/env -S dotnet --
 // hyperlink-widget-demo - Demonstrates OSC 8 hyperlinks in terminal output
 // GitHub Issue: https://github.com/TimeWarpEngineering/timewarp-terminal/issues/95
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj

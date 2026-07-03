@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // Orchestrates the full CI/CD pipeline.
 // For PR: clean -> build -> verify-samples -> test
-// For release: clean -> build -> check-version -> pack
+// For release: clean -> build -> verify-samples -> test -> check-version -> pack -> push -> notify timewarp-software
 
 namespace DevCli;
 
@@ -65,7 +65,10 @@ internal sealed class WorkflowCommand : ICommand<Unit>
         .WithArguments("clean", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-v", "q")
         .WithWorkingDirectory(repoRoot)
         .RunAsync();
-      if (exitCode != 0) throw new InvalidOperationException("Clean failed!");
+      if (exitCode != 0)
+      {
+        throw new InvalidOperationException("Clean failed!");
+      }
 
       // Step 2: Build
       Terminal.WriteLine("\nStep 2/4: Build");
@@ -73,60 +76,60 @@ internal sealed class WorkflowCommand : ICommand<Unit>
         .WithArguments("build", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-c", "Release")
         .WithWorkingDirectory(repoRoot)
         .RunAsync();
-      if (exitCode != 0) throw new InvalidOperationException("Build failed!");
+      if (exitCode != 0)
+      {
+        throw new InvalidOperationException("Build failed!");
+      }
 
       // Step 3: Verify Samples
       Terminal.WriteLine("\nStep 3/4: Verify Samples");
-      string samplesDir = Path.Combine(repoRoot, "samples");
-      if (Directory.Exists(samplesDir))
-      {
-        string[] sampleFiles = Directory.GetFiles(samplesDir, "*.cs", SearchOption.TopDirectoryOnly);
-        foreach (string sampleFile in sampleFiles)
-        {
-          string fileName = Path.GetFileName(sampleFile);
-          Terminal.WriteLine($"  Verifying {fileName}...");
-          exitCode = await Shell.Builder("dotnet")
-            .WithArguments("run", sampleFile, "--", "--help")
-            .WithWorkingDirectory(samplesDir)
-            .RunAsync();
-          if (exitCode != 0) throw new InvalidOperationException($"Sample verification failed: {fileName}");
-        }
-      }
+      await VerifySamplesAsync(repoRoot);
 
       // Step 4: Test
       Terminal.WriteLine("\nStep 4/4: Test");
-      exitCode = await Shell.Builder("dotnet")
-        .WithArguments("test", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "--no-build", "-v", "n")
-        .WithWorkingDirectory(repoRoot)
-        .RunAsync();
-      if (exitCode != 0) throw new InvalidOperationException("Tests failed!");
+      await RunTestSuiteAsync(repoRoot);
 
       Terminal.WriteLine("\n✓ CI Pipeline completed successfully");
     }
 
     private async Task RunReleaseWorkflowAsync(string repoRoot, string? apiKey, CancellationToken ct)
     {
-      Terminal.WriteLine("Release Pipeline: clean -> build -> check-version -> pack");
+      Terminal.WriteLine("Release Pipeline: clean -> build -> verify-samples -> test -> check-version -> pack");
       Terminal.WriteLine("");
 
       // Step 1: Clean
-      Terminal.WriteLine("Step 1/4: Clean");
+      Terminal.WriteLine("Step 1/6: Clean");
       int exitCode = await Shell.Builder("dotnet")
         .WithArguments("clean", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-v", "q")
         .WithWorkingDirectory(repoRoot)
         .RunAsync();
-      if (exitCode != 0) throw new InvalidOperationException("Clean failed!");
+      if (exitCode != 0)
+      {
+        throw new InvalidOperationException("Clean failed!");
+      }
 
       // Step 2: Build
-      Terminal.WriteLine("\nStep 2/4: Build");
+      Terminal.WriteLine("\nStep 2/6: Build");
       exitCode = await Shell.Builder("dotnet")
         .WithArguments("build", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-c", "Release")
         .WithWorkingDirectory(repoRoot)
         .RunAsync();
-      if (exitCode != 0) throw new InvalidOperationException("Build failed!");
+      if (exitCode != 0)
+      {
+        throw new InvalidOperationException("Build failed!");
+      }
 
-      // Step 3: Check Version
-      Terminal.WriteLine("\nStep 3/4: Check Version");
+      // Step 3: Verify Samples — a release must never ship from a commit
+      // whose samples or tests were not exercised on the release event itself
+      Terminal.WriteLine("\nStep 3/6: Verify Samples");
+      await VerifySamplesAsync(repoRoot);
+
+      // Step 4: Test
+      Terminal.WriteLine("\nStep 4/6: Test");
+      await RunTestSuiteAsync(repoRoot);
+
+      // Step 5: Check Version
+      Terminal.WriteLine("\nStep 5/6: Check Version");
       string propsPath = Path.Combine(repoRoot, "source", "Directory.Build.props");
       string? version = null;
       if (File.Exists(propsPath))
@@ -150,6 +153,38 @@ internal sealed class WorkflowCommand : ICommand<Unit>
       }
 
       Terminal.WriteLine($"Current version: {version}");
+
+      // A release event must publish the version named by its tag — otherwise publishing
+      // a "v1.0.0" GitHub release with props still at an older version silently pushes that stale version
+      string? tagName = Environment.GetEnvironmentVariable("GITHUB_REF_NAME");
+      if (string.IsNullOrEmpty(tagName))
+      {
+        string? gitHubRef = Environment.GetEnvironmentVariable("GITHUB_REF");
+        if (!string.IsNullOrEmpty(gitHubRef) && gitHubRef.StartsWith("refs/tags/", StringComparison.Ordinal))
+        {
+          tagName = gitHubRef["refs/tags/".Length..];
+        }
+      }
+
+      string? releaseEventName = Environment.GetEnvironmentVariable("GITHUB_EVENT_NAME");
+      if (releaseEventName == "release" && !string.IsNullOrEmpty(tagName))
+      {
+        string tagVersion = tagName.StartsWith('v') ? tagName[1..] : tagName;
+        if (!string.Equals(tagVersion, version, StringComparison.Ordinal))
+        {
+          Terminal.WriteLine("\n✗ Release tag does not match project version");
+          Terminal.WriteLine($"  Tag:     {tagName} (version {tagVersion})");
+          Terminal.WriteLine($"  Project: {version}");
+          throw new InvalidOperationException($"Release tag '{tagName}' does not match project version '{version}'");
+        }
+
+        Terminal.WriteLine($"✓ Release tag {tagName} matches project version");
+      }
+      else
+      {
+        Terminal.WriteLine("No release tag available (local run) - skipping tag/version match check");
+      }
+
       Terminal.WriteLine("Checking NuGet.org...");
 
       using HttpClient client = new();
@@ -177,13 +212,13 @@ internal sealed class WorkflowCommand : ICommand<Unit>
         Terminal.WriteLine("  Assuming version is available");
       }
 
-      // Step 4: Pack
-      Terminal.WriteLine("\nStep 4/4: Pack");
+      // Step 6: Pack
+      Terminal.WriteLine("\nStep 6/6: Pack");
       string artifactsDir = Path.Combine(repoRoot, "artifacts", "packages");
       Directory.CreateDirectory(artifactsDir);
 
       exitCode = await Shell.Builder("dotnet")
-        .WithArguments("pack", Path.Combine(repoRoot, "source", "timewarp-terminal", "timewarp-terminal.csproj"), "-c", "Release", "-o", artifactsDir)
+        .WithArguments("pack", Path.Combine(repoRoot, "source", "timewarp-terminal", "timewarp-terminal.csproj"), "-c", "Release", "-o", artifactsDir, "-p:ContinuousIntegrationBuild=true")
         .WithWorkingDirectory(repoRoot)
         .RunAsync();
 
@@ -211,11 +246,111 @@ internal sealed class WorkflowCommand : ICommand<Unit>
             .WithApiKey(apiKey)
             .RunAsync(ct);
 
-          if (exitCode != 0) throw new InvalidOperationException($"NuGet push failed: {packageName}");
+          if (exitCode != 0)
+          {
+            throw new InvalidOperationException($"NuGet push failed: {packageName}");
+          }
         }
 
         Terminal.WriteLine("✓ Packages pushed to NuGet.org");
+
+        await NotifySoftwareSiteAsync(repoRoot, version);
       }
+    }
+
+    private async Task NotifySoftwareSiteAsync(string repoRoot, string version)
+    {
+      // Signal timewarp-software to rebuild the site so the new release shows up
+      // immediately instead of waiting for its nightly cron backstop. Best effort:
+      // a failure here must never fail a release that already pushed to NuGet.
+      // Cross-repo repository_dispatch needs a credential with write access to
+      // timewarp-software — locally gh's stored auth suffices; in GitHub Actions
+      // the default GITHUB_TOKEN cannot reach other repos, so workflow.yml mints a
+      // short-lived installation token from the org's Rebuild Dispatcher GitHub App
+      // and passes it as GH_TOKEN.
+      Terminal.WriteLine("\nNotifying timewarp-software to rebuild the site...");
+      int exitCode = await Shell.Builder("gh")
+        .WithArguments
+        (
+          "api",
+          "repos/TimeWarpEngineering/timewarp-software/dispatches",
+          "-f", "event_type=rebuild",
+          "-f", "client_payload[package]=TimeWarp.Terminal",
+          "-f", $"client_payload[version]={version}"
+        )
+        .WithWorkingDirectory(repoRoot)
+        .RunAsync();
+
+      if (exitCode == 0)
+      {
+        Terminal.WriteLine("✓ timewarp-software rebuild dispatched");
+      }
+      else
+      {
+        Terminal.WriteLine("⚠ Could not dispatch timewarp-software rebuild (non-fatal; the site rebuilds nightly)");
+      }
+    }
+
+    private async Task VerifySamplesAsync(string repoRoot)
+    {
+      string samplesDir = Path.Combine(repoRoot, "samples");
+      if (!Directory.Exists(samplesDir))
+      {
+        return;
+      }
+
+      string[] sampleFiles = Directory.GetFiles(samplesDir, "*.cs", SearchOption.TopDirectoryOnly);
+      Array.Sort(sampleFiles, StringComparer.Ordinal);
+      foreach (string sampleFile in sampleFiles)
+      {
+        string fileName = Path.GetFileName(sampleFile);
+        Terminal.WriteLine($"  Verifying {fileName}...");
+        int exitCode = await Shell.Builder("dotnet")
+          .WithArguments("run", sampleFile, "--", "--help")
+          .WithWorkingDirectory(samplesDir)
+          .RunAsync();
+        if (exitCode != 0)
+        {
+          throw new InvalidOperationException($"Sample verification failed: {fileName}");
+        }
+      }
+    }
+
+    private async Task RunTestSuiteAsync(string repoRoot)
+    {
+      // The test suite is .NET 10 file-based apps (runfiles) under tests/,
+      // not VSTest projects, so `dotnet test` on the solution finds nothing
+      string testsDir = Path.Combine(repoRoot, "tests");
+      string[] testFiles = Directory.GetFiles(testsDir, "*.cs", SearchOption.TopDirectoryOnly);
+      Array.Sort(testFiles, StringComparer.Ordinal);
+
+      List<string> failed = [];
+      foreach (string testFile in testFiles)
+      {
+        string fileName = Path.GetFileName(testFile);
+        Terminal.WriteLine($"  Running {fileName}...");
+        int exitCode = await Shell.Builder("dotnet")
+          .WithArguments(testFile)
+          .WithWorkingDirectory(repoRoot)
+          .RunAsync();
+        if (exitCode != 0)
+        {
+          failed.Add(fileName);
+        }
+      }
+
+      if (failed.Count > 0)
+      {
+        Terminal.WriteLine($"\n✗ {failed.Count} of {testFiles.Length} test file(s) failed:");
+        foreach (string fileName in failed)
+        {
+          Terminal.WriteLine($"    {fileName}");
+        }
+
+        throw new InvalidOperationException("Tests failed!");
+      }
+
+      Terminal.WriteLine($"  ✓ {testFiles.Length} test file(s) passed");
     }
   }
 }
