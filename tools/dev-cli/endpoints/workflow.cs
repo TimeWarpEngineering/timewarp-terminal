@@ -265,8 +265,9 @@ internal sealed class WorkflowCommand : ICommand<Unit>
       // a failure here must never fail a release that already pushed to NuGet.
       // Cross-repo repository_dispatch needs a credential with write access to
       // timewarp-software — locally gh's stored auth suffices; in GitHub Actions
-      // the default GITHUB_TOKEN cannot reach other repos, so workflow.yml passes
-      // GH_TOKEN from the REBUILD_DISPATCH_TOKEN secret.
+      // the default GITHUB_TOKEN cannot reach other repos, so workflow.yml mints a
+      // short-lived installation token from the org's Rebuild Dispatcher GitHub App
+      // and passes it as GH_TOKEN.
       Terminal.WriteLine("\nNotifying timewarp-software to rebuild the site...");
       int exitCode = await Shell.Builder("gh")
         .WithArguments
