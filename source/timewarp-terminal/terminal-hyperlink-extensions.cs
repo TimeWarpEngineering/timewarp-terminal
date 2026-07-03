@@ -42,7 +42,7 @@ public static class TerminalHyperlinkExtensions
 
     if (terminal.SupportsHyperlinks)
     {
-      _ = terminal.Write(AnsiHyperlinks.CreateLink(text, url));
+      _ = terminal.Write(AnsiHyperlinks.CreateLink(url, text));
     }
     else
     {
@@ -72,7 +72,7 @@ public static class TerminalHyperlinkExtensions
 
     if (terminal.SupportsHyperlinks)
     {
-      _ = terminal.WriteLine(AnsiHyperlinks.CreateLink(text, url));
+      _ = terminal.WriteLine(AnsiHyperlinks.CreateLink(url, text));
     }
     else
     {

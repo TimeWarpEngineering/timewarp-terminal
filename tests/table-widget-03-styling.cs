@@ -187,6 +187,28 @@ namespace TimeWarp.Terminal.Tests.Core.TableWidgetStyling
       await Task.CompletedTask;
     }
 
+    public static async Task Should_keep_foreground_after_border_reset_when_writing_table_with_color()
+    {
+      // Regression: BorderColor emits a Reset inside each rendered line, which used to cancel
+      // the foreground requested via the WriteTable color overload for the rest of the line
+      using TestTerminal terminal = new() { WindowWidth = 40 };
+
+      // Act
+      terminal.WriteTable(
+        table => table
+          .AddColumn("Name")
+          .AddRow("Foo")
+          .BorderColor(AnsiColors.Yellow),
+        ConsoleColor.Cyan);
+
+      // Assert - the foreground code re-appears after each embedded Reset
+      terminal.Output.ShouldContain(AnsiColors.Yellow);
+      terminal.Output.ShouldContain(AnsiColors.Reset + AnsiColors.BrightCyan); // ConsoleColor.Cyan maps to bright cyan
+      terminal.Output.ShouldContain("Foo");
+
+      await Task.CompletedTask;
+    }
+
     public static async Task Should_handle_empty_cells()
     {
       // Arrange

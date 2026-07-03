@@ -1,5 +1,19 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// ANSI escape code constants and ConsoleColor-to-SGR conversion for colored terminal output.
+#endregion
+
+#region Design
+// ConsoleColor mapping follows the standard Windows-console-to-ANSI convention: Dark* colors map
+// to the dim SGR range 30-37 (backgrounds 40-47) and the normal colors map to the bright range
+// 90-97 (backgrounds 100-107). The two grays cross over: DarkGray is bright black (90/100) and
+// Gray is dim white (37/47), matching how conhost renders them.
+// RELEASE NOTE (1.0): GetForeground/GetBackground previously collapsed dark and normal colors to
+// the same dim SGR code (e.g. Red and DarkRed both emitted 31). Output now uses the standard
+// mapping above, so normal colors render bright — a visible-output change.
+#endregion
+
 /// <summary>
 /// ANSI escape codes for colored terminal output.
 /// Includes all standard CSS named colors for comprehensive terminal styling.
@@ -204,51 +218,59 @@ public static class AnsiColors
 
   /// <summary>
   /// Converts a <see cref="ConsoleColor"/> to its corresponding ANSI foreground code.
+  /// Dark colors map to the dim SGR range (30-37) and normal colors map to the bright
+  /// range (90-97); <see cref="ConsoleColor.Gray"/> is dim white (37) and
+  /// <see cref="ConsoleColor.DarkGray"/> is bright black (90).
   /// </summary>
   /// <param name="color">The ConsoleColor to convert.</param>
   /// <returns>The ANSI escape code for the specified foreground color.</returns>
   public static string GetForeground(ConsoleColor color) => color switch
   {
     ConsoleColor.Black => Black,
-    ConsoleColor.Red => Red,
-    ConsoleColor.Green => Green,
-    ConsoleColor.Yellow => Yellow,
-    ConsoleColor.Blue => Blue,
-    ConsoleColor.Magenta => Magenta,
-    ConsoleColor.Cyan => Cyan,
-    ConsoleColor.White => White,
-    ConsoleColor.Gray or ConsoleColor.DarkGray => Gray,
     ConsoleColor.DarkRed => Red,
     ConsoleColor.DarkGreen => Green,
     ConsoleColor.DarkYellow => Yellow,
     ConsoleColor.DarkBlue => Blue,
     ConsoleColor.DarkMagenta => Magenta,
     ConsoleColor.DarkCyan => Cyan,
-    _ => White
+    ConsoleColor.Gray => White,
+    ConsoleColor.DarkGray => Gray,
+    ConsoleColor.Red => BrightRed,
+    ConsoleColor.Green => BrightGreen,
+    ConsoleColor.Yellow => BrightYellow,
+    ConsoleColor.Blue => BrightBlue,
+    ConsoleColor.Magenta => BrightMagenta,
+    ConsoleColor.Cyan => BrightCyan,
+    ConsoleColor.White => BrightWhite,
+    _ => BrightWhite
   };
 
   /// <summary>
   /// Converts a <see cref="ConsoleColor"/> to its corresponding ANSI background code.
+  /// Dark colors map to the dim SGR range (40-47) and normal colors map to the bright
+  /// range (100-107); <see cref="ConsoleColor.Gray"/> is dim white (47) and
+  /// <see cref="ConsoleColor.DarkGray"/> is bright black (100).
   /// </summary>
   /// <param name="color">The ConsoleColor to convert.</param>
   /// <returns>The ANSI escape code for the specified background color.</returns>
   public static string GetBackground(ConsoleColor color) => color switch
   {
     ConsoleColor.Black => BgBlack,
-    ConsoleColor.Red => BgRed,
-    ConsoleColor.Green => BgGreen,
-    ConsoleColor.Yellow => BgYellow,
-    ConsoleColor.Blue => BgBlue,
-    ConsoleColor.Magenta => BgMagenta,
-    ConsoleColor.Cyan => BgCyan,
-    ConsoleColor.White => BgWhite,
-    ConsoleColor.Gray or ConsoleColor.DarkGray => BgBrightBlack,
     ConsoleColor.DarkRed => BgRed,
     ConsoleColor.DarkGreen => BgGreen,
     ConsoleColor.DarkYellow => BgYellow,
     ConsoleColor.DarkBlue => BgBlue,
     ConsoleColor.DarkMagenta => BgMagenta,
     ConsoleColor.DarkCyan => BgCyan,
-    _ => BgBlack
+    ConsoleColor.Gray => BgWhite,
+    ConsoleColor.DarkGray => BgBrightBlack,
+    ConsoleColor.Red => BgBrightRed,
+    ConsoleColor.Green => BgBrightGreen,
+    ConsoleColor.Yellow => BgBrightYellow,
+    ConsoleColor.Blue => BgBrightBlue,
+    ConsoleColor.Magenta => BgBrightMagenta,
+    ConsoleColor.Cyan => BgBrightCyan,
+    ConsoleColor.White => BgBrightWhite,
+    _ => BgBrightWhite
   };
 }

@@ -5,6 +5,18 @@
 
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// OSC 8 hyperlink primitives: escape-sequence constants, CreateLink, and the string.Link extension.
+#endregion
+
+#region Design
+// CreateLink takes (url, displayText) — the parameter order was aligned with Terminal.WriteLink
+// and the ITerminal WriteLink/WriteLinkLine extensions for 1.0 so the same two strings read in
+// the same order everywhere; displayText is optional and defaults to the URL.
+// URLs are sanitized (C0 controls and DEL percent-encoded) before embedding so an
+// attacker-influenced URL cannot terminate the OSC 8 sequence and inject escape sequences.
+#endregion
+
 /// <summary>
 /// Constants for OSC 8 hyperlink escape sequences.
 /// </summary>
@@ -24,8 +36,8 @@ public static class AnsiHyperlinks
   /// <summary>
   /// Creates an OSC 8 hyperlink string.
   /// </summary>
-  /// <param name="displayText">The text to display.</param>
   /// <param name="url">The URL to link to.</param>
+  /// <param name="displayText">The text to display. If null, the URL is used as display text.</param>
   /// <returns>An OSC 8 formatted hyperlink string.</returns>
   /// <remarks>
   /// The URL is sanitized before being embedded in the escape sequence:
@@ -35,8 +47,8 @@ public static class AnsiHyperlinks
   /// arbitrary terminal escape sequences. Normal URLs pass through unchanged.
   /// The display text is outside the OSC payload and is not modified.
   /// </remarks>
-  public static string CreateLink(string displayText, string url)
-    => $"{LinkStart}{SanitizeUrl(url)}{LinkEnd}{displayText}{LinkStart}{LinkEnd}";
+  public static string CreateLink(string url, string? displayText = null)
+    => $"{LinkStart}{SanitizeUrl(url)}{LinkEnd}{displayText ?? url}{LinkStart}{LinkEnd}";
 
   /// <summary>
   /// Percent-encodes every C0 control character (below U+0020) and DEL (U+007F)
@@ -110,6 +122,6 @@ public static class AnsiHyperlinkExtensions
     /// "Download".Link("https://example.com/file.zip").Blue().Underline()
     /// </code>
     /// </example>
-    public string Link(string url) => AnsiHyperlinks.CreateLink(text, url);
+    public string Link(string url) => AnsiHyperlinks.CreateLink(url, text);
   }
 }

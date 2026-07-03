@@ -187,6 +187,24 @@ namespace TimeWarp.Terminal.Tests.Core.AnsiStringUtils
       await Task.CompletedTask;
     }
 
+    public static async Task Should_clamp_negative_width_to_zero_without_throwing()
+    {
+      // Regression: negative totalWidth used to throw ArgumentOutOfRangeException
+      // from new string(paddingChar, negativeCount); it is now clamped to 0
+
+      // Non-empty text is longer than the clamped width, so it is returned unchanged
+      TimeWarp.Terminal.AnsiStringUtils.PadRightVisible("text", -5).ShouldBe("text");
+      TimeWarp.Terminal.AnsiStringUtils.PadLeftVisible("text", -5).ShouldBe("text");
+      TimeWarp.Terminal.AnsiStringUtils.CenterVisible("text", -5).ShouldBe("text");
+
+      // Null/empty text pads to the clamped width of 0, i.e. an empty string
+      TimeWarp.Terminal.AnsiStringUtils.PadRightVisible(null, -5).ShouldBe(string.Empty);
+      TimeWarp.Terminal.AnsiStringUtils.PadLeftVisible("", -5).ShouldBe(string.Empty);
+      TimeWarp.Terminal.AnsiStringUtils.CenterVisible(null, -5).ShouldBe(string.Empty);
+
+      await Task.CompletedTask;
+    }
+
     public static async Task Should_strip_osc8_hyperlink_sequences()
     {
       // Arrange - OSC 8 hyperlink with ST (String Terminator) ending

@@ -13,7 +13,10 @@ namespace TimeWarp.Terminal;
 // System.Console's culture behavior while allowing an invariant override for determinism.
 // Color methods use AnsiColors to wrap messages with ANSI escape sequences, applied only
 // when Instance.SupportsColor is true (NO_COLOR / redirected output degrade to plain text).
-// CA1054 suppressed for WriteLink: OSC 8 hyperlinks use raw URL strings by design.
+// A null message writes plain (no color prefix/reset), matching the non-colored overloads.
+// Colored widget output re-applies the color prefix after every embedded SGR reset (from
+// BorderColor or styled cells) so the requested colors survive styled segments in a line.
+// CA1054 suppressed for WriteLink/WriteLinkLine: OSC 8 hyperlinks use raw URL strings by design.
 #endregion
 
 using System.Globalization;
@@ -106,7 +109,7 @@ public static class Terminal
   /// <summary>
   /// Writes the specified string value to the standard output stream with the specified foreground color.
   /// </summary>
-  /// <param name="message">The value to write. If null, an empty string is written.</param>
+  /// <param name="message">The value to write. If null, an empty string is written without color codes.</param>
   /// <param name="foregroundColor">The foreground color to apply.</param>
   /// <example>
   /// <code>
@@ -121,13 +124,45 @@ public static class Terminal
   public static void Write(string? message, ConsoleColor foregroundColor)
   {
     ITerminal instance = Instance;
-    if (!instance.SupportsColor)
+    if (message is null || !instance.SupportsColor)
     {
       _ = instance.Write(message ?? string.Empty);
       return;
     }
 
-    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
+    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + message + AnsiColors.Reset;
+    _ = instance.Write(coloredMessage);
+  }
+
+  /// <summary>
+  /// Writes the specified string value to the standard output stream with the specified
+  /// foreground and background colors.
+  /// </summary>
+  /// <param name="message">The value to write. If null, an empty string is written without color codes.</param>
+  /// <param name="foregroundColor">The foreground color to apply.</param>
+  /// <param name="backgroundColor">The background color to apply.</param>
+  /// <example>
+  /// <code>
+  /// Terminal.Write("Highlighted text", ConsoleColor.Black, ConsoleColor.Yellow);
+  /// </code>
+  /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// </remarks>
+  public static void Write(string? message, ConsoleColor foregroundColor, ConsoleColor backgroundColor)
+  {
+    ITerminal instance = Instance;
+    if (message is null || !instance.SupportsColor)
+    {
+      _ = instance.Write(message ?? string.Empty);
+      return;
+    }
+
+    string coloredMessage = AnsiColors.GetForeground(foregroundColor) +
+                            AnsiColors.GetBackground(backgroundColor) +
+                            message +
+                            AnsiColors.Reset;
     _ = instance.Write(coloredMessage);
   }
 
@@ -135,7 +170,7 @@ public static class Terminal
   /// Writes the specified string value, followed by the current line terminator,
   /// to the standard output stream with the specified foreground color.
   /// </summary>
-  /// <param name="message">The value to write. If null, only the line terminator is written.</param>
+  /// <param name="message">The value to write. If null, only the line terminator is written (no color codes).</param>
   /// <param name="foregroundColor">The foreground color to apply.</param>
   /// <example>
   /// <code>
@@ -150,13 +185,13 @@ public static class Terminal
   public static void WriteLine(string? message, ConsoleColor foregroundColor)
   {
     ITerminal instance = Instance;
-    if (!instance.SupportsColor)
+    if (message is null || !instance.SupportsColor)
     {
-      _ = instance.WriteLine(message ?? string.Empty);
+      _ = instance.WriteLine(message);
       return;
     }
 
-    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
+    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + message + AnsiColors.Reset;
     _ = instance.WriteLine(coloredMessage);
   }
 
@@ -164,7 +199,7 @@ public static class Terminal
   /// Writes the specified string value, followed by the current line terminator,
   /// to the standard output stream with the specified foreground and background colors.
   /// </summary>
-  /// <param name="message">The value to write. If null, only the line terminator is written.</param>
+  /// <param name="message">The value to write. If null, only the line terminator is written (no color codes).</param>
   /// <param name="foregroundColor">The foreground color to apply.</param>
   /// <param name="backgroundColor">The background color to apply.</param>
   /// <example>
@@ -179,15 +214,15 @@ public static class Terminal
   public static void WriteLine(string? message, ConsoleColor foregroundColor, ConsoleColor backgroundColor)
   {
     ITerminal instance = Instance;
-    if (!instance.SupportsColor)
+    if (message is null || !instance.SupportsColor)
     {
-      _ = instance.WriteLine(message ?? string.Empty);
+      _ = instance.WriteLine(message);
       return;
     }
 
     string coloredMessage = AnsiColors.GetForeground(foregroundColor) +
                             AnsiColors.GetBackground(backgroundColor) +
-                            (message ?? string.Empty) +
+                            message +
                             AnsiColors.Reset;
     _ = instance.WriteLine(coloredMessage);
   }
@@ -211,7 +246,7 @@ public static class Terminal
   /// Writes the specified string value, followed by the current line terminator,
   /// to the standard error stream with the specified foreground color.
   /// </summary>
-  /// <param name="message">The value to write. If null, only the line terminator is written.</param>
+  /// <param name="message">The value to write. If null, only the line terminator is written (no color codes).</param>
   /// <param name="foregroundColor">The foreground color to apply.</param>
   /// <example>
   /// <code>
@@ -225,13 +260,45 @@ public static class Terminal
   public static void WriteErrorLine(string? message, ConsoleColor foregroundColor)
   {
     ITerminal instance = Instance;
-    if (!instance.SupportsColor)
+    if (message is null || !instance.SupportsColor)
     {
-      _ = instance.WriteErrorLine(message ?? string.Empty);
+      _ = instance.WriteErrorLine(message);
       return;
     }
 
-    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + (message ?? string.Empty) + AnsiColors.Reset;
+    string coloredMessage = AnsiColors.GetForeground(foregroundColor) + message + AnsiColors.Reset;
+    _ = instance.WriteErrorLine(coloredMessage);
+  }
+
+  /// <summary>
+  /// Writes the specified string value, followed by the current line terminator,
+  /// to the standard error stream with the specified foreground and background colors.
+  /// </summary>
+  /// <param name="message">The value to write. If null, only the line terminator is written (no color codes).</param>
+  /// <param name="foregroundColor">The foreground color to apply.</param>
+  /// <param name="backgroundColor">The background color to apply.</param>
+  /// <example>
+  /// <code>
+  /// Terminal.WriteErrorLine("Fatal error", ConsoleColor.White, ConsoleColor.Red);
+  /// </code>
+  /// </example>
+  /// <remarks>
+  /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
+  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// </remarks>
+  public static void WriteErrorLine(string? message, ConsoleColor foregroundColor, ConsoleColor backgroundColor)
+  {
+    ITerminal instance = Instance;
+    if (message is null || !instance.SupportsColor)
+    {
+      _ = instance.WriteErrorLine(message);
+      return;
+    }
+
+    string coloredMessage = AnsiColors.GetForeground(foregroundColor) +
+                            AnsiColors.GetBackground(backgroundColor) +
+                            message +
+                            AnsiColors.Reset;
     _ = instance.WriteErrorLine(coloredMessage);
   }
 
@@ -456,20 +523,25 @@ public static class Terminal
   /// <remarks>
   /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
   /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// The color prefix is re-applied after any embedded SGR reset (from border colors or styled
+  /// cells) so the requested colors are not cancelled mid-line.
   /// </remarks>
   public static void WriteTable(Table table, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
   {
     ArgumentNullException.ThrowIfNull(table);
 
     bool useColor = (foregroundColor.HasValue || backgroundColor.HasValue) && Instance.SupportsColor;
+    string colorPrefix = useColor
+      ? (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
+        (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "")
+      : "";
     string[] lines = table.Render(WindowWidth);
     foreach (string line in lines)
     {
       if (useColor)
       {
-        string coloredLine = (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
-                             (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +
-                             line +
+        string coloredLine = colorPrefix +
+                             line.Replace(AnsiColors.Reset, AnsiColors.Reset + colorPrefix, StringComparison.Ordinal) +
                              AnsiColors.Reset;
         _ = Instance.WriteLine(coloredLine);
       }
@@ -571,20 +643,25 @@ public static class Terminal
   /// <remarks>
   /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
   /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// The color prefix is re-applied after any embedded SGR reset (from border colors or styled
+  /// content) so the requested colors are not cancelled mid-line.
   /// </remarks>
   public static void WritePanel(Panel panel, ConsoleColor? foregroundColor = null, ConsoleColor? backgroundColor = null)
   {
     ArgumentNullException.ThrowIfNull(panel);
 
     bool useColor = (foregroundColor.HasValue || backgroundColor.HasValue) && Instance.SupportsColor;
+    string colorPrefix = useColor
+      ? (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
+        (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "")
+      : "";
     string[] lines = panel.Render(WindowWidth);
     foreach (string line in lines)
     {
       if (useColor)
       {
-        string coloredLine = (foregroundColor.HasValue ? AnsiColors.GetForeground(foregroundColor.Value) : "") +
-                             (backgroundColor.HasValue ? AnsiColors.GetBackground(backgroundColor.Value) : "") +
-                             line +
+        string coloredLine = colorPrefix +
+                             line.Replace(AnsiColors.Reset, AnsiColors.Reset + colorPrefix, StringComparison.Ordinal) +
                              AnsiColors.Reset;
         _ = Instance.WriteLine(coloredLine);
       }
@@ -666,8 +743,43 @@ public static class Terminal
       return;
     }
 
-    string link = AnsiHyperlinks.CreateLink(text, url);
+    string link = AnsiHyperlinks.CreateLink(url, text);
     _ = instance.Write(link);
+  }
+
+  /// <summary>
+  /// Writes a clickable hyperlink to the terminal using OSC 8 sequences,
+  /// followed by the current line terminator.
+  /// </summary>
+  /// <param name="url">The URL to link to.</param>
+  /// <param name="text">The text to display (clickable in supported terminals).</param>
+  /// <remarks>
+  /// If the terminal does not support hyperlinks (<see cref="ITerminal.SupportsHyperlinks"/>
+  /// is false), only the display text is written (followed by the line terminator) without
+  /// the hyperlink escape sequences, consistent with <see cref="WriteLink"/>.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// Terminal.WriteLinkLine("https://github.com", "GitHub Repository");
+  /// </code>
+  /// </example>
+  // CA1054: OSC 8 hyperlinks use raw URL strings by design for ergonomic API
+#pragma warning disable CA1054
+  public static void WriteLinkLine(string url, string text)
+#pragma warning restore CA1054
+  {
+    ArgumentNullException.ThrowIfNull(url);
+    ArgumentNullException.ThrowIfNull(text);
+
+    ITerminal instance = Instance;
+    if (!instance.SupportsHyperlinks)
+    {
+      _ = instance.WriteLine(text);
+      return;
+    }
+
+    string link = AnsiHyperlinks.CreateLink(url, text);
+    _ = instance.WriteLine(link);
   }
 
   // Stream Access Methods (IConsole)

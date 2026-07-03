@@ -218,80 +218,136 @@ calls — triage each.
 
 ## Checklist — Minor (triage)
 
-- [ ] `timewarp-terminal.cs:647` — NO_COLOR honored even when set to empty string (spec
+- [x] `timewarp-terminal.cs:647` — NO_COLOR honored even when set to empty string (spec
       says non-empty disables); no TERM=dumb / FORCE_COLOR handling.
-- [ ] `timewarp-terminal.cs:293` — GetCursorPosition reads CursorLeft then CursorTop
+      FIXED: NO_COLOR disables color only when non-empty (per no-color.org) and TERM=dumb is
+      honored; FORCE_COLOR deliberately out of scope. Rule documented on ITerminal.SupportsColor.
+- [x] `timewarp-terminal.cs:293` — GetCursorPosition reads CursorLeft then CursorTop
       non-atomically instead of Console.GetCursorPosition(); pair can tear.
-- [ ] `timewarp-terminal.cs:807` — TreatControlCAsInput lacks the try/catch every other
+      FIXED: uses atomic Console.GetCursorPosition() with the same (0,0) fallback.
+- [x] `timewarp-terminal.cs:807` — TreatControlCAsInput lacks the try/catch every other
       member has; throws when no console attached.
-- [ ] `iterminal.cs:175` — MoveBufferArea/CursorSize/Window-Buffer setters bake
+      FIXED: getter returns false / setter no-ops on IOException and InvalidOperationException,
+      matching the class-wide swallow policy; documented on the interface member.
+- [x] `iterminal.cs:175` — MoveBufferArea/CursorSize/Window-Buffer setters bake
       Windows-legacy-console APIs into the cross-platform interface; unremovable after 1.0.
-- [ ] `timewarp-terminal.cs:642` — IsInteractive checks only input redirection; stdout
+      ACCEPTED (2026-07-03): keeping the members — removing them would gut Console parity for
+      Windows consumers, and the platform contract (no-op elsewhere) is now explicitly
+      documented in <remarks> on every affected member. Custom implementations stub them
+      the same way TestTerminal does.
+- [x] `timewarp-terminal.cs:642` — IsInteractive checks only input redirection; stdout
       piped still reports interactive, and docs don't say which stream.
-- [ ] `ansi-hyperlink-extensions.cs:30` vs `terminal-static.cs:591` —
+      FIXED: IsInteractive now requires both stdin and stdout unredirected; docs state exactly
+      which streams are consulted.
+- [x] `ansi-hyperlink-extensions.cs:30` vs `terminal-static.cs:591` —
       CreateLink(displayText, url) and WriteLink(url, text) take the same two strings in
       opposite order; invites silently transposed args.
-- [ ] `terminal-static.cs:128,163,591` — overload asymmetry: WriteLine has (fg,bg) but
+      FIXED: CreateLink re-ordered to (url, displayText = null), aligned with WriteLink and the
+      extensions; all callers and tests updated. BREAKING vs beta (intentional, pre-1.0).
+- [x] `terminal-static.cs:128,163,591` — overload asymmetry: WriteLine has (fg,bg) but
       Write/WriteErrorLine have fg-only or none; WriteLink has no WriteLinkLine.
-- [ ] `terminal-static.cs:102,110-114` — colored-overload docs claim null message writes
+      FIXED: added Write(msg, fg, bg), WriteErrorLine(msg, fg, bg), and WriteLinkLine(url, text)
+      — all SupportsColor/SupportsHyperlinks-gated, non-optional params (no new ambiguity).
+- [x] `terminal-static.cs:102,110-114` — colored-overload docs claim null message writes
       "only the line terminator" but color prefix + reset escapes are still emitted.
-- [ ] `test-terminal.cs:261-265` — ReadKey at EOF fabricates Ctrl+D forever (real console
+      FIXED: behavior now matches the docs — a null message writes plain with no color codes
+      across all colored overloads.
+- [x] `test-terminal.cs:261-265` — ReadKey at EOF fabricates Ctrl+D forever (real console
       throws when redirected); undocumented sentinel becomes contract.
-- [ ] `test-terminal.cs:47,456` — KeyQueue and StringWriters unsynchronized while
+      FIXED (documented): the Ctrl+D EOF sentinel is now stated in the ReadKey docs — loops
+      should treat '\u0004' as end-of-input. Behavior intentionally kept for REPL testing.
+- [x] `test-terminal.cs:47,456` — KeyQueue and StringWriters unsynchronized while
       System.Console members are documented thread-safe; production-safe code can fail
       only under the double.
-- [ ] `test-terminal.cs:399-415` — SimulateCancelKeyPress reflects into
+      FIXED (documented): class-level remarks state the double is single-threaded by design,
+      unlike System.Console; no locking added.
+- [x] `test-terminal.cs:399-415` — SimulateCancelKeyPress reflects into
       ConsoleCancelEventArgs' non-public ctor and silently no-ops if lookup fails
       (trimming/AOT/future BCL); false-passing consumer tests.
-- [ ] `test-terminal.cs:419-420` — Clear() appends a "[CLEAR]" marker line to captured
+      FIXED: SimulateCancelKeyPress now throws InvalidOperationException if the BCL internal
+      constructor cannot be found or invoked — no more silent false-passing tests.
+- [x] `test-terminal.cs:419-420` — Clear() appends a "[CLEAR]" marker line to captured
       output; behavior only documented in internal Design region, not public docs.
-- [ ] `test-terminal.cs:628-630` — Dispose disposes consumer-assigned Standard*Stream
+      FIXED (documented): the verbatim "[CLEAR]" marker and its rationale are now in the
+      public Clear() docs.
+- [x] `test-terminal.cs:628-630` — Dispose disposes consumer-assigned Standard*Stream
       property values; duplicated summary doc block at 606-611; no cursor/window arg
       validation vs Console's ArgumentOutOfRangeException; TestTerminalContext class doc
       mentions DI resolution Resolve() doesn't implement (test-terminal-context.cs:21).
       PARTIAL: duplicated Dispose summary removed and the class-doc DI-resolution claim
       rewritten (2026-07-03); Dispose-of-consumer-streams and arg validation still open.
+      FIXED: Dispose now disposes only the constructor-created streams, never consumer-assigned
+      replacements (regression test added). Lax cursor/window arg validation accepted as
+      test-double leniency.
 - [x] `widgets/ansi-string-utils.cs:387-418` — wrap state machine never clears OSC 8
       hyperlink state on the end sequence and SGR reset wrongly wipes hyperlink state;
       wrapped lines re-open closed hyperlinks.
       FIXED: SGR and hyperlink are independent carry channels; empty-URL OSC 8 clears the link
       and SGR reset no longer wipes hyperlink state.
-- [ ] `ansi-colors.cs:210-253` — GetForeground maps dark and bright ConsoleColors to the
+- [x] `ansi-colors.cs:210-253` — GetForeground maps dark and bright ConsoleColors to the
       same SGR code (Red/DarkRed both 31; bright 91-97 unused; background likewise).
-- [ ] `widgets/ansi-string-utils.cs:74-137` — Pad*/Center with negative width throw
+      FIXED: standard SGR mapping — Dark* = 30-37/40-47, normal = 90-97/100-107, DarkGray =
+      bright black, Gray = dim white. RELEASE NOTE: visible output changes for ConsoleColor
+      overload users.
+- [x] `widgets/ansi-string-utils.cs:74-137` — Pad*/Center with negative width throw
       ArgumentOutOfRangeException from `new string(c, negative)`; clamp or document.
+      FIXED: negative widths clamp to 0 in Pad*/Center; documented.
 - [x] `widgets/table-widget.cs:139` — AddRow stores null params array without check; NRE
       at Render far from call site (AddColumns throws eagerly by contrast).
       FIXED: AddRow now throws ArgumentNullException eagerly; test added.
-- [ ] `widgets/terminal-table-extensions.cs:93-96` — WriteTable fg/bg prefix is cancelled
+- [x] `widgets/terminal-table-extensions.cs:93-96` — WriteTable fg/bg prefix is cancelled
       by the first embedded AnsiColors.Reset (border/cell colors), so the color overload
       malfunctions when combined with BorderColor or colored cells.
-- [ ] `widgets/table-widget.cs:292` — Expand silently ignored when Border is None;
+      FIXED: the requested fg/bg prefix is re-applied after every embedded Reset in all four
+      colored-widget write loops, so BorderColor/styled cells no longer cancel it.
+- [x] `widgets/table-widget.cs:292` — Expand silently ignored when Border is None;
       undocumented.
+      FIXED (documented): Expand's no-effect-with-BorderStyle.None behavior stated on both the
+      property and the builder method.
 - [x] `widgets/table-widget.cs:298-305` — Expand distributes width to MaxWidth-capped
       columns, violating the MaxWidth contract.
       FIXED: Expand skips capped columns and redistributes to uncapped ones; tests added.
-- [ ] `widgets/table-widget.cs:198-199` — 3-char overhead reserved for Grow columns that
+- [x] `widgets/table-widget.cs:198-199` — 3-char overhead reserved for Grow columns that
       later collapse to width 0, over-shrinking fixed columns.
+      RESOLVED BY EARLIER FIX (2026-07-03): Grow columns are now floored at max(4, MinWidth)
+      and never collapse to width 0 (the zeroing block and its render-skip were removed in
+      the Grow/MinWidth major fix), so overhead is only ever reserved for columns that
+      actually render.
 - [x] `widgets/table-builder.cs:153-157` — ToTable() doc references an implicit operator
       that doesn't exist.
       FIXED: doc rewritten as an explicit alternative to Build().
-- [ ] Overload pairs differing only by trailing optional ConsoleColor params
+- [x] Overload pairs differing only by trailing optional ConsoleColor params
       (`terminal-table-extensions.cs:36/57,78/112`, `terminal-panel-extensions.cs:31-56,
       109-141,149-173`, facade equivalents) — optional-param overloads are unreachable
       without explicit args and the redundant pairs freeze into the 1.0 surface.
-- [ ] `tools/dev-cli/endpoints/workflow.cs:147` — check-version never compares the props
+      ACCEPTED (2026-07-03): the genuinely ambiguous pair (WritePanel string overloads) was
+      collapsed; the remaining Action/Table/Panel pairs resolve deterministically (the
+      no-optional-parameter candidate wins), and collapsing them would make null-literal
+      calls like WritePanel(null!) ambiguous — verified when the test suite caught exactly
+      that. Frozen knowingly.
+- [x] `tools/dev-cli/endpoints/workflow.cs:147` — check-version never compares the props
       version to the GitHub release tag that triggered the run; a v1.0.0 release event
       with props still at beta would silently push another beta.
-- [ ] `Directory.Build.props:17` — net10.0-only target excludes LTS (net8.0) consumers at
+      FIXED: release runs compare the GitHub release tag (leading v stripped) to the props
+      version and fail on mismatch; local runs note the skip.
+- [x] `Directory.Build.props:17` — net10.0-only target excludes LTS (net8.0) consumers at
       1.0 launch; single-TFM is a deliberate choice worth confirming.
-- [ ] `source/Directory.Build.props:6` — missing PackageProjectUrl, RepositoryType, and a
+      ACCEPTED (2026-07-03): net10.0-only is the deliberate org-wide baseline across TimeWarp
+      repos (runfile tests/samples require .NET 10 regardless). Multi-targeting can be
+      added later without breaking existing consumers.
+- [x] `source/Directory.Build.props:6` — missing PackageProjectUrl, RepositoryType, and a
       PackageReleaseNotes strategy.
-- [ ] `terminal-static.cs:48` — type `TimeWarp.Terminal.Terminal` collides with its
+      FIXED: PackageProjectUrl, RepositoryType=git, and PackageReleaseNotes (releases URL) added.
+- [x] `terminal-static.cs:48` — type `TimeWarp.Terminal.Terminal` collides with its
       namespace (CA1724 suppressed); permanent qualification awkwardness — confirm as
       accepted design.
-- [ ] `README.md:59-67` — README teaches raw `Terminal.Instance =` swapping and never
+      ACCEPTED (2026-07-03): deliberate Console-like ergonomics — `Terminal.WriteLine(...)`
+      reads exactly like `Console.WriteLine(...)` for the primary audience; CA1724 stays
+      suppressed with this rationale.
+- [x] `README.md:59-67` — README teaches raw `Terminal.Instance =` swapping and never
       mentions TestTerminalContext, the safer shipped API.
+      FIXED: testing section now leads with the scoped TestTerminalContext.Use pattern and its
+      parallel-isolation guarantees; direct Instance swap demoted to a serial-tests note.
 
 ## Notes
 

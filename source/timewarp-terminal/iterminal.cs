@@ -307,9 +307,16 @@ public interface ITerminal : IConsole
   /// Gets a value indicating whether the terminal is interactive.
   /// </summary>
   /// <value>
-  /// <c>true</c> if the terminal supports interactive input (not redirected);
+  /// <c>true</c> if the terminal supports interactive input and output;
   /// otherwise, <c>false</c>.
   /// </value>
+  /// <remarks>
+  /// The default implementation consults both standard input and standard output:
+  /// it returns <c>true</c> only when neither stream is redirected. If either
+  /// stdin or stdout is redirected (for example, <c>app &lt; file</c> or
+  /// <c>app | tee</c>), the terminal is not considered interactive.
+  /// Standard error is not consulted.
+  /// </remarks>
   bool IsInteractive { get; }
 
   /// <summary>
@@ -320,8 +327,10 @@ public interface ITerminal : IConsole
   /// otherwise, <c>false</c>.
   /// </value>
   /// <remarks>
-  /// The default implementation returns <c>false</c> when output is redirected or when the
-  /// NO_COLOR environment variable is set (following the NO_COLOR convention).
+  /// The default implementation returns <c>false</c> when any of the following apply:
+  /// standard output is redirected; the NO_COLOR environment variable is set to a
+  /// non-empty value (per the no-color.org spec, an empty value does not disable color);
+  /// or the TERM environment variable equals "dumb" (ordinal comparison).
   /// </remarks>
   bool SupportsColor { get; }
 
@@ -421,6 +430,10 @@ public interface ITerminal : IConsole
   /// <c>true</c> if Ctrl+C is treated as ordinary input; <c>false</c> if it raises
   /// the <see cref="CancelKeyPress"/> event. The default is <c>false</c>.
   /// </value>
+  /// <remarks>
+  /// When the console is redirected or unavailable, the default implementation returns
+  /// <c>false</c> from the getter instead of throwing, and the setter silently does nothing.
+  /// </remarks>
   bool TreatControlCAsInput { get; set; }
 
   /// <summary>

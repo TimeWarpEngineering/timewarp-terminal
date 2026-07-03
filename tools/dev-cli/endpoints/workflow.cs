@@ -153,6 +153,38 @@ internal sealed class WorkflowCommand : ICommand<Unit>
       }
 
       Terminal.WriteLine($"Current version: {version}");
+
+      // A release event must publish the version named by its tag — otherwise publishing
+      // a "v1.0.0" GitHub release with props still at an older version silently pushes that stale version
+      string? tagName = Environment.GetEnvironmentVariable("GITHUB_REF_NAME");
+      if (string.IsNullOrEmpty(tagName))
+      {
+        string? gitHubRef = Environment.GetEnvironmentVariable("GITHUB_REF");
+        if (!string.IsNullOrEmpty(gitHubRef) && gitHubRef.StartsWith("refs/tags/", StringComparison.Ordinal))
+        {
+          tagName = gitHubRef["refs/tags/".Length..];
+        }
+      }
+
+      string? releaseEventName = Environment.GetEnvironmentVariable("GITHUB_EVENT_NAME");
+      if (releaseEventName == "release" && !string.IsNullOrEmpty(tagName))
+      {
+        string tagVersion = tagName.StartsWith('v') ? tagName[1..] : tagName;
+        if (!string.Equals(tagVersion, version, StringComparison.Ordinal))
+        {
+          Terminal.WriteLine("\n✗ Release tag does not match project version");
+          Terminal.WriteLine($"  Tag:     {tagName} (version {tagVersion})");
+          Terminal.WriteLine($"  Project: {version}");
+          throw new InvalidOperationException($"Release tag '{tagName}' does not match project version '{version}'");
+        }
+
+        Terminal.WriteLine($"✓ Release tag {tagName} matches project version");
+      }
+      else
+      {
+        Terminal.WriteLine("No release tag available (local run) - skipping tag/version match check");
+      }
+
       Terminal.WriteLine("Checking NuGet.org...");
 
       using HttpClient client = new();

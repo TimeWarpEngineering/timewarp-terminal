@@ -136,6 +136,9 @@ public sealed class TableBuilder : IBuilder<Table>
   /// <summary>
   /// Expands the table to fill the terminal width.
   /// </summary>
+  /// <remarks>
+  /// Has no effect when the border style is <see cref="BorderStyle.None"/>; borderless tables always render at their natural width.
+  /// </remarks>
   /// <returns>This builder for method chaining.</returns>
   public TableBuilder Expand()
   {

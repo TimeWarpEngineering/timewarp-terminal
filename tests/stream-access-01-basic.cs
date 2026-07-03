@@ -385,6 +385,23 @@ namespace TimeWarp.Terminal.Tests.Core.StreamAccess
       await Task.CompletedTask;
     }
 
+    public static async Task Should_not_dispose_consumer_assigned_standard_output_stream_in_test_terminal()
+    {
+      // Arrange
+      TestTerminal terminal = new();
+      using MemoryStream customStream = new();
+      terminal.StandardOutputStream = customStream;
+
+      // Act
+      terminal.Dispose();
+
+      // Assert - consumer-assigned stream must remain usable after TestTerminal.Dispose
+      customStream.WriteByte(0x41);
+      customStream.Length.ShouldBe(1L);
+
+      await Task.CompletedTask;
+    }
+
     public static async Task Should_access_stream_apis_via_iconsole_interface()
     {
       // Arrange

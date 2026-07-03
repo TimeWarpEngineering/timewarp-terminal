@@ -7,6 +7,9 @@
     <Version>1.0.0-beta.13</Version>
     <Authors>Steven T. Cramer</Authors>
     <RepositoryUrl>https://github.com/TimeWarpEngineering/timewarp-terminal</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/TimeWarpEngineering/timewarp-terminal</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/TimeWarpEngineering/timewarp-terminal/releases</PackageReleaseNotes>
     <PackageLicenseExpression>Unlicense</PackageLicenseExpression>
     <PackageIcon>logo.png</PackageIcon>
   </PropertyGroup>

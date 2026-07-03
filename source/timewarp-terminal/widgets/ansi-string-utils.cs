@@ -94,11 +94,19 @@ public static partial class AnsiStringUtils
   /// Pads a string to a specified length, accounting for ANSI codes.
   /// </summary>
   /// <param name="text">The text to pad.</param>
-  /// <param name="totalWidth">The desired total visible width.</param>
+  /// <param name="totalWidth">The desired total visible width. Negative values are clamped to 0.</param>
   /// <param name="paddingChar">The character to use for padding (default is space).</param>
-  /// <returns>The padded string with original ANSI codes preserved.</returns>
+  /// <returns>
+  /// The padded string with original ANSI codes preserved. Text already at or beyond
+  /// <paramref name="totalWidth"/> is returned unchanged.
+  /// </returns>
   public static string PadRightVisible(string? text, int totalWidth, char paddingChar = ' ')
   {
+    if (totalWidth < 0)
+    {
+      totalWidth = 0;
+    }
+
     if (string.IsNullOrEmpty(text))
     {
       return new string(paddingChar, totalWidth);
@@ -117,11 +125,19 @@ public static partial class AnsiStringUtils
   /// Pads a string on the left to a specified length, accounting for ANSI codes.
   /// </summary>
   /// <param name="text">The text to pad.</param>
-  /// <param name="totalWidth">The desired total visible width.</param>
+  /// <param name="totalWidth">The desired total visible width. Negative values are clamped to 0.</param>
   /// <param name="paddingChar">The character to use for padding (default is space).</param>
-  /// <returns>The padded string with original ANSI codes preserved.</returns>
+  /// <returns>
+  /// The padded string with original ANSI codes preserved. Text already at or beyond
+  /// <paramref name="totalWidth"/> is returned unchanged.
+  /// </returns>
   public static string PadLeftVisible(string? text, int totalWidth, char paddingChar = ' ')
   {
+    if (totalWidth < 0)
+    {
+      totalWidth = 0;
+    }
+
     if (string.IsNullOrEmpty(text))
     {
       return new string(paddingChar, totalWidth);
@@ -140,11 +156,19 @@ public static partial class AnsiStringUtils
   /// Centers a string within a specified width, accounting for ANSI codes.
   /// </summary>
   /// <param name="text">The text to center.</param>
-  /// <param name="totalWidth">The desired total visible width.</param>
+  /// <param name="totalWidth">The desired total visible width. Negative values are clamped to 0.</param>
   /// <param name="paddingChar">The character to use for padding (default is space).</param>
-  /// <returns>The centered string with original ANSI codes preserved.</returns>
+  /// <returns>
+  /// The centered string with original ANSI codes preserved. Text already at or beyond
+  /// <paramref name="totalWidth"/> is returned unchanged.
+  /// </returns>
   public static string CenterVisible(string? text, int totalWidth, char paddingChar = ' ')
   {
+    if (totalWidth < 0)
+    {
+      totalWidth = 0;
+    }
+
     if (string.IsNullOrEmpty(text))
     {
       return new string(paddingChar, totalWidth);

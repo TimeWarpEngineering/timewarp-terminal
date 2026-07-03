@@ -36,16 +36,38 @@ namespace TimeWarp.Terminal.Tests.Core.Hyperlink
 
     public static async Task Should_create_hyperlink_with_create_link_method()
     {
-      // Arrange
+      // Arrange - CreateLink takes (url, displayText), matching WriteLink's parameter order
       string displayText = "GitHub";
       string url = "https://github.com";
 
       // Act
-      string result = AnsiHyperlinks.CreateLink(displayText, url);
+      string result = AnsiHyperlinks.CreateLink(url, displayText);
 
       // Assert
       string expected = $"\x1b]8;;{url}\x1b\\{displayText}\x1b]8;;\x1b\\";
       result.ShouldBe(expected);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_create_link_with_url_first_parameter_order()
+    {
+      // Regression: CreateLink was changed from (displayText, url) to (url, displayText)
+      // to match Terminal.WriteLink and the ITerminal WriteLink/WriteLinkLine extensions
+      string result = AnsiHyperlinks.CreateLink("https://x", "text");
+
+      result.ShouldBe("\x1b]8;;https://x\x1b\\text\x1b]8;;\x1b\\");
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_use_url_as_display_text_when_create_link_display_text_omitted()
+    {
+      // Act - displayText defaults to null, which means "use the URL"
+      string result = AnsiHyperlinks.CreateLink("https://example.com");
+
+      // Assert
+      result.ShouldBe("\x1b]8;;https://example.com\x1b\\https://example.com\x1b]8;;\x1b\\");
 
       await Task.CompletedTask;
     }
@@ -183,7 +205,7 @@ namespace TimeWarp.Terminal.Tests.Core.Hyperlink
       string url = "https://example.com/\x1bmalicious\x07path";
 
       // Act
-      string result = AnsiHyperlinks.CreateLink(displayText, url);
+      string result = AnsiHyperlinks.CreateLink(url, displayText);
 
       // Assert - ESC and BEL inside the OSC payload must be percent-encoded
       result.ShouldContain("%1B");
@@ -210,7 +232,7 @@ namespace TimeWarp.Terminal.Tests.Core.Hyperlink
       string url = "https://github.com/TimeWarpEngineering/timewarp-terminal?tab=readme#usage";
 
       // Act
-      string result = AnsiHyperlinks.CreateLink(displayText, url);
+      string result = AnsiHyperlinks.CreateLink(url, displayText);
 
       // Assert - URL embedded verbatim, no encoding applied
       string expected = $"\x1b]8;;{url}\x1b\\{displayText}\x1b]8;;\x1b\\";
@@ -250,6 +272,37 @@ namespace TimeWarp.Terminal.Tests.Core.Hyperlink
         TimeWarp.Terminal.Terminal.WriteLink("https://example.com", "Example");
         withLinks.Output.ShouldContain("\u001b]8;;https://example.com");
         withLinks.Output.ShouldContain("Example");
+      }
+      finally
+      {
+        TimeWarp.Terminal.Terminal.Instance = original;
+      }
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_write_link_line_via_facade_with_newline_and_hyperlink_gating()
+    {
+      // Regression: Terminal.WriteLinkLine is the newline counterpart of Terminal.WriteLink
+      // and must honor SupportsHyperlinks the same way
+      ITerminal original = TimeWarp.Terminal.Terminal.Instance;
+      using TestTerminal noLinks = new();  // SupportsHyperlinks defaults to false
+      using TestTerminal withLinks = new() { SupportsHyperlinks = true };
+
+      try
+      {
+        // Act + Assert - unsupported: plain display text plus newline, no OSC 8 escapes
+        TimeWarp.Terminal.Terminal.Instance = noLinks;
+        TimeWarp.Terminal.Terminal.WriteLinkLine("https://example.com", "Example");
+        noLinks.Output.ShouldBe("Example" + Environment.NewLine);
+        noLinks.Output.ShouldNotContain("\u001b");
+
+        // supported: OSC 8 sequence emitted, still ends with newline
+        TimeWarp.Terminal.Terminal.Instance = withLinks;
+        TimeWarp.Terminal.Terminal.WriteLinkLine("https://example.com", "Example");
+        withLinks.Output.ShouldContain("\u001b]8;;https://example.com");
+        withLinks.Output.ShouldContain("Example");
+        withLinks.Output.ShouldEndWith(Environment.NewLine);
       }
       finally
       {

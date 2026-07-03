@@ -68,6 +68,9 @@ public sealed class Table
   /// Gets or sets a value indicating whether the table should expand to fill the terminal width.
   /// Defaults to <c>false</c>.
   /// </summary>
+  /// <remarks>
+  /// Has no effect when <see cref="Border"/> is <see cref="BorderStyle.None"/>; borderless tables always render at their natural width.
+  /// </remarks>
   public bool Expand { get; set; }
 
   /// <summary>

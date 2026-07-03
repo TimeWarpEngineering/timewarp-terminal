@@ -10,7 +10,7 @@ namespace TimeWarp.Terminal;
 // Explicit interface implementations (IConsole.Write) hide base interface methods from public API.
 // IOExceptions silently swallowed because redirected output is a valid runtime scenario.
 // Hyperlink detection uses environment variable heuristics for major terminal emulators.
-// Color support respects NO_COLOR environment variable (de facto standard).
+// Color support respects the NO_COLOR spec (non-empty value disables color) and TERM=dumb.
 #endregion
 
 /// <summary>
@@ -291,7 +291,7 @@ public sealed class TimeWarpTerminal : ITerminal
   {
     try
     {
-      return (Console.CursorLeft, Console.CursorTop);
+      return Console.GetCursorPosition();
     }
     catch (IOException)
     {
@@ -637,11 +637,13 @@ public sealed class TimeWarpTerminal : ITerminal
 
   /// <inheritdoc />
   public bool IsInteractive
-    => !Console.IsInputRedirected;
+    => !Console.IsInputRedirected && !Console.IsOutputRedirected;
 
   /// <inheritdoc />
   public bool SupportsColor
-    => !Console.IsOutputRedirected && Environment.GetEnvironmentVariable("NO_COLOR") is null;
+    => !Console.IsOutputRedirected
+      && Environment.GetEnvironmentVariable("NO_COLOR") is not { Length: > 0 }
+      && !string.Equals(Environment.GetEnvironmentVariable("TERM"), "dumb", StringComparison.Ordinal);
 
   /// <inheritdoc />
   public bool SupportsHyperlinks => DetectHyperlinkSupport();
@@ -809,8 +811,36 @@ public sealed class TimeWarpTerminal : ITerminal
   /// <inheritdoc />
   public bool TreatControlCAsInput
   {
-    get => Console.TreatControlCAsInput;
-    set => Console.TreatControlCAsInput = value;
+    get
+    {
+      try
+      {
+        return Console.TreatControlCAsInput;
+      }
+      catch (IOException)
+      {
+        return false;
+      }
+      catch (InvalidOperationException)
+      {
+        // Thrown when no console is attached (e.g., redirected input)
+        return false;
+      }
+    }
+    set
+    {
+      try
+      {
+        Console.TreatControlCAsInput = value;
+      }
+      catch (IOException)
+      {
+      }
+      catch (InvalidOperationException)
+      {
+        // Silently ignore when no console is attached
+      }
+    }
   }
 
   /// <inheritdoc />

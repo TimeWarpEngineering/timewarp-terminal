@@ -198,6 +198,21 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalCursorProperties
 
       await Task.CompletedTask;
     }
+
+    public static async Task Should_get_cursor_position_atomically_from_real_terminal()
+    {
+      // Arrange - TimeWarpTerminal uses the atomic Console.GetCursorPosition()
+      TimeWarpTerminal terminal = TimeWarpTerminal.Default;
+
+      // Act - must not throw, even when the console is redirected (falls back to (0, 0))
+      (int left, int top) = Should.NotThrow(terminal.GetCursorPosition);
+
+      // Assert
+      left.ShouldBeGreaterThanOrEqualTo(0);
+      top.ShouldBeGreaterThanOrEqualTo(0);
+
+      await Task.CompletedTask;
+    }
   }
 
 } // namespace TimeWarp.Terminal.Tests.Core.TerminalCursorProperties

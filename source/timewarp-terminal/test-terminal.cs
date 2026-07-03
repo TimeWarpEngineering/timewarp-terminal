@@ -14,7 +14,11 @@ namespace TimeWarp.Terminal;
 // control character (char)(key - ConsoleKey.A + 1); QueueKeys sets the shift flag for uppercase letters.
 // Clear() writes "[CLEAR]" marker so tests can verify it was called without losing captured output.
 // IsInteractive defaults to false; SupportsColor defaults to true for color verification.
-// IDisposable cleans up StringReader and StringWriter resources.
+// IDisposable cleans up StringReader and StringWriter resources, plus only the constructor-created
+// MemoryStreams (tracked in Owned* fields) — consumer-assigned Standard*Stream values are never disposed.
+// SimulateCancelKeyPress throws InvalidOperationException instead of silently no-oping if the
+// non-public ConsoleCancelEventArgs constructor cannot be found or invoked (BCL internals changed).
+// Not thread-safe by design (unlike System.Console); single-threaded test flows only.
 #endregion
 
 /// <summary>
@@ -42,6 +46,12 @@ namespace TimeWarp.Terminal;
 /// Assert.Contains("hello", terminal.Output);
 /// </code>
 /// </example>
+/// <para>
+/// Unlike <see cref="System.Console"/>, whose members are documented as thread-safe, this test
+/// double is intended for single-threaded test flows: the key queue and captured-output writers
+/// are unsynchronized, and members are not thread-safe. Tests driving a multi-threaded CLI must
+/// synchronize access to the <see cref="TestTerminal"/> externally.
+/// </para>
 /// </remarks>
 public sealed class TestTerminal : ITerminal, IDisposable
 {
@@ -49,6 +59,9 @@ public sealed class TestTerminal : ITerminal, IDisposable
   private readonly StringWriter OutputWriter;
   private readonly StringWriter ErrorWriter;
   private readonly Queue<ConsoleKeyInfo> KeyQueue;
+  private readonly MemoryStream OwnedStandardInputStream;
+  private readonly MemoryStream OwnedStandardOutputStream;
+  private readonly MemoryStream OwnedStandardErrorStream;
   private bool Disposed;
 
   /// <summary>
@@ -148,9 +161,12 @@ public sealed class TestTerminal : ITerminal, IDisposable
     In = InputReader;
     Out = OutputWriter;
     Error = ErrorWriter;
-    StandardInputStream = new MemoryStream();
-    StandardOutputStream = new MemoryStream();
-    StandardErrorStream = new MemoryStream();
+    OwnedStandardInputStream = new MemoryStream();
+    OwnedStandardOutputStream = new MemoryStream();
+    OwnedStandardErrorStream = new MemoryStream();
+    StandardInputStream = OwnedStandardInputStream;
+    StandardOutputStream = OwnedStandardOutputStream;
+    StandardErrorStream = OwnedStandardErrorStream;
 
     // Suppress unused field warnings - these fields will be used when REPL is updated to use ITerminal
     _ = CursorLeft;
@@ -250,10 +266,22 @@ public sealed class TestTerminal : ITerminal, IDisposable
   }
 
   /// <inheritdoc />
+  /// <remarks>
+  /// When both the key queue and the constructor-supplied input are exhausted, this method does not
+  /// block or throw: it returns a Ctrl+D (EOF) <see cref="ConsoleKeyInfo"/> — KeyChar <c>'\u0004'</c>,
+  /// <see cref="ConsoleKey.D"/> with the Control modifier — on every subsequent call. Loops driving a
+  /// REPL should treat <c>'\u0004'</c> as end-of-input to terminate.
+  /// </remarks>
   public ConsoleKeyInfo ReadKey()
     => ReadKey(false);
 
   /// <inheritdoc />
+  /// <remarks>
+  /// When both the key queue and the constructor-supplied input are exhausted, this method does not
+  /// block or throw: it returns a Ctrl+D (EOF) <see cref="ConsoleKeyInfo"/> — KeyChar <c>'\u0004'</c>,
+  /// <see cref="ConsoleKey.D"/> with the Control modifier — on every subsequent call. Loops driving a
+  /// REPL should treat <c>'\u0004'</c> as end-of-input to terminate.
+  /// </remarks>
   public ConsoleKeyInfo ReadKey(bool intercept)
   {
     if (KeyQueue.Count > 0)
@@ -400,6 +428,10 @@ public sealed class TestTerminal : ITerminal, IDisposable
   /// <remarks>
   /// Uses reflection to create ConsoleCancelEventArgs since it has no public constructor.
   /// </remarks>
+  /// <exception cref="InvalidOperationException">
+  /// The non-public <see cref="ConsoleCancelEventArgs"/> constructor could not be found or invoked,
+  /// meaning the BCL internals have changed and this helper cannot construct the event args.
+  /// </exception>
   public void SimulateCancelKeyPress(ConsoleSpecialKey specialKey = ConsoleSpecialKey.ControlC)
   {
     if (CancelKeyPressHandler is null)
@@ -411,15 +443,40 @@ public sealed class TestTerminal : ITerminal, IDisposable
     System.Reflection.ConstructorInfo? constructor = typeof(ConsoleCancelEventArgs)
       .GetConstructor(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance, [typeof(ConsoleSpecialKey)]);
 
-    if (constructor is not null)
+    if (constructor is null)
     {
-      ConsoleCancelEventArgs args = (ConsoleCancelEventArgs)constructor.Invoke([specialKey]);
-      CancelKeyPressHandler.Invoke(this, args);
+      throw new InvalidOperationException
+      (
+        "The internal ConsoleCancelEventArgs(ConsoleSpecialKey) constructor was not found. " +
+        "The BCL internals have changed and SimulateCancelKeyPress cannot construct ConsoleCancelEventArgs."
+      );
     }
+
+    ConsoleCancelEventArgs args;
+    try
+    {
+      args = (ConsoleCancelEventArgs)constructor.Invoke([specialKey]);
+    }
+    catch (Exception exception) when (exception is System.Reflection.TargetInvocationException or MemberAccessException)
+    {
+      throw new InvalidOperationException
+      (
+        "Invoking the internal ConsoleCancelEventArgs(ConsoleSpecialKey) constructor failed. " +
+        "The BCL internals have changed and SimulateCancelKeyPress cannot construct ConsoleCancelEventArgs.",
+        exception
+      );
+    }
+
+    CancelKeyPressHandler.Invoke(this, args);
   }
 
   /// <inheritdoc />
-
+  /// <remarks>
+  /// Does not erase captured output: output history is preserved so tests can assert on everything
+  /// written before the clear. Instead, the marker line <c>[CLEAR]</c> is appended to the captured
+  /// output to record that <see cref="Clear"/> was called. Use <see cref="ClearOutput"/> to actually
+  /// discard captured output.
+  /// </remarks>
   public void Clear()
     => OutputWriter.WriteLine("[CLEAR]");
 
@@ -640,9 +697,12 @@ public sealed class TestTerminal : ITerminal, IDisposable
     InputReader.Dispose();
     OutputWriter.Dispose();
     ErrorWriter.Dispose();
-    StandardInputStream.Dispose();
-    StandardOutputStream.Dispose();
-    StandardErrorStream.Dispose();
+
+    // Dispose only the streams this instance created in its constructor.
+    // Consumer-assigned Standard*Stream replacements are owned by the consumer and must not be disposed here.
+    OwnedStandardInputStream.Dispose();
+    OwnedStandardOutputStream.Dispose();
+    OwnedStandardErrorStream.Dispose();
     Disposed = true;
   }
 
