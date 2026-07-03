@@ -138,24 +138,38 @@ calls — triage each.
       later).
 
 ### Widgets / text
-- [ ] `widgets/unicode-width.cs:260-279` — GetTextWidth treats every multi-rune grapheme
+- [x] `widgets/unicode-width.cs:260-279` — GetTextWidth treats every multi-rune grapheme
       as width 2, so NFD combining sequences ("e" + U+0301) measure 2 instead of 1;
       misaligns borders for decomposed Latin text.
-- [ ] `widgets/unicode-width.cs:163-180` — blanket 0x1F000-0x1FAFF wide range makes
+      FIXED: multi-rune clusters now measure by content — ZWJ/VS16/skin-tone/flag pairs are 2,
+      anything else sums rune widths so NFD combining sequences measure correctly.
+- [x] `widgets/unicode-width.cs:163-180` — blanket 0x1F000-0x1FAFF wide range makes
       narrow EAW=N blocks wide (playing cards, ornamental dingbats, alchemical symbols);
       regional-indicator branch unreachable inside it; genuinely wide ranges missing
       (Hangul Jamo Ext-A, Tangut, Kana Extended, CJK Compat tail).
-- [ ] `widgets/ansi-string-utils.cs:14-15` — strip/measure regex only matches SGR ('m')
+      FIXED: blanket range replaced with Unicode 16 EAW/emoji-presentation ranges (narrow
+      blocks fall through to width 1, only their emoji exceptions are wide); regional
+      indicators reachable again; Tangut/Kana/Nushu/Hangul Jamo Ext-A/CJK Compat tail added.
+- [x] `widgets/ansi-string-utils.cs:14-15` — strip/measure regex only matches SGR ('m')
       CSI + OSC 8; cursor movement, erase, private-mode sequences count as visible
       characters, corrupting all width math for real ANSI streams.
-- [ ] `widgets/ansi-string-utils.cs:186-289` — WrapText treats an ANSI code mid-word as a
+      FIXED: source-generated regex now matches all CSI finals, all OSC (BEL or ST terminated),
+      and two-byte ESC sequences; wrap carry-state only re-emits SGR and OSC 8.
+- [x] `widgets/ansi-string-utils.cs:186-289` — WrapText treats an ANSI code mid-word as a
       word boundary, so a single styled word can wrap mid-word and get TrimStart'ed.
-- [ ] `widgets/panel-widget.cs:226-229` — with WordWrap(false), long lines are never
+      FIXED: words are tokenized on visible whitespace only, so mid-word ANSI stays attached
+      and the word wraps as one unit; over-wide words grapheme-break with codes in place.
+- [x] `widgets/panel-widget.cs:226-229` — with WordWrap(false), long lines are never
       truncated (comment says "Pad or truncate" but PadRightVisible never truncates) and
       push past the right border, breaking the box.
-- [ ] `widgets/table-widget.cs:569` — TruncateWithEllipsis strips all ANSI codes in every
+      FIXED: over-long lines are truncated ANSI/grapheme-aware to the content area (plain cut,
+      no ellipsis — panel has no ellipsis convention) with reset before the border.
+- [x] `widgets/table-widget.cs:569` — TruncateWithEllipsis strips all ANSI codes in every
       branch despite the line-493 comment claiming codes are preserved; truncated cells
       silently lose colors.
+      FIXED: truncation preserves embedded ANSI in the kept span for End/Start/Middle; style
+      active at a cut is reset before the plain ellipsis, and style opened before a Start/
+      Middle cut is replayed onto the kept tail via the shared TruncateVisible helpers.
 - [x] `widgets/table-widget.cs:276-282,223-234` — Grow columns hard-set to width 0 when
       fixed columns fill the terminal (content silently vanishes) and MinWidth is never
       consulted, contradicting table-column.cs docs.
@@ -226,9 +240,11 @@ calls — triage each.
       mentions DI resolution Resolve() doesn't implement (test-terminal-context.cs:21).
       PARTIAL: duplicated Dispose summary removed and the class-doc DI-resolution claim
       rewritten (2026-07-03); Dispose-of-consumer-streams and arg validation still open.
-- [ ] `widgets/ansi-string-utils.cs:387-418` — wrap state machine never clears OSC 8
+- [x] `widgets/ansi-string-utils.cs:387-418` — wrap state machine never clears OSC 8
       hyperlink state on the end sequence and SGR reset wrongly wipes hyperlink state;
       wrapped lines re-open closed hyperlinks.
+      FIXED: SGR and hyperlink are independent carry channels; empty-URL OSC 8 clears the link
+      and SGR reset no longer wipes hyperlink state.
 - [ ] `ansi-colors.cs:210-253` — GetForeground maps dark and bright ConsoleColors to the
       same SGR code (Red/DarkRed both 31; bright 91-97 unused; background likewise).
 - [ ] `widgets/ansi-string-utils.cs:74-137` — Pad*/Center with negative width throw

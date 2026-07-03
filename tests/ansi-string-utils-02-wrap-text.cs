@@ -175,6 +175,58 @@ namespace TimeWarp.Terminal.Tests.Core.AnsiStringUtilsWrap
 
       await Task.CompletedTask;
     }
+
+    public static async Task Should_keep_word_with_embedded_ansi_codes_together()
+    {
+      // Arrange - "unbreakable" styled mid-word must wrap as a single word, not split at the codes
+      string text = "go un\x1b[31mbreak\x1b[0mable";
+
+      // Act
+      IReadOnlyList<string> lines = TimeWarp.Terminal.AnsiStringUtils.WrapText(text, 11);
+
+      // Assert - "unbreakable" (11 visible chars) moves to its own line intact
+      lines.Count.ShouldBe(2);
+      TimeWarp.Terminal.AnsiStringUtils.StripAnsiCodes(lines[0]).ShouldBe("go ");
+      TimeWarp.Terminal.AnsiStringUtils.StripAnsiCodes(lines[1]).ShouldBe("unbreakable");
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_not_reopen_closed_hyperlink_on_wrapped_lines()
+    {
+      // Arrange - the hyperlink closes before the text wraps
+      string url = "https://example.com";
+      string text = $"\x1b]8;;{url}\x1b\\Link\x1b]8;;\x1b\\ trailing words that wrap here";
+
+      // Act
+      IReadOnlyList<string> lines = TimeWarp.Terminal.AnsiStringUtils.WrapText(text, 12);
+
+      // Assert - lines after the close must not re-open the hyperlink
+      lines.Count.ShouldBeGreaterThan(1);
+
+      for (int i = 1; i < lines.Count; i++)
+      {
+        lines[i].ShouldNotContain(url);
+      }
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_carry_open_hyperlink_across_wrapped_lines()
+    {
+      // Arrange - the hyperlink stays open across the wrap point
+      string url = "https://example.com";
+      string text = $"\x1b]8;;{url}\x1b\\linked text that wraps across\x1b]8;;\x1b\\";
+
+      // Act
+      IReadOnlyList<string> lines = TimeWarp.Terminal.AnsiStringUtils.WrapText(text, 12);
+
+      // Assert - continuation lines re-open the still-active hyperlink
+      lines.Count.ShouldBeGreaterThan(1);
+      lines[1].ShouldContain(url);
+
+      await Task.CompletedTask;
+    }
   }
 
 } // namespace TimeWarp.Terminal.Tests.Core.AnsiStringUtilsWrap

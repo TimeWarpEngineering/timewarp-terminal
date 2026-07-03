@@ -1,5 +1,20 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Table widget: renders formatted columnar data with headers, alignment, borders, and width management.
+#endregion
+
+#region Design
+// Cell truncation preserves ANSI escape codes for all TruncateMode values: codes within the kept
+// visible span stay in their original positions, and for Start/Middle the style established by the
+// discarded prefix is replayed before the kept tail (AnsiStringUtils.TakeVisibleFromEnd), so a
+// color opened before the cut still styles the kept text. The ellipsis is always PLAIN: any style
+// active at a cut boundary is closed with a reset (AnsiStringUtils.TakeVisibleFromStart) so
+// styling never bleeds into the ellipsis, padding, or borders. Cuts are grapheme-aware and never
+// split a wide (two-column) grapheme; a straddling grapheme is dropped and AlignCell pads the
+// shortfall.
+#endregion
+
 /// <summary>
 /// Represents a table widget for rendering formatted columnar data with headers, alignment, and borders.
 /// </summary>
@@ -603,20 +618,20 @@ public sealed class Table
       return new string('.', maxWidth);
     }
 
-    // Strip ANSI codes to get plain text
-    string plainText = AnsiStringUtils.StripAnsiCodes(text);
-
-    if (UnicodeWidth.GetTextWidth(plainText) <= maxWidth)
+    if (AnsiStringUtils.GetVisibleLength(text) <= maxWidth)
     {
       return text; // No truncation needed
     }
 
+    // ANSI codes in the kept visible span stay in place; the ellipsis is always plain:
+    // TakeVisibleFromStart closes any style active at the cut, and TakeVisibleFromEnd replays
+    // the style established by the discarded prefix so the kept tail keeps its color.
     return mode switch
     {
-      TruncateMode.Start => "..." + TakeGraphemesFromEnd(plainText, maxWidth - 3),
-      TruncateMode.Middle => TruncateMiddle(plainText, maxWidth),
-      TruncateMode.End => TakeGraphemesFromStart(plainText, maxWidth - 3) + "...",
-      _ => TakeGraphemesFromStart(plainText, maxWidth - 3) + "..."
+      TruncateMode.Start => "..." + AnsiStringUtils.TakeVisibleFromEnd(text, maxWidth - 3),
+      TruncateMode.Middle => TruncateMiddle(text, maxWidth),
+      TruncateMode.End => AnsiStringUtils.TakeVisibleFromStart(text, maxWidth - 3) + "...",
+      _ => AnsiStringUtils.TakeVisibleFromStart(text, maxWidth - 3) + "..."
     };
   }
 
@@ -626,69 +641,6 @@ public sealed class Table
     int startWidth = (availableWidth + 1) / 2;
     int endWidth = availableWidth - startWidth;
 
-    return TakeGraphemesFromStart(text, startWidth) + "..." + TakeGraphemesFromEnd(text, endWidth);
-  }
-
-  private static string TakeGraphemesFromStart(string text, int maxColumns)
-  {
-    StringBuilder sb = new();
-    int width = 0;
-    TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(text);
-    while (enumerator.MoveNext())
-    {
-      string grapheme = enumerator.GetTextElement();
-      int gw = UnicodeWidth.GetTextWidth(grapheme);
-      if (width + gw > maxColumns)
-      {
-        break;
-      }
-
-      _ = sb.Append(grapheme);
-      width += gw;
-    }
-
-    return sb.ToString();
-  }
-
-  private static string TakeGraphemesFromEnd(string text, int maxColumns)
-  {
-    // Collect all grapheme clusters, then take from end
-    List<string> graphemes = [];
-    TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(text);
-    while (enumerator.MoveNext())
-    {
-      graphemes.Add(enumerator.GetTextElement());
-    }
-
-    StringBuilder sb = new();
-    int width = 0;
-    for (int i = graphemes.Count - 1; i >= 0; i--)
-    {
-      int gw = UnicodeWidth.GetTextWidth(graphemes[i]);
-      if (width + gw > maxColumns)
-      {
-        break;
-      }
-
-      width += gw;
-    }
-
-    // Now collect from the correct starting position
-    int skipWidth = UnicodeWidth.GetTextWidth(text) - width;
-    int accumulated = 0;
-    _ = sb.Clear();
-    enumerator = StringInfo.GetTextElementEnumerator(text);
-    while (enumerator.MoveNext())
-    {
-      string grapheme = enumerator.GetTextElement();
-      int gw = UnicodeWidth.GetTextWidth(grapheme);
-      accumulated += gw;
-      if (accumulated > skipWidth)
-      {
-        _ = sb.Append(grapheme);
-      }
-    }
-
-    return sb.ToString();
+    return AnsiStringUtils.TakeVisibleFromStart(text, startWidth) + "..." + AnsiStringUtils.TakeVisibleFromEnd(text, endWidth);
   }
 }

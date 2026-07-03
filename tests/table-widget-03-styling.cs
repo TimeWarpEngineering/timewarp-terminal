@@ -135,6 +135,58 @@ namespace TimeWarp.Terminal.Tests.Core.TableWidgetStyling
       await Task.CompletedTask;
     }
 
+    public static async Task Should_preserve_color_when_truncating_with_End_mode()
+    {
+      // Arrange
+      TableColumn column = new("Description")
+      {
+        MaxWidth = 10
+      };
+      string styled = $"{AnsiColors.Red}This is a long red value{AnsiColors.Reset}";
+      Table table = new TableBuilder()
+        .AddColumn(column)
+        .AddRow(styled)
+        .Build();
+
+      // Act
+      string[] lines = table.Render(40);
+      string dataRow = lines[3];
+
+      // Assert - kept text keeps its color; a reset closes it before the plain ellipsis,
+      // so the ellipsis, padding, and border after it are unstyled
+      dataRow.ShouldContain(AnsiColors.Red + "This is");
+      dataRow.ShouldContain(AnsiColors.Reset + "...");
+      TimeWarp.Terminal.AnsiStringUtils.StripAnsiCodes(dataRow).ShouldContain("This is...");
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_replay_color_opened_before_cut_when_truncating_with_Start_mode()
+    {
+      // Arrange - the red color opens in the discarded prefix but must still style the kept tail
+      TableColumn column = new("Path")
+      {
+        MaxWidth = 10,
+        TruncateMode = TruncateMode.Start
+      };
+      string styled = $"prefix text {AnsiColors.Red}red tail{AnsiColors.Reset}";
+      Table table = new TableBuilder()
+        .AddColumn(column)
+        .AddRow(styled)
+        .Build();
+
+      // Act
+      string[] lines = table.Render(40);
+      string dataRow = lines[3];
+
+      // Assert - plain ellipsis, then the replayed color styles the kept tail
+      dataRow.ShouldContain("..." + AnsiColors.Red);
+      dataRow.ShouldContain("ed tail" + AnsiColors.Reset);
+      TimeWarp.Terminal.AnsiStringUtils.StripAnsiCodes(dataRow).ShouldContain("...ed tail");
+
+      await Task.CompletedTask;
+    }
+
     public static async Task Should_handle_empty_cells()
     {
       // Arrange

@@ -251,6 +251,50 @@ namespace TimeWarp.Terminal.Tests.Core.AnsiStringUtils
       await Task.CompletedTask;
     }
 
+    public static async Task Should_count_only_visible_chars_with_control_sequences()
+    {
+      // Arrange - erase-line (\x1b[2K) and hide-cursor (\x1b[?25l) must not count as visible
+      const string input = "\x1b[2K\x1b[?25lAB";
+
+      // Act
+      int length = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(input);
+
+      // Assert
+      length.ShouldBe(2);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_strip_osc_title_sequence()
+    {
+      // Arrange - OSC 0 sets the window title, terminated by BEL
+      // Note: Using \u0007 instead of \x07 to avoid ambiguous hex escape parsing
+      const string input = "\x1b]0;My Title\u0007Hello";
+
+      // Act
+      string result = TimeWarp.Terminal.AnsiStringUtils.StripAnsiCodes(input);
+
+      // Assert
+      result.ShouldBe("Hello");
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_strip_two_byte_escape_sequences()
+    {
+      // Arrange - ESC M (reverse index) and ESC D (index)
+      // Note: Using \u001b because \x1bD would be parsed as the single char ƽ
+      const string input = "\u001bMUp\u001bD";
+
+      // Act
+      string result = TimeWarp.Terminal.AnsiStringUtils.StripAnsiCodes(input);
+
+      // Assert
+      result.ShouldBe("Up");
+
+      await Task.CompletedTask;
+    }
+
     public static async Task Should_handle_multiple_hyperlinks_in_text()
     {
       // Arrange - Two hyperlinks in one string

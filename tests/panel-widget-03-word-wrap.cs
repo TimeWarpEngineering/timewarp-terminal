@@ -79,6 +79,39 @@ namespace TimeWarp.Terminal.Tests.Core.PanelWidgetWrap
       await Task.CompletedTask;
     }
 
+    public static async Task Should_truncate_overlong_lines_when_WordWrap_is_false()
+    {
+      // Arrange - plain and ANSI-colored lines both longer than the content area
+      string plainLong = "This plain line is far longer than the panel content area allows.";
+      string coloredLong = $"{AnsiColors.Red}This red line is also far longer than the content area allows.{AnsiColors.Reset}";
+      Panel panel = new PanelBuilder()
+        .Content($"{plainLong}\n{coloredLong}")
+        .Width(30)
+        .WordWrap(false)
+        .Build();
+
+      // Act
+      string[] lines = panel.Render(30);
+
+      // Assert - top border, two content rows, bottom border
+      lines.Length.ShouldBe(4);
+
+      // Every row renders at identical visible width with the right border intact
+      foreach (string line in lines)
+      {
+        TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line).ShouldBe(30);
+      }
+
+      lines[1].ShouldEndWith("│");
+      lines[2].ShouldEndWith("│");
+
+      // Color is preserved on the kept text and closed before the border
+      lines[2].ShouldContain(AnsiColors.Red);
+      lines[2].ShouldContain(AnsiColors.Reset + " │");
+
+      await Task.CompletedTask;
+    }
+
     public static async Task Should_wrap_content_with_hyperlinks()
     {
       // Arrange - OSC 8 hyperlink sequence

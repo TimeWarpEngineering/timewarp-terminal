@@ -1,5 +1,18 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Panel widget: renders content inside a bordered box with optional header, padding, and word wrap.
+#endregion
+
+#region Design
+// Every content row is rendered at exactly the content-area width so the right border always
+// aligns: with WordWrap on, lines are wrapped by AnsiStringUtils.WrapText; with WordWrap off,
+// over-long lines are truncated with AnsiStringUtils.TruncateVisible — a plain ANSI-aware,
+// grapheme-aware cut (no ellipsis; the panel has no ellipsis convention) that appends a reset
+// when styling is active at the cut so the border and padding are never styled. A wide grapheme
+// straddling the last column is dropped and the shortfall is absorbed by PadRightVisible.
+#endregion
+
 /// <summary>
 /// Represents a bordered box (panel) for terminal output.
 /// Can optionally include a header in the top border.
@@ -223,8 +236,9 @@ public sealed class Panel
 
     string padding = new(' ', PaddingHorizontal);
 
-    // Pad or truncate content to fit content area
-    string paddedContent = AnsiStringUtils.PadRightVisible(content, contentAreaWidth);
+    // Truncate (ANSI-aware, grapheme-aware, no ellipsis) then pad to exactly the content area width
+    string truncatedContent = AnsiStringUtils.TruncateVisible(content, contentAreaWidth);
+    string paddedContent = AnsiStringUtils.PadRightVisible(truncatedContent, contentAreaWidth);
 
     return $"{colorStart}{vertical}{colorEnd}{padding}{paddedContent}{padding}{colorStart}{vertical}{colorEnd}";
   }

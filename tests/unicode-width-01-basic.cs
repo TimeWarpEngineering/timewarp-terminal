@@ -155,6 +155,41 @@ namespace TimeWarp.Terminal.Tests.Core.UnicodeWidthTests
 
       await Task.CompletedTask;
     }
+
+    public static async Task Should_return_width_1_for_nfd_combining_sequence()
+    {
+      // NFD "é" = "e" + U+0301 (combining acute accent) renders as one column
+      UnicodeWidth.GetTextWidth("e\u0301").ShouldBe(1);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_return_width_1_for_narrow_smp_symbol_blocks()
+    {
+      // U+1F0A1 Playing Card Ace of Spades (EAW=N)
+      UnicodeWidth.GetRuneWidth(new Rune(0x1F0A1)).ShouldBe(1);
+
+      // U+1F70A Alchemical Symbol for Vinegar (EAW=N)
+      UnicodeWidth.GetRuneWidth(new Rune(0x1F70A)).ShouldBe(1);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_return_width_2_for_mahjong_red_dragon()
+    {
+      // U+1F004 has Emoji_Presentation=Yes despite its narrow block
+      UnicodeWidth.GetRuneWidth(new Rune(0x1F004)).ShouldBe(2);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_return_width_2_for_tangut_character()
+    {
+      // U+17000 Tangut Ideograph (EAW=W)
+      UnicodeWidth.GetRuneWidth(new Rune(0x17000)).ShouldBe(2);
+
+      await Task.CompletedTask;
+    }
   }
 
 } // namespace TimeWarp.Terminal.Tests.Core.UnicodeWidthTests
