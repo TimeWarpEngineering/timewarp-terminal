@@ -118,17 +118,13 @@ string styledLink = "Docs".Link("https://docs.example.com").Blue().Underline();
 terminal.WriteLink("https://example.com", "Click here");    // no newline
 terminal.WriteLinkLine("https://example.com", "Visit site"); // with newline
 
-// Static API
+// Static API (same graceful degradation via SupportsHyperlinks)
 Terminal.WriteLink("https://example.com", "Click here");
+Terminal.WriteLinkLine("https://example.com", "Visit site");
 
-// Check support
-if (terminal.SupportsHyperlinks)
-  terminal.WriteLinkLine("https://example.com", "Link");
-else
-  terminal.WriteLine("https://example.com");
+// Low-level — parameter order matches WriteLink: (url, displayText)
+string osc8 = AnsiHyperlinks.CreateLink("https://example.com", "text");
 
-// Low-level
-string osc8 = AnsiHyperlinks.CreateLink("text", "https://example.com");
 ```
 
 ### Colors and Styles
@@ -142,10 +138,21 @@ string osc8 = AnsiHyperlinks.CreateLink("text", "https://example.com");
 terminal.WriteLine("Success".Green().Bold());
 terminal.WriteLine("Error".Red().OnWhite());
 
-// ConsoleColor overloads on static API and WritePanel
+// ConsoleColor overloads on static API and WritePanel/WriteTable
+// (Write, WriteLine, and WriteErrorLine all have fg and fg+bg overloads)
 Terminal.WriteLine("colored", ConsoleColor.Green);
 Terminal.WriteLine("colored", ConsoleColor.Red, ConsoleColor.White);
 ```
+
+ConsoleColor overloads and widget color parameters automatically degrade to plain text
+when `SupportsColor` is false (redirected output, non-empty `NO_COLOR`, or `TERM=dumb`).
+Embedded ANSI from string extensions like `.Green()` is the caller's responsibility.
+
+### Format Culture
+
+Format overloads (`Terminal.Write("{0:N2}", value)` etc.) use the current culture,
+matching `System.Console`. Set `Terminal.FormatProvider = CultureInfo.InvariantCulture`
+for deterministic output; `null` (default) resolves `CurrentCulture` per call.
 
 ### Unicode Width
 
@@ -181,25 +188,25 @@ Assert.Contains("error message", terminal.ErrorOutput);
 
 ### Static Terminal Testing
 
+Use `TestTerminalContext.Use` — it is async-context isolated (safe for parallel tests,
+never mutates the global) and restores automatically on dispose:
+
 ```csharp
-using TestTerminal testTerminal = new();
-Terminal.Instance = testTerminal;
-try
-{
-  Terminal.WriteLine("test");
-  Assert.Contains("test", testTerminal.Output);
-}
-finally
-{
-  Terminal.Instance = TimeWarpTerminal.Default;
-}
+using TestTerminal terminal = new();
+using IDisposable scope = TestTerminalContext.Use(terminal);
+
+Terminal.WriteLine("test");
+Assert.Contains("test", terminal.Output);
 ```
+
+For strictly serial tests, direct `Terminal.Instance = testTerminal` assignment also
+works, but you must restore the original instance yourself.
 
 ## Key Interfaces
 
 **IConsole:** `Write` -> `IConsole`, `WriteLine` -> `IConsole`, `WriteLineAsync` -> `Task`, `WriteErrorLine` -> `IConsole`, `WriteErrorLineAsync` -> `Task`, `ReadLine`
 
-**ITerminal extends IConsole:** Overrides `Write` -> `ITerminal`, `WriteLine` -> `ITerminal`, `WriteErrorLine` -> `ITerminal`. Adds `ReadKey`, `SetCursorPosition`, `GetCursorPosition`, `WindowWidth`, `IsInteractive`, `SupportsColor`, `SupportsHyperlinks`, `Clear`
+**ITerminal extends IConsole:** Overrides `Write` -> `ITerminal`, `WriteLine` -> `ITerminal`, `WriteErrorLine` -> `ITerminal`. Adds `ReadKey()` / `ReadKey(bool)` (key-by-key input lives here, not on `IConsole`), `SetCursorPosition`, `GetCursorPosition`, `WindowWidth`/`WindowHeight`/`BufferWidth`/`BufferHeight` (get-only; `TestTerminal` exposes setters for test configuration), `CancelKeyPress`, `IsInteractive`, `SupportsColor`, `SupportsHyperlinks`, `Clear`
 
 All Write methods return the interface for fluent chaining:
 ```csharp
@@ -251,7 +258,7 @@ terminal.WritePanel(panel);
 |----------|------|---------|-------------|
 | `Header` | `string` | `""` | Column header text (supports ANSI colors) |
 | `Alignment` | `Alignment` | `Left` | Horizontal alignment (`Left`, `Right`, `Center`) |
-| `MinWidth` | `int?` | `4` | Column won't shrink below this width |
+| `MinWidth` | `int?` | `null` | Column won't shrink below this width; the layout floor is `max(4, MinWidth)` |
 | `MaxWidth` | `int?` | `null` | Content exceeding this is truncated with ellipsis |
 | `TruncateMode` | `TruncateMode` | `End` | Where to place ellipsis when truncating |
 | `HeaderColor` | `string?` | `null` | ANSI color code for header text |
@@ -353,6 +360,6 @@ AnsiStringUtils.WrapText("long text...", 40);                 // word-wrap, grap
 
 1. **Don't use `new Table()`, `new Panel()`, `new Rule()`** - Constructors are internal. Use builders or `Action<XxxBuilder>` extension methods.
 2. **Don't mix Console and Terminal** - Pick one, stick with it
-3. **Always restore Terminal.Instance in tests** - Use try/finally or using pattern
-4. **Check SupportsColor/SupportsHyperlinks** before using those features in production
+3. **Prefer `TestTerminalContext.Use` over swapping `Terminal.Instance`** - the scope is parallel-safe and restores automatically; direct swaps require manual restore and are serial-only
+4. **`ConsoleColor` overloads and `WriteLink` self-gate** on `SupportsColor`/`SupportsHyperlinks` — but embedded ANSI from string extensions (`.Green()`, `BorderColor`) does not; check `SupportsColor` yourself before emitting those
 5. **Use `UnicodeWidth.GetTextWidth()` not `.Length`** for terminal column calculations — `.Length` counts UTF-16 code units, not display columns
