@@ -139,6 +139,30 @@ namespace TimeWarp.Terminal.Tests.Core.TestTerminalContextIntegration
       await Task.CompletedTask;
     }
 
+    public static async Task Should_restore_format_provider_on_clear()
+    {
+      // Arrange
+      IFormatProvider? originalProvider = TimeWarp.Terminal.Terminal.FormatProvider;
+      using TestTerminal testTerminal = new();
+
+      try
+      {
+        // Act - a test that sets FormatProvider inside a context gets it restored on clear
+        TestTerminalContext.SetCurrent(testTerminal);
+        TimeWarp.Terminal.Terminal.FormatProvider = System.Globalization.CultureInfo.InvariantCulture;
+        TestTerminalContext.ClearCurrent();
+
+        // Assert
+        TimeWarp.Terminal.Terminal.FormatProvider.ShouldBe(originalProvider);
+      }
+      finally
+      {
+        TimeWarp.Terminal.Terminal.FormatProvider = originalProvider;
+      }
+
+      await Task.CompletedTask;
+    }
+
     public static async Task Should_restore_on_use_scope_dispose()
     {
       // Arrange

@@ -9,6 +9,8 @@ namespace TimeWarp.Terminal;
 // Static API mimics System.Console for easy migration from existing code.
 // Instance property allows swapping implementation for testing without DI container.
 // Dedicated format overloads for 1-3 args avoid array allocation (params variant for 4+).
+// Format overloads use FormatProvider ?? CurrentCulture (resolved per call), matching
+// System.Console's culture behavior while allowing an invariant override for determinism.
 // Color methods use AnsiColors to wrap messages with ANSI escape sequences.
 // CA1054 suppressed for WriteLink: OSC 8 hyperlinks use raw URL strings by design.
 #endregion
@@ -62,6 +64,25 @@ public static class Terminal
     get;
     set => field = value ?? throw new ArgumentNullException(nameof(value));
   } = TimeWarpTerminal.Default;
+
+  /// <summary>
+  /// Gets or sets the format provider used by the format overloads of
+  /// <see cref="Write(string, object?)"/>, <see cref="WriteLine(string, object?)"/>,
+  /// and <see cref="WriteErrorLine(string, object?)"/>.
+  /// </summary>
+  /// <value>
+  /// The provider to format with, or <c>null</c> to use <see cref="CultureInfo.CurrentCulture"/>
+  /// as resolved at the time of each call. Defaults to <c>null</c>, matching
+  /// <see cref="System.Console"/>'s current-culture formatting behavior.
+  /// </value>
+  /// <remarks>
+  /// Set to <see cref="CultureInfo.InvariantCulture"/> for deterministic output in tests or logs.
+  /// This is process-global startup configuration; <c>TestTerminalContext</c> snapshots and
+  /// restores it alongside <see cref="Instance"/>.
+  /// </remarks>
+  public static IFormatProvider? FormatProvider { get; set; }
+
+  private static IFormatProvider ActiveFormatProvider => FormatProvider ?? CultureInfo.CurrentCulture;
 
   // Output Methods
 
@@ -182,7 +203,7 @@ public static class Terminal
   /// <param name="format">A composite format string.</param>
   /// <param name="arg0">The object to format.</param>
   public static void Write(string format, object? arg0)
-    => Instance.Write(string.Format(CultureInfo.InvariantCulture, format, arg0));
+    => Instance.Write(string.Format(ActiveFormatProvider, format, arg0));
 
   /// <summary>
   /// Writes the specified string value to the standard output stream, using the specified format information.
@@ -191,7 +212,7 @@ public static class Terminal
   /// <param name="arg0">The first object to format.</param>
   /// <param name="arg1">The second object to format.</param>
   public static void Write(string format, object? arg0, object? arg1)
-    => Instance.Write(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1));
+    => Instance.Write(string.Format(ActiveFormatProvider, format, arg0, arg1));
 
   /// <summary>
   /// Writes the specified string value to the standard output stream, using the specified format information.
@@ -201,7 +222,7 @@ public static class Terminal
   /// <param name="arg1">The second object to format.</param>
   /// <param name="arg2">The third object to format.</param>
   public static void Write(string format, object? arg0, object? arg1, object? arg2)
-    => Instance.Write(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1, arg2));
+    => Instance.Write(string.Format(ActiveFormatProvider, format, arg0, arg1, arg2));
 
   /// <summary>
   /// Writes the specified string value to the standard output stream, using the specified format information.
@@ -209,7 +230,7 @@ public static class Terminal
   /// <param name="format">A composite format string.</param>
   /// <param name="args">An array of objects to format.</param>
   public static void Write(string format, params object?[] args)
-    => Instance.Write(string.Format(CultureInfo.InvariantCulture, format, args));
+    => Instance.Write(string.Format(ActiveFormatProvider, format, args));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -218,7 +239,7 @@ public static class Terminal
   /// <param name="format">A composite format string.</param>
   /// <param name="arg0">The object to format.</param>
   public static void WriteLine(string format, object? arg0)
-    => Instance.WriteLine(string.Format(CultureInfo.InvariantCulture, format, arg0));
+    => Instance.WriteLine(string.Format(ActiveFormatProvider, format, arg0));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -228,7 +249,7 @@ public static class Terminal
   /// <param name="arg0">The first object to format.</param>
   /// <param name="arg1">The second object to format.</param>
   public static void WriteLine(string format, object? arg0, object? arg1)
-    => Instance.WriteLine(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1));
+    => Instance.WriteLine(string.Format(ActiveFormatProvider, format, arg0, arg1));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -239,7 +260,7 @@ public static class Terminal
   /// <param name="arg1">The second object to format.</param>
   /// <param name="arg2">The third object to format.</param>
   public static void WriteLine(string format, object? arg0, object? arg1, object? arg2)
-    => Instance.WriteLine(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1, arg2));
+    => Instance.WriteLine(string.Format(ActiveFormatProvider, format, arg0, arg1, arg2));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -248,7 +269,7 @@ public static class Terminal
   /// <param name="format">A composite format string.</param>
   /// <param name="args">An array of objects to format.</param>
   public static void WriteLine(string format, params object?[] args)
-    => Instance.WriteLine(string.Format(CultureInfo.InvariantCulture, format, args));
+    => Instance.WriteLine(string.Format(ActiveFormatProvider, format, args));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -257,7 +278,7 @@ public static class Terminal
   /// <param name="format">A composite format string.</param>
   /// <param name="arg0">The object to format.</param>
   public static void WriteErrorLine(string format, object? arg0)
-    => Instance.WriteErrorLine(string.Format(CultureInfo.InvariantCulture, format, arg0));
+    => Instance.WriteErrorLine(string.Format(ActiveFormatProvider, format, arg0));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -267,7 +288,7 @@ public static class Terminal
   /// <param name="arg0">The first object to format.</param>
   /// <param name="arg1">The second object to format.</param>
   public static void WriteErrorLine(string format, object? arg0, object? arg1)
-    => Instance.WriteErrorLine(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1));
+    => Instance.WriteErrorLine(string.Format(ActiveFormatProvider, format, arg0, arg1));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -278,7 +299,7 @@ public static class Terminal
   /// <param name="arg1">The second object to format.</param>
   /// <param name="arg2">The third object to format.</param>
   public static void WriteErrorLine(string format, object? arg0, object? arg1, object? arg2)
-    => Instance.WriteErrorLine(string.Format(CultureInfo.InvariantCulture, format, arg0, arg1, arg2));
+    => Instance.WriteErrorLine(string.Format(ActiveFormatProvider, format, arg0, arg1, arg2));
 
   /// <summary>
   /// Writes the specified string value, followed by the current line terminator,
@@ -287,7 +308,7 @@ public static class Terminal
   /// <param name="format">A composite format string.</param>
   /// <param name="args">An array of objects to format.</param>
   public static void WriteErrorLine(string format, params object?[] args)
-    => Instance.WriteErrorLine(string.Format(CultureInfo.InvariantCulture, format, args));
+    => Instance.WriteErrorLine(string.Format(ActiveFormatProvider, format, args));
 
   // Widget Methods
 

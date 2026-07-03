@@ -49,6 +49,7 @@ public static class TestTerminalContext
   {
     public required TestTerminal? PreviousContext { get; init; }
     public required ITerminal PreviousInstance { get; init; }
+    public required IFormatProvider? PreviousFormatProvider { get; init; }
   }
 
   /// <summary>
@@ -78,7 +79,8 @@ public static class TestTerminalContext
       new ContextSnapshot
       {
         PreviousContext = Context.Value,
-        PreviousInstance = TimeWarp.Terminal.Terminal.Instance
+        PreviousInstance = TimeWarp.Terminal.Terminal.Instance,
+        PreviousFormatProvider = TimeWarp.Terminal.Terminal.FormatProvider
       }
     );
 
@@ -99,12 +101,14 @@ public static class TestTerminalContext
     {
       Context.Value = null;
       TimeWarp.Terminal.Terminal.Instance = new TimeWarpTerminal();
+      TimeWarp.Terminal.Terminal.FormatProvider = null;
       return;
     }
 
     ContextSnapshot snapshot = stack.Pop();
     Context.Value = snapshot.PreviousContext;
     TimeWarp.Terminal.Terminal.Instance = snapshot.PreviousInstance;
+    TimeWarp.Terminal.Terminal.FormatProvider = snapshot.PreviousFormatProvider;
 
     if (stack.Count == 0)
     {

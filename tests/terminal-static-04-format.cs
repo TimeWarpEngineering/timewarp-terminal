@@ -395,6 +395,59 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalStatic
 
       await Task.CompletedTask;
     }
+
+    // ========== FormatProvider Tests ==========
+
+    public static async Task Should_format_with_custom_format_provider()
+    {
+      // Arrange
+      ITerminal original = Terminal.Instance;
+      using TestTerminal testTerminal = new();
+      Terminal.Instance = testTerminal;
+
+      try
+      {
+        // Act - a provider with a comma decimal separator, independent of OS cultures
+        System.Globalization.NumberFormatInfo commaProvider = new() { NumberDecimalSeparator = "," };
+        Terminal.FormatProvider = commaProvider;
+        Terminal.Write("Value: {0:0.0}", 1.5);
+
+        // Assert
+        testTerminal.Output.ShouldBe("Value: 1,5");
+      }
+      finally
+      {
+        Terminal.FormatProvider = null;
+        Terminal.Instance = original;
+      }
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_format_with_current_culture_by_default()
+    {
+      // Arrange
+      ITerminal original = Terminal.Instance;
+      using TestTerminal testTerminal = new();
+      Terminal.Instance = testTerminal;
+
+      try
+      {
+        // Act - FormatProvider defaults to null = CurrentCulture resolved per call
+        Terminal.FormatProvider.ShouldBeNull();
+        Terminal.Write("Value: {0:0.0}", 1.5);
+
+        // Assert
+        string expected = string.Format(System.Globalization.CultureInfo.CurrentCulture, "Value: {0:0.0}", 1.5);
+        testTerminal.Output.ShouldBe(expected);
+      }
+      finally
+      {
+        Terminal.Instance = original;
+      }
+
+      await Task.CompletedTask;
+    }
   }
 
 } // namespace TimeWarp.Terminal.Tests.Core.TerminalStatic

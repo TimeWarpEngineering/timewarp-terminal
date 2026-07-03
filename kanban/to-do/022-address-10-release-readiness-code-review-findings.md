@@ -69,9 +69,17 @@ calls — triage each.
 - [ ] `terminal-static.cs:92-135,163` — colored Write/WriteLine/WriteErrorLine emit ANSI
       unconditionally, ignoring SupportsColor / NO_COLOR / redirection; raw escapes land
       in piped output.
-- [ ] `terminal-static.cs:184-290` — format overloads use InvariantCulture where
+- [x] `terminal-static.cs:184-290` — format overloads use InvariantCulture where
       System.Console uses current culture; silent formatting differences for migrated
       code, undocumented.
+      DECIDED + FIXED (2026-07-03): added `Terminal.FormatProvider` (IFormatProvider?,
+      default null = CultureInfo.CurrentCulture resolved per call — TextWriter.FormatProvider
+      semantics, avoids freezing a static-init culture snapshot). All 12 format overloads
+      now use it; set to InvariantCulture for deterministic output. Typed IFormatProvider
+      (not CultureInfo) per BCL convention; lives on Terminal (no separate TerminalFormatting
+      class) for discoverability. TestTerminalContext snapshots/restores it alongside
+      Instance. NOTE for release notes: default behavior changes from invariant to
+      current culture (Console parity).
 - [ ] `terminal-static.cs:591-599` — static Terminal.WriteLink always emits raw OSC 8,
       while the same-named ITerminal.WriteLink extension checks SupportsHyperlinks and
       falls back to plain text; two same-named APIs with different behavior.
