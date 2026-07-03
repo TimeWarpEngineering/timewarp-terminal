@@ -132,11 +132,16 @@ calls — triage each.
       produces shift:false.
       FIXED: shift produces uppercase KeyChar, ctrl produces the control character for A-Z,
       QueueKeys sets shift for uppercase letters; tests added.
-- [ ] `test-console.cs:200-201` — TestConsole.ReadKey() throws NotSupportedException
+- [x] `test-console.cs:200-201` — TestConsole.ReadKey() throws NotSupportedException
       while inheriting IConsole docs that promise a value; first-party implementation
       violates its own contract (suggests ReadKey belongs on ITerminal — breaking to move
       later).
 
+      DECIDED + FIXED (2026-07-03): ReadKey() moved from IConsole to ITerminal — key-by-key
+      input is interactive-terminal functionality with no meaning for a stream-oriented
+      console. TestConsole's throwing member and TimeWarpConsole's implementation removed;
+      contract test added asserting the member lives on ITerminal only. BREAKING vs beta
+      (intentional, pre-1.0).
 ### Widgets / text
 - [x] `widgets/unicode-width.cs:260-279` — GetTextWidth treats every multi-rune grapheme
       as width 2, so NFD combining sequences ("e" + U+0301) measure 2 instead of 1;
@@ -192,10 +197,16 @@ calls — triage each.
 - [x] `timewarp-terminal.csproj:23` — README.md is packed as a file but PackageReadmeFile
       is never set, so nuget.org shows no readme.
       FIXED: PackageReadmeFile set; verified <readme> lands in the nuspec.
-- [ ] `Directory.Build.props:66` + `csproj:13` — IsAotCompatible=true is claimed while
+- [x] `Directory.Build.props:66` + `csproj:13` — IsAotCompatible=true is claimed while
       all trim/AOT diagnostics (IL2026/IL2067/IL2070/IL2075/IL3050/IL2104/IL3053) are
       globally NoWarn'd "not yet implemented"; the package advertises AOT compat that is
       unverified.
+      FIXED: the blanket IL2026/IL2067/IL2070/IL2075/IL3050/IL2104/IL3053 NoWarn is removed
+      from the root props — the library now builds clean under full trim/AOT analysis
+      (EnableTrimAnalyzer/EnableAotAnalyzer), and the dev-cli AOT publish (which consumes
+      the library) succeeds end-to-end. IL2026/IL3050/IL2104/IL3053 remain suppressed only
+      in tools/dev-cli for TimeWarp.Nuru.DevCli package-content files using reflection
+      JsonSerializer, documented in that props file.
 - [x] `README.md:193` — Table quickstart calls `.Shrink()` which does not exist on
       TableBuilder; front-page sample does not compile.
       FIXED: sample now ends at .Expand() with a note that shrink-to-fit is automatic.

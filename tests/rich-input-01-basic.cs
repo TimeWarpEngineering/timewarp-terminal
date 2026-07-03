@@ -62,14 +62,12 @@ namespace TimeWarp.Terminal.Tests.Core.RichInput
       await Task.CompletedTask;
     }
 
-    public static async Task Should_throw_notsupported_for_readkey_in_testconsole()
+    public static async Task Should_declare_readkey_on_iterminal_not_iconsole()
     {
-      // Arrange
-      using TestConsole console = new();
-
-      // Act & Assert
-      NotSupportedException exception = Should.Throw<NotSupportedException>(() => console.ReadKey());
-      exception.Message.ShouldContain("TestConsole does not support key-by-key input");
+      // ReadKey is interactive-terminal functionality; it moved from IConsole to
+      // ITerminal for 1.0 so stream-oriented consoles are not forced to throw.
+      typeof(IConsole).GetMethod("ReadKey", Type.EmptyTypes).ShouldBeNull();
+      typeof(ITerminal).GetMethod("ReadKey", Type.EmptyTypes).ShouldNotBeNull();
 
       await Task.CompletedTask;
     }
@@ -203,15 +201,15 @@ namespace TimeWarp.Terminal.Tests.Core.RichInput
       await Task.CompletedTask;
     }
 
-    public static async Task Should_access_readkey_via_iconsole_interface()
+    public static async Task Should_access_readkey_via_iterminal_interface()
     {
       // Arrange
       using TestTerminal terminal = new();
-      IConsole iconsole = terminal;
+      ITerminal iterminal = terminal;
       terminal.QueueKey(ConsoleKey.Spacebar);
 
       // Act
-      ConsoleKeyInfo keyInfo = iconsole.ReadKey();
+      ConsoleKeyInfo keyInfo = iterminal.ReadKey();
 
       // Assert
       keyInfo.Key.ShouldBe(ConsoleKey.Spacebar);

@@ -196,10 +196,6 @@ public sealed class TestConsole : IConsole, IDisposable
     return -1;
   }
 
-  /// <inheritdoc />
-  public ConsoleKeyInfo ReadKey()
-    => throw new NotSupportedException("TestConsole does not support key-by-key input. Use TestTerminal for interactive key input.");
-
   /// <summary>
   /// Queues characters for <see cref="Read"/> to return.
   /// </summary>

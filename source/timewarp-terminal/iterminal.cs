@@ -52,6 +52,21 @@ public interface ITerminal : IConsole
 
   /// <summary>
   /// Obtains the next character or function key pressed by the user.
+  /// The pressed key is displayed in the console window.
+  /// </summary>
+  /// <returns>
+  /// An object that describes the <see cref="ConsoleKey"/> constant and Unicode character,
+  /// if any, that correspond to the pressed console key.
+  /// </returns>
+  /// <remarks>
+  /// Key-by-key input is an interactive-terminal capability, which is why this member lives
+  /// on <see cref="ITerminal"/> rather than <see cref="IConsole"/> — it has no meaning for a
+  /// redirected, stream-oriented console.
+  /// </remarks>
+  ConsoleKeyInfo ReadKey();
+
+  /// <summary>
+  /// Obtains the next character or function key pressed by the user.
   /// </summary>
   /// <param name="intercept">
   /// If true, the pressed key is not displayed in the console window.

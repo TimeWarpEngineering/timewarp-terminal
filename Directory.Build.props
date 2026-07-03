@@ -62,8 +62,7 @@
     <!-- CA1724: Type name conflicts (acceptable in this context) -->
     <!-- CA1812: False positives for DI-instantiated classes -->
     <!-- CS1591: XML doc comments not required on all public members -->
-    <!-- IL2026, IL2067, IL2070, IL2075, IL3050, IL2104, IL3053: AOT warnings (not yet implemented) -->
-    <NoWarn>$(NoWarn);CA1014;CA1716;CA1724;CA1812;CS1591;IL2026;IL2067;IL2070;IL2075;IL3050;IL2104;IL3053</NoWarn>
+    <NoWarn>$(NoWarn);CA1014;CA1716;CA1724;CA1812;CS1591</NoWarn>
   </PropertyGroup>
 
   <!-- Code analyzers applied to all projects -->

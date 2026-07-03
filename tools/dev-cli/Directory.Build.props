@@ -18,7 +18,10 @@
          TimeWarp.Nuru.DevCli content files compiled from the NuGet cache, where repo
          .editorconfig cannot reach -->
     <!-- IDE0211: dev.cs is a file-based app (runfile) and requires top-level statements -->
-    <NoWarn>$(NoWarn);CA1031;CA1034;CA1303;CA1508;CA1515;CA1849;CA2007;CA2016;CA2000;RCS1046;CA5399;IL2104;IL3053;IDE0065;IDE0005;IDE0052;IDE0055;IDE0058;IDE0160;IDE0211;IDE0290</NoWarn>
+    <!-- IL2026, IL3050: reflection-based JsonSerializer in TimeWarp.Nuru.DevCli content
+         files; suppressed here only — the library itself builds clean under full
+         trim/AOT analysis -->
+    <NoWarn>$(NoWarn);CA1031;CA1034;CA1303;CA1508;CA1515;CA1849;CA2007;CA2016;CA2000;RCS1046;CA5399;IL2026;IL2104;IL3050;IL3053;IDE0065;IDE0005;IDE0052;IDE0055;IDE0058;IDE0160;IDE0211;IDE0290</NoWarn>
 
     <!-- AOT Support -->
     <PublishAot>true</PublishAot>
