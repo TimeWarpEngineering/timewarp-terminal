@@ -964,127 +964,25 @@ public static class Terminal
     set => Instance.CursorVisible = value;
   }
 
-  /// <summary>
-  /// Gets or sets the height of the cursor within a character cell.
-  /// </summary>
-  /// <value>The cursor size as a percentage from 1 to 100.</value>
-  public static int CursorSize
-  {
-    get => Instance.CursorSize;
-    set => Instance.CursorSize = value;
-  }
-
   // Window/Buffer Geometry Properties (ITerminal)
 
   /// <summary>
-  /// Gets or sets the height of the terminal window in characters.
+  /// Gets the height of the terminal window in characters.
   /// </summary>
   /// <value>The height of the terminal window measured in rows.</value>
-  public static int WindowHeight
-  {
-    get => Instance.WindowHeight;
-    set => Instance.WindowHeight = value;
-  }
+  public static int WindowHeight => Instance.WindowHeight;
 
   /// <summary>
-  /// Gets or sets the left position of the console window area.
-  /// </summary>
-  /// <value>The leftmost position of the console window.</value>
-  public static int WindowLeft
-  {
-    get => Instance.WindowLeft;
-    set => Instance.WindowLeft = value;
-  }
-
-  /// <summary>
-  /// Gets or sets the top position of the console window area.
-  /// </summary>
-  /// <value>The topmost position of the console window.</value>
-  public static int WindowTop
-  {
-    get => Instance.WindowTop;
-    set => Instance.WindowTop = value;
-  }
-
-  /// <summary>
-  /// Gets or sets the width of the buffer area.
+  /// Gets the width of the buffer area.
   /// </summary>
   /// <value>The width of the buffer area measured in columns.</value>
-  public static int BufferWidth
-  {
-    get => Instance.BufferWidth;
-    set => Instance.BufferWidth = value;
-  }
+  public static int BufferWidth => Instance.BufferWidth;
 
   /// <summary>
-  /// Gets or sets the height of the buffer area.
+  /// Gets the height of the buffer area.
   /// </summary>
   /// <value>The height of the buffer area measured in rows.</value>
-  public static int BufferHeight
-  {
-    get => Instance.BufferHeight;
-    set => Instance.BufferHeight = value;
-  }
-
-  /// <summary>
-  /// Gets the largest possible number of console window columns.
-  /// </summary>
-  /// <value>The maximum width of the console window measured in columns.</value>
-  public static int LargestWindowWidth => Instance.LargestWindowWidth;
-
-  /// <summary>
-  /// Gets the largest possible number of console window rows.
-  /// </summary>
-  /// <value>The maximum height of the console window measured in rows.</value>
-  public static int LargestWindowHeight => Instance.LargestWindowHeight;
-
-  // Window/Buffer Geometry Methods (ITerminal)
-
-  /// <summary>
-  /// Sets the dimensions of the console window to the specified values.
-  /// </summary>
-  /// <param name="width">The width of the console window measured in columns.</param>
-  /// <param name="height">The height of the console window measured in rows.</param>
-  public static void SetWindowSize(int width, int height) => Instance.SetWindowSize(width, height);
-
-  /// <summary>
-  /// Sets the position of the console window relative to the screen buffer.
-  /// </summary>
-  /// <param name="left">The column position of the upper left corner of the console window.</param>
-  /// <param name="top">The row position of the upper left corner of the console window.</param>
-  public static void SetWindowPosition(int left, int top) => Instance.SetWindowPosition(left, top);
-
-  /// <summary>
-  /// Sets the height and width of the screen buffer area to the specified values.
-  /// </summary>
-  /// <param name="width">The width of the buffer area measured in columns.</param>
-  /// <param name="height">The height of the buffer area measured in rows.</param>
-  public static void SetBufferSize(int width, int height) => Instance.SetBufferSize(width, height);
-
-  /// <summary>
-  /// Moves a specified source screen buffer area to a specified destination screen buffer area.
-  /// </summary>
-  /// <param name="sourceLeft">The leftmost column of the source area.</param>
-  /// <param name="sourceTop">The topmost row of the source area.</param>
-  /// <param name="sourceWidth">The number of columns in the source area.</param>
-  /// <param name="sourceHeight">The number of rows in the source area.</param>
-  /// <param name="targetLeft">The leftmost column of the destination area.</param>
-  /// <param name="targetTop">The topmost row of the destination area.</param>
-  /// <param name="sourceChar">The character used to fill the source area.</param>
-  /// <param name="sourceForeColor">The foreground color used to fill the source area.</param>
-  /// <param name="sourceBackColor">The background color used to fill the source area.</param>
-  public static void MoveBufferArea
-  (
-    int sourceLeft,
-    int sourceTop,
-    int sourceWidth,
-    int sourceHeight,
-    int targetLeft,
-    int targetTop,
-    char sourceChar,
-    ConsoleColor sourceForeColor,
-    ConsoleColor sourceBackColor
-  ) => Instance.MoveBufferArea(sourceLeft, sourceTop, sourceWidth, sourceHeight, targetLeft, targetTop, sourceChar, sourceForeColor, sourceBackColor);
+  public static int BufferHeight => Instance.BufferHeight;
 
   // Color State Properties (ITerminal)
 
@@ -1181,14 +1079,10 @@ public static class Terminal
   // Terminal Properties
 
   /// <summary>
-  /// Gets or sets the width of the terminal window in characters.
+  /// Gets the width of the terminal window in characters.
   /// </summary>
   /// <value>The width of the terminal window measured in columns.</value>
-  public static int WindowWidth
-  {
-    get => Instance.WindowWidth;
-    set => Instance.WindowWidth = value;
-  }
+  public static int WindowWidth => Instance.WindowWidth;
 
   /// <summary>
   /// Gets a value indicating whether the terminal is interactive.

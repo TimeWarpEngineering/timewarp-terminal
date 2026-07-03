@@ -231,45 +231,6 @@ public sealed class TimeWarpTerminal : ITerminal
   }
 
   /// <inheritdoc />
-  public int CursorSize
-  {
-    get
-    {
-      if (!OperatingSystem.IsWindows())
-      {
-        return 100;
-      }
-
-      try
-      {
-        return Console.CursorSize;
-      }
-      catch (IOException)
-      {
-        return 100;
-      }
-    }
-    set
-    {
-      if (!OperatingSystem.IsWindows())
-      {
-        return;
-      }
-
-      try
-      {
-        Console.CursorSize = value;
-      }
-      catch (ArgumentOutOfRangeException)
-      {
-      }
-      catch (IOException)
-      {
-      }
-    }
-  }
-
-  /// <inheritdoc />
   public void SetCursorPosition(int left, int top)
   {
     try
@@ -314,24 +275,6 @@ public sealed class TimeWarpTerminal : ITerminal
         return 80;
       }
     }
-    set
-    {
-      if (!OperatingSystem.IsWindows())
-      {
-        return;
-      }
-
-      try
-      {
-        Console.WindowWidth = value;
-      }
-      catch (ArgumentOutOfRangeException)
-      {
-      }
-      catch (IOException)
-      {
-      }
-    }
   }
 
   /// <inheritdoc />
@@ -346,92 +289,6 @@ public sealed class TimeWarpTerminal : ITerminal
       catch (IOException)
       {
         return 24;
-      }
-    }
-    set
-    {
-      if (!OperatingSystem.IsWindows())
-      {
-        return;
-      }
-
-      try
-      {
-        Console.WindowHeight = value;
-      }
-      catch (ArgumentOutOfRangeException)
-      {
-      }
-      catch (IOException)
-      {
-      }
-    }
-  }
-
-  /// <inheritdoc />
-  public int WindowLeft
-  {
-    get
-    {
-      try
-      {
-        return Console.WindowLeft;
-      }
-      catch (IOException)
-      {
-        return 0;
-      }
-    }
-    set
-    {
-      if (!OperatingSystem.IsWindows())
-      {
-        return;
-      }
-
-      try
-      {
-        Console.WindowLeft = value;
-      }
-      catch (ArgumentOutOfRangeException)
-      {
-      }
-      catch (IOException)
-      {
-      }
-    }
-  }
-
-  /// <inheritdoc />
-  public int WindowTop
-  {
-    get
-    {
-      try
-      {
-        return Console.WindowTop;
-      }
-      catch (IOException)
-      {
-        return 0;
-      }
-    }
-    set
-    {
-      if (!OperatingSystem.IsWindows())
-      {
-        return;
-      }
-
-      try
-      {
-        Console.WindowTop = value;
-      }
-      catch (ArgumentOutOfRangeException)
-      {
-      }
-      catch (IOException)
-      {
       }
     }
   }
@@ -450,24 +307,6 @@ public sealed class TimeWarpTerminal : ITerminal
         return 80;
       }
     }
-    set
-    {
-      if (!OperatingSystem.IsWindows())
-      {
-        return;
-      }
-
-      try
-      {
-        Console.BufferWidth = value;
-      }
-      catch (ArgumentOutOfRangeException)
-      {
-      }
-      catch (IOException)
-      {
-      }
-    }
   }
 
   /// <inheritdoc />
@@ -482,155 +321,6 @@ public sealed class TimeWarpTerminal : ITerminal
       catch (IOException)
       {
         return 300;
-      }
-    }
-    set
-    {
-      if (!OperatingSystem.IsWindows())
-      {
-        return;
-      }
-
-      try
-      {
-        Console.BufferHeight = value;
-      }
-      catch (ArgumentOutOfRangeException)
-      {
-      }
-      catch (IOException)
-      {
-      }
-    }
-  }
-
-  /// <inheritdoc />
-  public void SetWindowSize(int width, int height)
-  {
-    if (!OperatingSystem.IsWindows())
-    {
-      return;
-    }
-
-    try
-    {
-      Console.SetWindowSize(width, height);
-    }
-    catch (ArgumentOutOfRangeException)
-    {
-    }
-    catch (IOException)
-    {
-    }
-  }
-
-  /// <inheritdoc />
-  public void SetWindowPosition(int left, int top)
-  {
-    if (!OperatingSystem.IsWindows())
-    {
-      return;
-    }
-
-    try
-    {
-      Console.SetWindowPosition(left, top);
-    }
-    catch (ArgumentOutOfRangeException)
-    {
-    }
-    catch (IOException)
-    {
-    }
-  }
-
-  /// <inheritdoc />
-  public void SetBufferSize(int width, int height)
-  {
-    if (!OperatingSystem.IsWindows())
-    {
-      return;
-    }
-
-    try
-    {
-      Console.SetBufferSize(width, height);
-    }
-    catch (ArgumentOutOfRangeException)
-    {
-    }
-    catch (IOException)
-    {
-    }
-  }
-
-  /// <inheritdoc />
-  public void MoveBufferArea
-  (
-    int sourceLeft,
-    int sourceTop,
-    int sourceWidth,
-    int sourceHeight,
-    int targetLeft,
-    int targetTop,
-    char sourceChar,
-    ConsoleColor sourceForeColor,
-    ConsoleColor sourceBackColor
-  )
-  {
-    if (!OperatingSystem.IsWindows())
-    {
-      return;
-    }
-
-    try
-    {
-      Console.MoveBufferArea
-      (
-        sourceLeft,
-        sourceTop,
-        sourceWidth,
-        sourceHeight,
-        targetLeft,
-        targetTop,
-        sourceChar,
-        sourceForeColor,
-        sourceBackColor
-      );
-    }
-    catch (IOException)
-    {
-    }
-  }
-
-  /// <inheritdoc />
-  public int LargestWindowWidth
-  {
-    get
-    {
-      try
-      {
-        return Console.LargestWindowWidth;
-      }
-      catch (IOException)
-      {
-        return 120;
-      }
-    }
-  }
-
-  /// <inheritdoc />
-  public int LargestWindowHeight
-  {
-    get
-    {
-      try
-      {
-        return Console.LargestWindowHeight;
-      }
-      catch (IOException)
-      {
-        return 40;
       }
     }
   }

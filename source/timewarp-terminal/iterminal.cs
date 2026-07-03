@@ -112,19 +112,6 @@ public interface ITerminal : IConsole
   bool CursorVisible { get; set; }
 
   /// <summary>
-  /// Gets or sets the height of the cursor within a character cell.
-  /// </summary>
-  /// <value>The cursor size as a percentage from 1 to 100.</value>
-  /// <remarks>
-  /// A value of 1 indicates a horizontal line at the bottom of the cell.
-  /// A value of 100 indicates a full block cursor.
-  /// Implementations targeting the system console may only support this property on Windows;
-  /// the default implementation returns 100 and ignores writes on other platforms, and does the
-  /// same when the console is redirected or unavailable.
-  /// </remarks>
-  int CursorSize { get; set; }
-
-  /// <summary>
   /// Sets the position of the cursor.
   /// </summary>
   /// <param name="left">The column position of the cursor. Columns are numbered from left to right starting at 0.</param>
@@ -146,162 +133,44 @@ public interface ITerminal : IConsole
   (int Left, int Top) GetCursorPosition();
 
   /// <summary>
-  /// Gets or sets the width of the terminal window in characters.
+  /// Gets the width of the terminal window in characters.
   /// </summary>
   /// <value>The width of the terminal window measured in columns.</value>
   /// <remarks>
-  /// Implementations targeting the system console may only support setting this value on Windows;
-  /// the default implementation ignores writes on other platforms. When the console is redirected
-  /// or unavailable, the getter returns 80 instead of throwing, and the setter silently ignores
-  /// I/O errors and out-of-range values.
+  /// When the console is redirected or unavailable, the default implementation returns 80
+  /// instead of throwing.
   /// </remarks>
-  int WindowWidth { get; set; }
+  int WindowWidth { get; }
 
   /// <summary>
-  /// Gets or sets the height of the terminal window in characters.
+  /// Gets the height of the terminal window in characters.
   /// </summary>
   /// <value>The height of the terminal window measured in rows.</value>
   /// <remarks>
-  /// Implementations targeting the system console may only support setting this value on Windows;
-  /// the default implementation ignores writes on other platforms. When the console is redirected
-  /// or unavailable, the getter returns 24 instead of throwing, and the setter silently ignores
-  /// I/O errors and out-of-range values.
+  /// When the console is redirected or unavailable, the default implementation returns 24
+  /// instead of throwing.
   /// </remarks>
-  int WindowHeight { get; set; }
+  int WindowHeight { get; }
 
   /// <summary>
-  /// Gets or sets the left position of the console window area.
-  /// </summary>
-  /// <value>The leftmost position of the console window.</value>
-  /// <remarks>
-  /// Implementations targeting the system console may only support setting this value on Windows;
-  /// the default implementation ignores writes on other platforms. When the console is redirected
-  /// or unavailable, the getter returns 0 instead of throwing, and the setter silently ignores
-  /// I/O errors and out-of-range values.
-  /// </remarks>
-  int WindowLeft { get; set; }
-
-  /// <summary>
-  /// Gets or sets the top position of the console window area.
-  /// </summary>
-  /// <value>The topmost position of the console window.</value>
-  /// <remarks>
-  /// Implementations targeting the system console may only support setting this value on Windows;
-  /// the default implementation ignores writes on other platforms. When the console is redirected
-  /// or unavailable, the getter returns 0 instead of throwing, and the setter silently ignores
-  /// I/O errors and out-of-range values.
-  /// </remarks>
-  int WindowTop { get; set; }
-
-  /// <summary>
-  /// Gets or sets the width of the buffer area.
+  /// Gets the width of the buffer area.
   /// </summary>
   /// <value>The width of the buffer area measured in columns.</value>
   /// <remarks>
-  /// Implementations targeting the system console may only support setting this value on Windows;
-  /// the default implementation ignores writes on other platforms. When the console is redirected
-  /// or unavailable, the getter returns 80 instead of throwing, and the setter silently ignores
-  /// I/O errors and out-of-range values.
+  /// On modern terminals the buffer width equals the window width. When the console is
+  /// redirected or unavailable, the default implementation returns 80 instead of throwing.
   /// </remarks>
-  int BufferWidth { get; set; }
+  int BufferWidth { get; }
 
   /// <summary>
-  /// Gets or sets the height of the buffer area.
+  /// Gets the height of the buffer area (including scrollback where the host reports it).
   /// </summary>
   /// <value>The height of the buffer area measured in rows.</value>
   /// <remarks>
-  /// Implementations targeting the system console may only support setting this value on Windows;
-  /// the default implementation ignores writes on other platforms. When the console is redirected
-  /// or unavailable, the getter returns 300 instead of throwing, and the setter silently ignores
-  /// I/O errors and out-of-range values.
-  /// </remarks>
-  int BufferHeight { get; set; }
-
-  /// <summary>
-  /// Sets the dimensions of the console window to the specified values.
-  /// </summary>
-  /// <param name="width">The width of the console window measured in columns.</param>
-  /// <param name="height">The height of the console window measured in rows.</param>
-  /// <remarks>
-  /// Implementations targeting the system console may only support this operation on Windows;
-  /// the default implementation silently does nothing on other platforms and silently ignores
-  /// I/O errors and out-of-range values.
-  /// </remarks>
-  void SetWindowSize(int width, int height);
-
-  /// <summary>
-  /// Sets the position of the console window relative to the screen buffer.
-  /// </summary>
-  /// <param name="left">The column position of the upper left corner of the console window.</param>
-  /// <param name="top">The row position of the upper left corner of the console window.</param>
-  /// <remarks>
-  /// Implementations targeting the system console may only support this operation on Windows;
-  /// the default implementation silently does nothing on other platforms and silently ignores
-  /// I/O errors and out-of-range values.
-  /// </remarks>
-  void SetWindowPosition(int left, int top);
-
-  /// <summary>
-  /// Sets the height and width of the screen buffer area to the specified values.
-  /// </summary>
-  /// <param name="width">The width of the buffer area measured in columns.</param>
-  /// <param name="height">The height of the buffer area measured in rows.</param>
-  /// <remarks>
-  /// Implementations targeting the system console may only support this operation on Windows;
-  /// the default implementation silently does nothing on other platforms and silently ignores
-  /// I/O errors and out-of-range values.
-  /// </remarks>
-  void SetBufferSize(int width, int height);
-
-  /// <summary>
-  /// Moves a specified source screen buffer area to a specified destination screen buffer area.
-  /// </summary>
-  /// <param name="sourceLeft">The leftmost column of the source area.</param>
-  /// <param name="sourceTop">The topmost row of the source area.</param>
-  /// <param name="sourceWidth">The number of columns in the source area.</param>
-  /// <param name="sourceHeight">The number of rows in the source area.</param>
-  /// <param name="targetLeft">The leftmost column of the destination area.</param>
-  /// <param name="targetTop">The topmost row of the destination area.</param>
-  /// <param name="sourceChar">The character used to fill the source area.</param>
-  /// <param name="sourceForeColor">The foreground color used to fill the source area.</param>
-  /// <param name="sourceBackColor">The background color used to fill the source area.</param>
-  /// <remarks>
-  /// Implementations targeting the system console may only support this operation on Windows;
-  /// the default implementation silently does nothing on other platforms and silently ignores
-  /// I/O errors.
-  /// </remarks>
-  void MoveBufferArea
-  (
-    int sourceLeft,
-    int sourceTop,
-    int sourceWidth,
-    int sourceHeight,
-    int targetLeft,
-    int targetTop,
-    char sourceChar,
-    ConsoleColor sourceForeColor,
-    ConsoleColor sourceBackColor
-  );
-
-  /// <summary>
-  /// Gets the largest possible number of console window columns.
-  /// </summary>
-  /// <value>The maximum width of the console window measured in columns.</value>
-  /// <remarks>
-  /// When the console is redirected or unavailable, the default implementation returns 120
+  /// When the console is redirected or unavailable, the default implementation returns 300
   /// instead of throwing.
   /// </remarks>
-  int LargestWindowWidth { get; }
-
-  /// <summary>
-  /// Gets the largest possible number of console window rows.
-  /// </summary>
-  /// <value>The maximum height of the console window measured in rows.</value>
-  /// <remarks>
-  /// When the console is redirected or unavailable, the default implementation returns 40
-  /// instead of throwing.
-  /// </remarks>
-  int LargestWindowHeight { get; }
+  int BufferHeight { get; }
 
   /// <summary>
   /// Gets a value indicating whether the terminal is interactive.

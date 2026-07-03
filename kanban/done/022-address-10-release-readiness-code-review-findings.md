@@ -231,10 +231,13 @@ calls — triage each.
       matching the class-wide swallow policy; documented on the interface member.
 - [x] `iterminal.cs:175` — MoveBufferArea/CursorSize/Window-Buffer setters bake
       Windows-legacy-console APIs into the cross-platform interface; unremovable after 1.0.
-      ACCEPTED (2026-07-03): keeping the members — removing them would gut Console parity for
-      Windows consumers, and the platform contract (no-op elsewhere) is now explicitly
-      documented in <remarks> on every affected member. Custom implementations stub them
-      the same way TestTerminal does.
+      REVISED + FIXED (2026-07-03): initially accepted, then overturned on review — these are
+      legacy conhost features that don't work in Windows Terminal either, and freezing them at
+      1.0 would be permanent stub debt for every implementer. REMOVED: MoveBufferArea,
+      CursorSize, SetWindowSize, SetWindowPosition, SetBufferSize, WindowLeft, WindowTop,
+      LargestWindowWidth, LargestWindowHeight. DEMOTED to get-only: WindowWidth, WindowHeight,
+      BufferWidth, BufferHeight (TestTerminal keeps public setters for test configuration).
+      BREAKING vs beta (intentional, pre-1.0).
 - [x] `timewarp-terminal.cs:642` — IsInteractive checks only input redirection; stdout
       piped still reports interactive, and docs don't say which stream.
       FIXED: IsInteractive now requires both stdin and stdout unredirected; docs state exactly

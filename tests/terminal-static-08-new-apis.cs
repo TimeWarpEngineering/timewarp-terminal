@@ -584,52 +584,6 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalStaticNewApis
       await Task.CompletedTask;
     }
 
-    public static async Task Should_get_cursor_size()
-    {
-      // Arrange
-      ITerminal original = Terminal.Instance;
-      using TestTerminal testTerminal = new() { CursorSize = 50 };
-      Terminal.Instance = testTerminal;
-
-      try
-      {
-        // Act
-        int size = Terminal.CursorSize;
-
-        // Assert
-        size.ShouldBe(50);
-      }
-      finally
-      {
-        Terminal.Instance = original;
-      }
-
-      await Task.CompletedTask;
-    }
-
-    public static async Task Should_set_cursor_size()
-    {
-      // Arrange
-      ITerminal original = Terminal.Instance;
-      using TestTerminal testTerminal = new();
-      Terminal.Instance = testTerminal;
-
-      try
-      {
-        // Act
-        Terminal.CursorSize = 75;
-
-        // Assert
-        testTerminal.CursorSize.ShouldBe(75);
-      }
-      finally
-      {
-        Terminal.Instance = original;
-      }
-
-      await Task.CompletedTask;
-    }
-
     // ========== Window/Buffer Geometry Tests (ITerminal - task 020-005) ==========
 
     public static async Task Should_get_window_height()
@@ -655,7 +609,7 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalStaticNewApis
       await Task.CompletedTask;
     }
 
-    public static async Task Should_set_window_height()
+    public static async Task Should_get_window_height_after_test_terminal_change()
     {
       // Arrange
       ITerminal original = Terminal.Instance;
@@ -665,10 +619,10 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalStaticNewApis
       try
       {
         // Act
-        Terminal.WindowHeight = 50;
+        testTerminal.WindowHeight = 50;
 
         // Assert
-        testTerminal.WindowHeight.ShouldBe(50);
+        Terminal.WindowHeight.ShouldBe(50);
       }
       finally
       {
@@ -678,112 +632,20 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalStaticNewApis
       await Task.CompletedTask;
     }
 
-    public static async Task Should_set_window_width()
+    public static async Task Should_get_window_width()
     {
       // Arrange
       ITerminal original = Terminal.Instance;
-      using TestTerminal testTerminal = new();
+      using TestTerminal testTerminal = new() { WindowWidth = 150 };
       Terminal.Instance = testTerminal;
 
       try
       {
         // Act
-        Terminal.WindowWidth = 150;
+        int width = Terminal.WindowWidth;
 
         // Assert
-        testTerminal.WindowWidth.ShouldBe(150);
-      }
-      finally
-      {
-        Terminal.Instance = original;
-      }
-
-      await Task.CompletedTask;
-    }
-
-    public static async Task Should_get_window_left()
-    {
-      // Arrange
-      ITerminal original = Terminal.Instance;
-      using TestTerminal testTerminal = new() { WindowLeft = 5 };
-      Terminal.Instance = testTerminal;
-
-      try
-      {
-        // Act
-        int left = Terminal.WindowLeft;
-
-        // Assert
-        left.ShouldBe(5);
-      }
-      finally
-      {
-        Terminal.Instance = original;
-      }
-
-      await Task.CompletedTask;
-    }
-
-    public static async Task Should_set_window_left()
-    {
-      // Arrange
-      ITerminal original = Terminal.Instance;
-      using TestTerminal testTerminal = new();
-      Terminal.Instance = testTerminal;
-
-      try
-      {
-        // Act
-        Terminal.WindowLeft = 10;
-
-        // Assert
-        testTerminal.WindowLeft.ShouldBe(10);
-      }
-      finally
-      {
-        Terminal.Instance = original;
-      }
-
-      await Task.CompletedTask;
-    }
-
-    public static async Task Should_get_window_top()
-    {
-      // Arrange
-      ITerminal original = Terminal.Instance;
-      using TestTerminal testTerminal = new() { WindowTop = 3 };
-      Terminal.Instance = testTerminal;
-
-      try
-      {
-        // Act
-        int top = Terminal.WindowTop;
-
-        // Assert
-        top.ShouldBe(3);
-      }
-      finally
-      {
-        Terminal.Instance = original;
-      }
-
-      await Task.CompletedTask;
-    }
-
-    public static async Task Should_set_window_top()
-    {
-      // Arrange
-      ITerminal original = Terminal.Instance;
-      using TestTerminal testTerminal = new();
-      Terminal.Instance = testTerminal;
-
-      try
-      {
-        // Act
-        Terminal.WindowTop = 8;
-
-        // Assert
-        testTerminal.WindowTop.ShouldBe(8);
+        width.ShouldBe(150);
       }
       finally
       {
@@ -816,7 +678,7 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalStaticNewApis
       await Task.CompletedTask;
     }
 
-    public static async Task Should_set_buffer_width()
+    public static async Task Should_get_buffer_width_after_test_terminal_change()
     {
       // Arrange
       ITerminal original = Terminal.Instance;
@@ -826,10 +688,10 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalStaticNewApis
       try
       {
         // Act
-        Terminal.BufferWidth = 250;
+        testTerminal.BufferWidth = 250;
 
         // Assert
-        testTerminal.BufferWidth.ShouldBe(250);
+        Terminal.BufferWidth.ShouldBe(250);
       }
       finally
       {
@@ -862,7 +724,7 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalStaticNewApis
       await Task.CompletedTask;
     }
 
-    public static async Task Should_set_buffer_height()
+    public static async Task Should_get_buffer_height_after_test_terminal_change()
     {
       // Arrange
       ITerminal original = Terminal.Instance;
@@ -872,151 +734,10 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalStaticNewApis
       try
       {
         // Act
-        Terminal.BufferHeight = 600;
+        testTerminal.BufferHeight = 600;
 
         // Assert
-        testTerminal.BufferHeight.ShouldBe(600);
-      }
-      finally
-      {
-        Terminal.Instance = original;
-      }
-
-      await Task.CompletedTask;
-    }
-
-    public static async Task Should_get_largest_window_width()
-    {
-      // Arrange
-      ITerminal original = Terminal.Instance;
-      using TestTerminal testTerminal = new() { LargestWindowWidth = 200 };
-      Terminal.Instance = testTerminal;
-
-      try
-      {
-        // Act
-        int width = Terminal.LargestWindowWidth;
-
-        // Assert
-        width.ShouldBe(200);
-      }
-      finally
-      {
-        Terminal.Instance = original;
-      }
-
-      await Task.CompletedTask;
-    }
-
-    public static async Task Should_get_largest_window_height()
-    {
-      // Arrange
-      ITerminal original = Terminal.Instance;
-      using TestTerminal testTerminal = new() { LargestWindowHeight = 60 };
-      Terminal.Instance = testTerminal;
-
-      try
-      {
-        // Act
-        int height = Terminal.LargestWindowHeight;
-
-        // Assert
-        height.ShouldBe(60);
-      }
-      finally
-      {
-        Terminal.Instance = original;
-      }
-
-      await Task.CompletedTask;
-    }
-
-    public static async Task Should_set_window_size()
-    {
-      // Arrange
-      ITerminal original = Terminal.Instance;
-      using TestTerminal testTerminal = new();
-      Terminal.Instance = testTerminal;
-
-      try
-      {
-        // Act
-        Terminal.SetWindowSize(100, 30);
-
-        // Assert
-        testTerminal.WindowWidth.ShouldBe(100);
-        testTerminal.WindowHeight.ShouldBe(30);
-      }
-      finally
-      {
-        Terminal.Instance = original;
-      }
-
-      await Task.CompletedTask;
-    }
-
-    public static async Task Should_set_window_position()
-    {
-      // Arrange
-      ITerminal original = Terminal.Instance;
-      using TestTerminal testTerminal = new();
-      Terminal.Instance = testTerminal;
-
-      try
-      {
-        // Act
-        Terminal.SetWindowPosition(5, 10);
-
-        // Assert
-        testTerminal.WindowLeft.ShouldBe(5);
-        testTerminal.WindowTop.ShouldBe(10);
-      }
-      finally
-      {
-        Terminal.Instance = original;
-      }
-
-      await Task.CompletedTask;
-    }
-
-    public static async Task Should_set_buffer_size()
-    {
-      // Arrange
-      ITerminal original = Terminal.Instance;
-      using TestTerminal testTerminal = new();
-      Terminal.Instance = testTerminal;
-
-      try
-      {
-        // Act
-        Terminal.SetBufferSize(150, 400);
-
-        // Assert
-        testTerminal.BufferWidth.ShouldBe(150);
-        testTerminal.BufferHeight.ShouldBe(400);
-      }
-      finally
-      {
-        Terminal.Instance = original;
-      }
-
-      await Task.CompletedTask;
-    }
-
-    public static async Task Should_move_buffer_area()
-    {
-      // Arrange
-      ITerminal original = Terminal.Instance;
-      using TestTerminal testTerminal = new();
-      Terminal.Instance = testTerminal;
-
-      try
-      {
-        // Act
-        Terminal.MoveBufferArea(0, 0, 10, 5, 20, 10, ' ', ConsoleColor.White, ConsoleColor.Black);
-
-        // Assert
-        testTerminal.MoveBufferAreaCallCount.ShouldBe(1);
+        Terminal.BufferHeight.ShouldBe(600);
       }
       finally
       {

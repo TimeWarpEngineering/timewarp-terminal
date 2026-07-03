@@ -182,21 +182,6 @@ public sealed class TestTerminal : ITerminal, IDisposable
   /// <inheritdoc />
   public bool CursorVisible { get; set; } = true;
 
-  /// <inheritdoc />
-  public int CursorSize
-  {
-    get;
-    set
-    {
-      if (value is < 1 or > 100)
-      {
-        throw new ArgumentOutOfRangeException(nameof(value), value, "CursorSize must be between 1 and 100.");
-      }
-
-      field = value;
-    }
-  } = 100;
-
   /// <summary>
   /// Gets all standard output written to this terminal.
   /// </summary>
@@ -323,72 +308,25 @@ public sealed class TestTerminal : ITerminal, IDisposable
   public (int Left, int Top) GetCursorPosition()
     => (CursorLeft, CursorTop);
 
-  /// <inheritdoc />
+  /// <summary>
+  /// Gets or sets the width of the terminal window. Settable so tests can control layout.
+  /// </summary>
   public int WindowWidth { get; set; }
 
-  /// <inheritdoc />
+  /// <summary>
+  /// Gets or sets the height of the terminal window. Settable so tests can control layout.
+  /// </summary>
   public int WindowHeight { get; set; } = 24;
 
-  /// <inheritdoc />
-  public int WindowLeft { get; set; }
-
-  /// <inheritdoc />
-  public int WindowTop { get; set; }
-
-  /// <inheritdoc />
+  /// <summary>
+  /// Gets or sets the buffer width. Settable so tests can control layout.
+  /// </summary>
   public int BufferWidth { get; set; } = 80;
 
-  /// <inheritdoc />
-  public int BufferHeight { get; set; } = 300;
-
-  /// <inheritdoc />
-  public int LargestWindowWidth { get; set; } = 120;
-
-  /// <inheritdoc />
-  public int LargestWindowHeight { get; set; } = 40;
-
   /// <summary>
-  /// Gets the number of times <see cref="MoveBufferArea"/> has been called.
+  /// Gets or sets the buffer height. Settable so tests can control layout.
   /// </summary>
-  public int MoveBufferAreaCallCount { get; private set; }
-
-  /// <inheritdoc />
-  public void SetWindowSize(int width, int height)
-  {
-    WindowWidth = width;
-    WindowHeight = height;
-  }
-
-  /// <inheritdoc />
-  public void SetWindowPosition(int left, int top)
-  {
-    WindowLeft = left;
-    WindowTop = top;
-  }
-
-  /// <inheritdoc />
-  public void SetBufferSize(int width, int height)
-  {
-    BufferWidth = width;
-    BufferHeight = height;
-  }
-
-  /// <inheritdoc />
-  public void MoveBufferArea
-  (
-    int sourceLeft,
-    int sourceTop,
-    int sourceWidth,
-    int sourceHeight,
-    int targetLeft,
-    int targetTop,
-    char sourceChar,
-    ConsoleColor sourceForeColor,
-    ConsoleColor sourceBackColor
-  )
-  {
-    MoveBufferAreaCallCount++;
-  }
+  public int BufferHeight { get; set; } = 300;
 
   /// <inheritdoc />
   public bool IsInteractive { get; set; }
