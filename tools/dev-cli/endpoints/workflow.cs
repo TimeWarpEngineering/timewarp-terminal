@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // Orchestrates the full CI/CD pipeline.
 // For PR: clean -> build -> verify-samples -> test
-// For release: clean -> build -> verify-samples -> test -> check-version -> pack
+// For release: clean -> build -> verify-samples -> test -> check-version -> pack -> push -> notify timewarp-software
 
 namespace DevCli;
 
@@ -247,15 +247,46 @@ internal sealed class WorkflowCommand : ICommand<Unit>
             .RunAsync(ct);
 
           if (exitCode != 0)
-
           {
-
             throw new InvalidOperationException($"NuGet push failed: {packageName}");
-
           }
         }
 
         Terminal.WriteLine("✓ Packages pushed to NuGet.org");
+
+        await NotifySoftwareSiteAsync(repoRoot, version);
+      }
+    }
+
+    private async Task NotifySoftwareSiteAsync(string repoRoot, string version)
+    {
+      // Signal timewarp-software to rebuild the site so the new release shows up
+      // immediately instead of waiting for its nightly cron backstop. Best effort:
+      // a failure here must never fail a release that already pushed to NuGet.
+      // Cross-repo repository_dispatch needs a credential with write access to
+      // timewarp-software — locally gh's stored auth suffices; in GitHub Actions
+      // the default GITHUB_TOKEN cannot reach other repos, so workflow.yml passes
+      // GH_TOKEN from the REBUILD_DISPATCH_TOKEN secret.
+      Terminal.WriteLine("\nNotifying timewarp-software to rebuild the site...");
+      int exitCode = await Shell.Builder("gh")
+        .WithArguments
+        (
+          "api",
+          "repos/TimeWarpEngineering/timewarp-software/dispatches",
+          "-f", "event_type=rebuild",
+          "-f", "client_payload[package]=TimeWarp.Terminal",
+          "-f", $"client_payload[version]={version}"
+        )
+        .WithWorkingDirectory(repoRoot)
+        .RunAsync();
+
+      if (exitCode == 0)
+      {
+        Terminal.WriteLine("✓ timewarp-software rebuild dispatched");
+      }
+      else
+      {
+        Terminal.WriteLine("⚠ Could not dispatch timewarp-software rebuild (non-fatal; the site rebuilds nightly)");
       }
     }
 
