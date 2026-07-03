@@ -155,6 +155,35 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalStaticWidget
       await Task.CompletedTask;
     }
 
+    // Regression: the positional forms were once ambiguous (CS0121) between the
+    // (string, string?) and (string, string?, ConsoleColor?, ConsoleColor?) overloads,
+    // which only consumer code exercised. Compiling these calls IS the test.
+    public static async Task Should_write_panel_with_positional_arguments()
+    {
+      // Arrange
+      ITerminal original = Terminal.Instance;
+      using TestTerminal testTerminal = new() { WindowWidth = 40 };
+      Terminal.Instance = testTerminal;
+
+      try
+      {
+        // Act
+        Terminal.WritePanel("Positional content");
+        Terminal.WritePanel("More content", "Positional Header");
+
+        // Assert
+        testTerminal.Output.ShouldContain("Positional content");
+        testTerminal.Output.ShouldContain("Positional Header");
+        testTerminal.Output.ShouldContain("More content");
+      }
+      finally
+      {
+        Terminal.Instance = original;
+      }
+
+      await Task.CompletedTask;
+    }
+
     // ========== Rule Tests ==========
 
     public static async Task Should_write_rule_with_title()

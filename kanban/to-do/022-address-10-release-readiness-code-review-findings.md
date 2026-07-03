@@ -14,10 +14,14 @@ calls — triage each.
 
 ## Checklist — Blockers (must fix before 1.0)
 
-- [ ] `terminal-static.cs:447,495` — `WritePanel(string, string?)` and
+- [x] `terminal-static.cs:447,495` — `WritePanel(string, string?)` and
       `WritePanel(string, string?, ConsoleColor?, ConsoleColor?)` make
       `Terminal.WritePanel("content")` a CS0121 ambiguous-call compile error; that exact
       call is the documented example at line 443. Collapse the overload set.
+      FIXED: removed the redundant `(string, string?)` overload (source-compatible — the
+      4-param overload covers every previously-compilable call) and added a positional
+      regression test in tests/terminal-static-05-widgets.cs; the ambiguity had zero test
+      coverage because existing tests only used named args or the ITerminal extension.
 - [ ] `widgets/rule-widget.cs:102-110` — colored rule with a title longer than the width
       recomputes negative left/right line lengths and `new string(char, -n)` throws
       ArgumentOutOfRangeException, bypassing the min-width fallback computed at line 74.

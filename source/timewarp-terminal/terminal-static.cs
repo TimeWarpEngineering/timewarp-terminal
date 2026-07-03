@@ -434,27 +434,6 @@ public static class Terminal
   }
 
   /// <summary>
-  /// Writes a panel with content and optional header to the terminal.
-  /// </summary>
-  /// <param name="content">The content to display inside the panel.</param>
-  /// <param name="header">The header to display in the top border. Defaults to <c>null</c>.</param>
-  /// <example>
-  /// <code>
-  /// Terminal.WritePanel("This is important information");
-  /// Terminal.WritePanel("Content here", header: "Notice");
-  /// </code>
-  /// </example>
-  public static void WritePanel(string content, string? header = null)
-  {
-    Panel panel = new() { Content = content, Header = header };
-    string[] lines = panel.Render(WindowWidth);
-    foreach (string line in lines)
-    {
-      _ = Instance.WriteLine(line);
-    }
-  }
-
-  /// <summary>
   /// Writes a panel configured via a builder action to the terminal with optional colors.
   /// </summary>
   /// <param name="configure">An action to configure the panel using a <see cref="PanelBuilder"/>.</param>
@@ -488,6 +467,8 @@ public static class Terminal
   /// <param name="backgroundColor">The background color to apply to panel content. Defaults to <c>null</c> (no color).</param>
   /// <example>
   /// <code>
+  /// Terminal.WritePanel("This is important information");
+  /// Terminal.WritePanel("Content here", "Notice");
   /// Terminal.WritePanel("This is important information", header: "Notice",
   ///     foregroundColor: ConsoleColor.White, backgroundColor: ConsoleColor.DarkBlue);
   /// </code>
