@@ -8,21 +8,21 @@
     <PackageVersion Include="TimeWarp.Amuru" Version="1.0.0" />
     <PackageVersion Include="TimeWarp.Amuru.Tools" Version="1.0.0-beta.2" />
     <PackageVersion Include="TimeWarp.Builder" Version="1.0.0" />
-    <!-- Jaribu beta.12 pulls Amuru beta.21 -> StreamJsonRpc -> MessagePack 2.5.198,
-         which trips NU1902/NU1903 under our TreatWarningsAsErrors policy -->
-    <PackageVersion Include="TimeWarp.Jaribu" Version="1.0.0-beta.13" />
-    <PackageVersion Include="TimeWarp.Nuru" Version="3.0.0-beta.72" />
-    <PackageVersion Include="TimeWarp.Nuru.DevCli" Version="3.0.0-beta.72" />
+    <!-- Jaribu beta.12 pulled Amuru beta.21 -> StreamJsonRpc -> MessagePack 2.5.198
+         (NU1902/NU1903 under TreatWarningsAsErrors). beta.15 restores clean. -->
+    <PackageVersion Include="TimeWarp.Jaribu" Version="1.0.0-beta.15" />
+    <PackageVersion Include="TimeWarp.Nuru" Version="3.0.0-beta.76" />
+    <PackageVersion Include="TimeWarp.Nuru.DevCli" Version="3.0.0-beta.76" />
     <PackageVersion Include="TimeWarp.Build.Tasks" Version="1.0.0" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <PackageVersion Include="Shouldly" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup Label="Code Analyzers">
-    <PackageVersion Include="Roslynator.Analyzers" Version="4.15.0" />
-    <PackageVersion Include="Roslynator.CodeAnalysis.Analyzers" Version="4.15.0" />
-    <PackageVersion Include="Roslynator.Formatting.Analyzers" Version="4.15.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.301" />
+    <PackageVersion Include="Roslynator.Analyzers" Version="4.16.0" />
+    <PackageVersion Include="Roslynator.CodeAnalysis.Analyzers" Version="4.16.0" />
+    <PackageVersion Include="Roslynator.Formatting.Analyzers" Version="4.16.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.400" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="5.6.0" />
   </ItemGroup>
 </Project>
