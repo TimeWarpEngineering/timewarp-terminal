@@ -61,6 +61,8 @@ protection, then the **next** kitchen uses publish. Record which path was used.
 - Trigger: nuru 468 other-repo scan — timewarp-terminal was the remaining public repo with
   `enforce_admins: true` + require PR
 - Implementer: grok session (2026-09-02) — `enforce_admins` off + publish proof 027-001
+- Review: grok (2026-09-02) — effort 1 general; disposition clean
+- Reviewer subagent: `01a062e3-8bce-7482-9573-b86fae03c983`
 
 ## Notes
 
@@ -91,7 +93,8 @@ PR-fallback (ganda 221).
 
 ### Files changed
 
-- `kanban/to-do/027-…/task.md` (this file) — Notes / Results
+- `kanban/to-do/027-…/task.md` (this file) — Notes / Results / review disposition
+- `kanban/to-do/027-…/review/` — framework, round-1 general + merged, disposition
 - GitHub branch protection (not in git)
 - Child kitchen `kanban/to-do/027-001-….md` already on origin-home via publish (`dc075a7`)
 
@@ -129,3 +132,16 @@ git log -1 --oneline origin/master
 - Force-push and branch deletion stay off.
 
 **Not in scope:** inventing a ganda publish PR-fallback; dropping require-PR for everyone.
+
+### Review disposition
+
+- **Outcome:** clean
+- **Rounds:** 1
+- **Effort / roster:** 1, general only
+- **Final counts:** bug 0 / suggestion 0 / nit 0 (all statuses 0; no issues raised)
+- **Wontfix / escalations:** none
+- **Paths:**
+  - `review/review-framework.md`
+  - `review/round-1/general.md`
+  - `review/round-1/merged.md`
+  - `review/disposition.md`
