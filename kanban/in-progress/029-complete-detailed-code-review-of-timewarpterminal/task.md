@@ -67,18 +67,19 @@ Severity: `bug` · `suggestion` · `nit`. Status starts `open`. Prefer strongest
 
 - [x] Folder task created (`ganda kanban reserve` + `claim --repo timewarp-terminal`)
 - [x] `review/review-framework.md` scaffolded with scope, roster, prior-art notes
-- [ ] Worker re-pins SHA at review start if `origin/master` moved
+- [x] Worker re-pins SHA at implement start (`origin/master` `1a6a29b66c38ba24b6306520de554b22def7bc74`)
+- [x] Moved to in-progress (`ganda kanban move 029 in-progress`)
 
 ### Round 1
 
-- [ ] Area reviewers write `review/round-1/<area>.md` (6 files)
+- [ ] Area reviewers write `review/round-1/<area>.md` (6 files) — host `review` oracle (elevated roster in `review/review-framework.md`)
 - [ ] Merge → `review/round-1/merged.md` (counts + stable `M#`)
 
 ### Disposition / follow-through
 
 - [ ] Child tasks for independent product fixes (`--parent 029`), or same-task nits committed here
 - [ ] `review/disposition.md`
-- [ ] `## Results` + `### How to validate`
+- [x] `## Results` + `### How to validate` (implement pass; review oracle must add disposition)
 - [ ] Do not `kanban done` from the implementer; host lifecycle / human gate
 
 ## Notes
@@ -95,6 +96,14 @@ Severity: `bug` · `suggestion` · `nit`. Status starts `open`. Prefer strongest
 - Shipped package: **TimeWarp.Terminal** only. Layout package is **023**, not in tree.
 - ~28 library `.cs` files + 33 tests + 5 samples + 5 tools
 - Other open work: **023** (Layout, gated on Flexbox), **027-001**, **028**
+
+### Snapshot at implement start (2026-09-04)
+
+- Origin-home SHA: `1a6a29b66c38ba24b6306520de554b22def7bc74` (`publish kanban 029`)
+- `bf38d51..1a6a29b` is this kitchen only (no product-code delta)
+- Package version still `1.0.1`
+- Implement did **not** spawn area reviewers; host `review` oracle owns `review/round-1/`
+- Local unstaged `.gitignore` journal ignore is **028**, not this id — left unstaged
 
 ### Related skills
 
@@ -113,3 +122,67 @@ ganda task work 029 --repo timewarp-terminal --host herdr
 
 - Created: Grok cockpit `01a06a77-1631-7543-b181-07ddc524f9fe` (2026-09-04) — reserved/claimed 029, wrote inbound brief
 - Ganda claim: cramer@TWE-001 session 3290412 (2026-09-04)
+- Implementer: Grok `01a06a90-5bc6-7a91-8523-fa528da1fa16` (2026-09-04) — re-pin SHA, in-progress, Results; no reviewer spawn
+- Ganda claim (implement pickup): cramer@TWE-001 session 3295467 (2026-09-04)
+
+## Results
+
+### What was implemented
+
+Implement oracle on **029** (whole-repo TimeWarp.Terminal review). No product-code change: this id reviews origin-home `master` as it exists, and ExtraRules forbid freelance `tw-implementation-review` / reviewer spawn from implement.
+
+- Moved kitchen `to-do` → `in-progress`.
+- Re-pinned `review/review-framework.md` to `git rev-parse origin/master` = `1a6a29b66c38ba24b6306520de554b22def7bc74` (`1a6a29b publish kanban 029`). Kitchen-create pin `bf38d51` kept as history. Product files are unchanged vs that pin (`bf38d51..1a6a29b` is this kitchen only).
+- Left `review/round-1/` uncreated for the host **review** oracle (elevated 6-area roster already recorded on the framework).
+- Did not create child tasks (no merged findings yet). Did not `kanban done` or `gh pr create`. Did not commit local `.gitignore` journal ignore (task **028**).
+
+### Files changed
+
+- `kanban/in-progress/029-complete-detailed-code-review-of-timewarpterminal/task.md` (column move + this Results)
+- `kanban/in-progress/029-complete-detailed-code-review-of-timewarpterminal/review/review-framework.md` (SHA re-pin)
+
+### Key decisions
+
+- Host walks implement → review. Round-1 artifacts belong to the review node so it does not clobber or dual-write `round-1/`.
+- Review scope stays whole-repo origin-home `master` at the pinned SHA, not this branch’s kanban-only delta.
+- Roster remains elevated: `core-abstractions`, `static-facade`, `test-doubles`, `widgets`, `tests-infra`, `security`.
+
+### Test outcomes
+
+- No library/tests/samples/tools edits; no `./bin/dev test` run this pass.
+- `git fetch origin master` then `git rev-parse origin/master` → `1a6a29b66c38ba24b6306520de554b22def7bc74`.
+- `git diff --stat bf38d514990febd2815294908b2a599c6f6e0bab..1a6a29b66c38ba24b6306520de554b22def7bc74` → two kitchen files only.
+
+### Review disposition
+
+- **Outcome:** pending host `review` oracle (not `clean` / `accepted-exceptions` yet)
+- **Rounds:** 0 (round 1 not started)
+- **Effort / roster:** elevated; 6 area files named in `review/review-framework.md`
+- **Final counts:** n/a until `review/round-1/merged.md`
+- **Wontfix / escalations:** none this pass
+- **Paths:**
+  - `review/review-framework.md` (pinned SHA + roster)
+  - `review/round-1/` — not written by implement
+  - `review/disposition.md` — not written by implement
+
+### How to validate
+
+**Smoke**
+
+```bash
+git fetch origin master
+echo "origin/master=$(git rev-parse origin/master)"
+grep -n 'Pinned SHA at implement start' kanban/in-progress/029-complete-detailed-code-review-of-timewarpterminal/review/review-framework.md
+test ! -d kanban/in-progress/029-complete-detailed-code-review-of-timewarpterminal/review/round-1 && echo 'round-1 absent (review oracle owns it)'
+ganda kanban show 029
+```
+
+**Expect**
+
+- `origin/master` equals `1a6a29b66c38ba24b6306520de554b22def7bc74`.
+- Framework line contains that full SHA; roster lists the six area names; host path is `kanban/in-progress/029-…`.
+- `review/round-1/` does not exist until the host review oracle runs.
+- `ganda kanban show 029` reports column `in-progress` and claim held.
+- `git diff origin/master -- source tests samples tools .github` is empty (no product delta from implement).
+
+**Not in scope this pass:** spawning the six area reviewers; `review/disposition.md`; child tasks; `./bin/dev test`; committing `.gitignore` (028).
