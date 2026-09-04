@@ -181,20 +181,18 @@ echo "origin/master=$(git rev-parse origin/master)"
 test -f kanban/in-progress/029-complete-detailed-code-review-of-timewarpterminal/review/round-1/merged.md
 test -f kanban/in-progress/029-complete-detailed-code-review-of-timewarpterminal/review/disposition.md
 grep -E '^\*\*Outcome:\*\*' kanban/in-progress/029-complete-detailed-code-review-of-timewarpterminal/review/disposition.md
+git ls-tree --name-only origin/master kanban/to-do/ | grep '^kanban/to-do/029-00'
+git diff origin/master -- source tests samples tools .github
 ganda kanban show 029
-ganda kanban show 029-001
-ganda kanban show 029-002
-ganda kanban show 029-003
-ganda kanban show 029-004
-ganda kanban show 029-005
 ```
 
 **Expect**
 
-- `origin/master` still `1a6a29b66c38ba24b6306520de554b22def7bc74` unless home moved; product tree vs that pin is unchanged (`git diff origin/master -- source tests samples tools .github` empty on this branch).
+- Reviewed product pin is still `1a6a29b66c38ba24b6306520de554b22def7bc74`; origin-home later moved with kanban-only child publishes (029-001 `5455b0b` … 029-005 `5f2ab30`).
+- `git diff origin/master -- source tests samples tools .github` is empty on this branch (no product delta).
 - `review/round-1/` has six area files plus `merged.md`; counts table is 10/7/4 open.
 - `review/disposition.md` Outcome is `pending-children`; lists children 029-001..005.
 - `ganda kanban show 029` reports column `in-progress` and claim held.
-- Children exist as `--parent 029` to-do items (after publish: on origin-home `kanban/to-do/`).
+- `git ls-tree origin/master kanban/to-do/` lists 029-001..005 markdown kitchens.
 
 **Not in scope this pass:** product fixes (those are the children); `./bin/dev test`; committing `.gitignore` (028); `kanban done`; `gh pr create`.

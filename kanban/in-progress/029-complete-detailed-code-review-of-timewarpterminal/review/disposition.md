@@ -12,13 +12,13 @@ Elevated six-area round 1 of TimeWarp.Terminal 1.0.1 (whole-repo, not a PR delta
 
 ## Children (open findings)
 
-| Child | Merged IDs | Batch |
-|-------|------------|--------|
-| **029-001** | M1, M2, M3, M4, M14, M18 | TestConsole/TestTerminal parity + FormatProvider |
-| **029-002** | M5, M6 | OSC 8 C1 ST + URL display text |
-| **029-003** | M7, M8, M15, M16, M19 | Panel layout / wrap / builders |
-| **029-004** | M9, M10, M20, M21 | CI path filters, snupkg push, pack Include, banner |
-| **029-005** | M11, M12, M13, M17 | Title getter, Beep docs, CancelKeyPress, stderr color |
+| Child | Merged IDs | Batch | Origin-home |
+|-------|------------|--------|-------------|
+| **029-001** | M1, M2, M3, M4, M14, M18 | TestConsole/TestTerminal parity + FormatProvider | published `5455b0b` |
+| **029-002** | M5, M6 | OSC 8 C1 ST + URL display text | published `1e06939` |
+| **029-003** | M7, M8, M15, M16, M19 | Panel layout / wrap / builders | published `bbe2d87` |
+| **029-004** | M9, M10, M20, M21 | CI path filters, snupkg push, pack Include, banner | published `28e5005` |
+| **029-005** | M11, M12, M13, M17 | Title getter, Beep docs, CancelKeyPress, stderr color | published `5f2ab30` |
 
 ## Exception log (if accepted-exceptions)
 
