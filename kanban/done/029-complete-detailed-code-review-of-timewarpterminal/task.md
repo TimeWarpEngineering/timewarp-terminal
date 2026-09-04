@@ -67,18 +67,19 @@ Severity: `bug` · `suggestion` · `nit`. Status starts `open`. Prefer strongest
 
 - [x] Folder task created (`ganda kanban reserve` + `claim --repo timewarp-terminal`)
 - [x] `review/review-framework.md` scaffolded with scope, roster, prior-art notes
-- [ ] Worker re-pins SHA at review start if `origin/master` moved
+- [x] Worker re-pins SHA at implement start (`origin/master` `1a6a29b66c38ba24b6306520de554b22def7bc74`)
+- [x] Moved to in-progress (`ganda kanban move 029 in-progress`)
 
 ### Round 1
 
-- [ ] Area reviewers write `review/round-1/<area>.md` (6 files)
-- [ ] Merge → `review/round-1/merged.md` (counts + stable `M#`)
+- [x] Area reviewers write `review/round-1/<area>.md` (6 files) — host `review` oracle (elevated roster in `review/review-framework.md`)
+- [x] Merge → `review/round-1/merged.md` (counts + stable `M#`)
 
 ### Disposition / follow-through
 
-- [ ] Child tasks for independent product fixes (`--parent 029`), or same-task nits committed here
-- [ ] `review/disposition.md`
-- [ ] `## Results` + `### How to validate`
+- [x] Child tasks for independent product fixes (`--parent 029`): **029-001** … **029-005**
+- [x] `review/disposition.md` (`pending-children`; 0 unfiled opens)
+- [x] `## Results` + `### How to validate` (implement pass + review disposition)
 - [ ] Do not `kanban done` from the implementer; host lifecycle / human gate
 
 ## Notes
@@ -95,6 +96,14 @@ Severity: `bug` · `suggestion` · `nit`. Status starts `open`. Prefer strongest
 - Shipped package: **TimeWarp.Terminal** only. Layout package is **023**, not in tree.
 - ~28 library `.cs` files + 33 tests + 5 samples + 5 tools
 - Other open work: **023** (Layout, gated on Flexbox), **027-001**, **028**
+
+### Snapshot at implement start (2026-09-04)
+
+- Origin-home SHA: `1a6a29b66c38ba24b6306520de554b22def7bc74` (`publish kanban 029`)
+- `bf38d51..1a6a29b` is this kitchen only (no product-code delta)
+- Package version still `1.0.1`
+- Implement did **not** spawn area reviewers; host `review` oracle owns `review/round-1/`
+- Local unstaged `.gitignore` journal ignore is **028**, not this id — left unstaged
 
 ### Related skills
 
@@ -113,3 +122,77 @@ ganda task work 029 --repo timewarp-terminal --host herdr
 
 - Created: Grok cockpit `01a06a77-1631-7543-b181-07ddc524f9fe` (2026-09-04) — reserved/claimed 029, wrote inbound brief
 - Ganda claim: cramer@TWE-001 session 3290412 (2026-09-04)
+- Implementer: Grok `01a06a90-5bc6-7a91-8523-fa528da1fa16` (2026-09-04) — re-pin SHA, in-progress, Results; no reviewer spawn
+- Ganda claim (implement pickup): cramer@TWE-001 session 3295467 (2026-09-04)
+- Review: Grok `01a06a96-935c-79a0-b334-1e5bc6c6b568` (2026-09-04) — elevated 6-area round 1, merge, children 029-001..005, disposition
+- Reviewer subagents: core-abstractions `01a06a99-29fd-7121-a141-691d78e42cbc`; static-facade `01a06a99-29fe-7993-a3cf-8a884083616f`; test-doubles `01a06a99-29fe-7993-a3cf-8a992a3ff231`; widgets `01a06a99-29fe-7993-a3cf-8aa4c8a1b0a2`; tests-infra `01a06a99-29ff-7fc0-93a7-d0c41418c392`; security `01a06a99-29ff-7fc0-93a7-d0d65bb9ff4e`
+
+## Results
+
+### What was implemented
+
+Implement oracle re-pinned the SHA and left `review/round-1/` for the host review node (no product-code change). Review oracle ran elevated six-area round 1 against origin-home `master` at `1a6a29b66c38ba24b6306520de554b22def7bc74`, merged findings, filed five `--parent 029` children, and wrote disposition. Still no product-code change on this branch. Did not `kanban done` or `gh pr create`. Did not commit local `.gitignore` journal ignore (task **028**).
+
+### Files changed
+
+- `kanban/in-progress/029-complete-detailed-code-review-of-timewarpterminal/task.md`
+- `kanban/in-progress/029-complete-detailed-code-review-of-timewarpterminal/review/review-framework.md`
+- `kanban/in-progress/029-complete-detailed-code-review-of-timewarpterminal/review/round-1/{core-abstractions,static-facade,test-doubles,widgets,tests-infra,security,merged}.md`
+- `kanban/in-progress/029-complete-detailed-code-review-of-timewarpterminal/review/disposition.md`
+- Children (own kitchens): **029-001** … **029-005**
+
+### Key decisions
+
+- Host walks implement → review. Round-1 artifacts belong to the review node.
+- Review scope stays whole-repo origin-home `master` at the pinned SHA, not this branch’s kanban-only delta.
+- Roster remained elevated (task brief), not default effort-1: `core-abstractions`, `static-facade`, `test-doubles`, `widgets`, `tests-infra`, `security`.
+- Independent product fixes → children `--parent 029`. No sibling “apply 029 findings” task. No `wontfix` this round.
+
+### Test outcomes
+
+- No library/tests/samples/tools edits on 029; no `./bin/dev test` this pass.
+- Findings re-verified against current files (path:line) plus NuGet symbolpackage 1.0.0/1.0.1 HTTP 404 and on-disk `readme.md` (no `README.md`).
+
+### Review disposition
+
+- **Outcome:** `pending-children` (not `clean` / `accepted-exceptions` until children land)
+- **Rounds:** 1
+- **Effort / roster:** elevated; 6 area files
+- **Final counts (round 1 merged):** bug 10 open / suggestion 7 open / nit 4 open — **0 unfiled**
+- **Wontfix / escalations:** none
+- **Children:**
+  - **029-001** — M1, M2, M3, M4, M14, M18 (test doubles + FormatProvider)
+  - **029-002** — M5, M6 (OSC 8)
+  - **029-003** — M7, M8, M15, M16, M19 (panel/widgets)
+  - **029-004** — M9, M10, M20, M21 (CI/packaging)
+  - **029-005** — M11, M12, M13, M17 (core contract)
+- **Paths:**
+  - `review/review-framework.md`
+  - `review/round-1/merged.md`
+  - `review/disposition.md`
+
+### How to validate
+
+**Smoke**
+
+```bash
+git fetch origin master
+echo "origin/master=$(git rev-parse origin/master)"
+test -f kanban/in-progress/029-complete-detailed-code-review-of-timewarpterminal/review/round-1/merged.md
+test -f kanban/in-progress/029-complete-detailed-code-review-of-timewarpterminal/review/disposition.md
+grep -E '^\*\*Outcome:\*\*' kanban/in-progress/029-complete-detailed-code-review-of-timewarpterminal/review/disposition.md
+git ls-tree --name-only origin/master kanban/to-do/ | grep '^kanban/to-do/029-00'
+git diff origin/master -- source tests samples tools .github
+ganda kanban show 029
+```
+
+**Expect**
+
+- Reviewed product pin is still `1a6a29b66c38ba24b6306520de554b22def7bc74`; origin-home later moved with kanban-only child publishes (029-001 `5455b0b` … 029-005 `5f2ab30`).
+- `git diff origin/master -- source tests samples tools .github` is empty on this branch (no product delta).
+- `review/round-1/` has six area files plus `merged.md`; counts table is 10/7/4 open.
+- `review/disposition.md` Outcome is `pending-children`; lists children 029-001..005.
+- `ganda kanban show 029` reports column `in-progress` and claim held.
+- `git ls-tree origin/master kanban/to-do/` lists 029-001..005 markdown kitchens.
+
+**Not in scope this pass:** product fixes (those are the children); `./bin/dev test`; committing `.gitignore` (028); `kanban done`; `gh pr create`.
