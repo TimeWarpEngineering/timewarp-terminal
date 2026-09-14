@@ -8,7 +8,13 @@ namespace TimeWarp.Terminal;
 #region Design
 // Lighter alternative to TestTerminal for tests needing only IConsole (line-based I/O).
 // Separate from TestTerminal: independent test doubles per interface, not inheritance.
-// IDisposable cleans up StringReader and StringWriter resources.
+// Read falls back to In when CharacterQueue is empty so constructor input and SetIn share one source.
+// Write*/Read*/ReadLine route through Out/Error/In; capture writers are teed so Output/ErrorOutput
+// still work after SetOut/SetError.
+// IDisposable disposes StringReader/StringWriter plus only constructor-created MemoryStreams
+// (Owned* fields) — consumer-assigned Standard*Stream values are never disposed.
+// ClearOutput discards captured stdout/stderr. Clear is an alias; TestConsole has no ITerminal.Clear
+// screen-clear marker (that lives on TestTerminal.Clear).
 // Helper methods (OutputContains, GetOutputLines) reduce boilerplate in test assertions.
 #endregion
 
@@ -36,6 +42,9 @@ public sealed class TestConsole : IConsole, IDisposable
   private readonly StringWriter OutputWriter;
   private readonly StringWriter ErrorWriter;
   private readonly Queue<char> CharacterQueue;
+  private readonly MemoryStream OwnedStandardInputStream;
+  private readonly MemoryStream OwnedStandardOutputStream;
+  private readonly MemoryStream OwnedStandardErrorStream;
   private bool Disposed;
 
   /// <summary>
@@ -132,9 +141,12 @@ public sealed class TestConsole : IConsole, IDisposable
     In = InputReader;
     Out = OutputWriter;
     Error = ErrorWriter;
-    StandardInputStream = new MemoryStream();
-    StandardOutputStream = new MemoryStream();
-    StandardErrorStream = new MemoryStream();
+    OwnedStandardInputStream = new MemoryStream();
+    OwnedStandardOutputStream = new MemoryStream();
+    OwnedStandardErrorStream = new MemoryStream();
+    StandardInputStream = OwnedStandardInputStream;
+    StandardOutputStream = OwnedStandardOutputStream;
+    StandardErrorStream = OwnedStandardErrorStream;
   }
 
   /// <summary>
@@ -155,46 +167,39 @@ public sealed class TestConsole : IConsole, IDisposable
   /// <inheritdoc />
   public IConsole Write(string message)
   {
-    OutputWriter.Write(message);
+    WriteTo(Out, OutputWriter, message, newLine: false);
     return this;
   }
 
   /// <inheritdoc />
   public IConsole WriteLine(string? message = null)
   {
-    OutputWriter.WriteLine(message ?? string.Empty);
+    WriteTo(Out, OutputWriter, message ?? string.Empty, newLine: true);
     return this;
   }
 
   /// <inheritdoc />
   public async Task WriteLineAsync(string? message = null)
-    => await OutputWriter.WriteLineAsync(message ?? string.Empty).ConfigureAwait(false);
+    => await WriteLineToAsync(Out, OutputWriter, message ?? string.Empty).ConfigureAwait(false);
 
   /// <inheritdoc />
   public IConsole WriteErrorLine(string? message = null)
   {
-    ErrorWriter.WriteLine(message ?? string.Empty);
+    WriteTo(Error, ErrorWriter, message ?? string.Empty, newLine: true);
     return this;
   }
 
   /// <inheritdoc />
   public async Task WriteErrorLineAsync(string? message = null)
-    => await ErrorWriter.WriteLineAsync(message ?? string.Empty).ConfigureAwait(false);
+    => await WriteLineToAsync(Error, ErrorWriter, message ?? string.Empty).ConfigureAwait(false);
 
   /// <inheritdoc />
   public string? ReadLine()
-    => InputReader.ReadLine();
+    => In.ReadLine();
 
   /// <inheritdoc />
   public int Read()
-  {
-    if (CharacterQueue.Count > 0)
-    {
-      return CharacterQueue.Dequeue();
-    }
-
-    return -1;
-  }
+    => CharacterQueue.Count > 0 ? CharacterQueue.Dequeue() : In.Read();
 
   /// <summary>
   /// Queues characters for <see cref="Read"/> to return.
@@ -217,7 +222,25 @@ public sealed class TestConsole : IConsole, IDisposable
   /// <summary>
   /// Clears all captured output.
   /// </summary>
+  /// <remarks>
+  /// Discards captured stdout and stderr so subsequent assertions observe only writes after
+  /// this call. Prefer <see cref="ClearOutput"/> when switching between <see cref="TestConsole"/>
+  /// and <see cref="TestTerminal"/> — on <see cref="TestTerminal"/>, <c>Clear</c> is the
+  /// <see cref="ITerminal.Clear"/> screen-clear marker and <c>ClearOutput</c> discards capture.
+  /// <see cref="TestConsole"/> has no screen-clear operation; <see cref="Clear"/> is an alias
+  /// of <see cref="ClearOutput"/>.
+  /// </remarks>
   public void Clear()
+    => ClearOutput();
+
+  /// <summary>
+  /// Clears all captured output.
+  /// </summary>
+  /// <remarks>
+  /// Discards captured stdout and stderr. Same helper as <see cref="TestTerminal.ClearOutput"/>.
+  /// Unlike <see cref="TestTerminal.Clear"/>, this does not append a <c>[CLEAR]</c> marker.
+  /// </remarks>
+  public void ClearOutput()
   {
     _ = OutputWriter.GetStringBuilder().Clear();
     _ = ErrorWriter.GetStringBuilder().Clear();
@@ -266,9 +289,47 @@ public sealed class TestConsole : IConsole, IDisposable
     InputReader.Dispose();
     OutputWriter.Dispose();
     ErrorWriter.Dispose();
-    StandardInputStream.Dispose();
-    StandardOutputStream.Dispose();
-    StandardErrorStream.Dispose();
+
+    // Dispose only the streams this instance created in its constructor.
+    // Consumer-assigned Standard*Stream replacements are owned by the consumer and must not be disposed here.
+    OwnedStandardInputStream.Dispose();
+    OwnedStandardOutputStream.Dispose();
+    OwnedStandardErrorStream.Dispose();
     Disposed = true;
+  }
+
+  private static void WriteTo(TextWriter destination, StringWriter capture, string value, bool newLine)
+  {
+    if (newLine)
+    {
+      destination.WriteLine(value);
+    }
+    else
+    {
+      destination.Write(value);
+    }
+
+    if (ReferenceEquals(destination, capture))
+    {
+      return;
+    }
+
+    if (newLine)
+    {
+      capture.WriteLine(value);
+    }
+    else
+    {
+      capture.Write(value);
+    }
+  }
+
+  private static async Task WriteLineToAsync(TextWriter destination, StringWriter capture, string value)
+  {
+    await destination.WriteLineAsync(value).ConfigureAwait(false);
+    if (!ReferenceEquals(destination, capture))
+    {
+      await capture.WriteLineAsync(value).ConfigureAwait(false);
+    }
   }
 }

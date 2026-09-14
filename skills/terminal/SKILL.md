@@ -153,6 +153,8 @@ Embedded ANSI from string extensions like `.Green()` is the caller's responsibil
 Format overloads (`Terminal.Write("{0:N2}", value)` etc.) use the current culture,
 matching `System.Console`. Set `Terminal.FormatProvider = CultureInfo.InvariantCulture`
 for deterministic output; `null` (default) resolves `CurrentCulture` per call.
+Inside `TestTerminalContext.Use`, that assignment is async-local (parallel-safe);
+outside a context it is process-global.
 
 ### Unicode Width
 

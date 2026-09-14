@@ -196,6 +196,87 @@ namespace TimeWarp.Terminal.Tests.Core.StreamAccess
 
       await Task.CompletedTask;
     }
+
+    public static async Task Should_not_dispose_consumer_assigned_standard_output_stream_in_test_console()
+    {
+      // Arrange
+      TestConsole console = new();
+      using MemoryStream customStream = new();
+      console.StandardOutputStream = customStream;
+
+      // Act
+      console.Dispose();
+
+      // Assert - consumer-assigned stream must remain usable after TestConsole.Dispose
+      customStream.WriteByte(0x41);
+      customStream.Length.ShouldBe(1L);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_write_to_set_out_writer_in_test_console()
+    {
+      // Arrange
+      using TestConsole console = new();
+      using StringWriter redirected = new();
+      console.SetOut(redirected);
+
+      // Act
+      await console.WriteLineAsync("hello-out");
+
+      // Assert
+      redirected.ToString().ShouldContain("hello-out");
+      console.Output.ShouldContain("hello-out");
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_write_error_to_set_error_writer_in_test_console()
+    {
+      // Arrange
+      using TestConsole console = new();
+      using StringWriter redirected = new();
+      console.SetError(redirected);
+
+      // Act
+      await console.WriteErrorLineAsync("hello-err");
+
+      // Assert
+      redirected.ToString().ShouldContain("hello-err");
+      console.ErrorOutput.ShouldContain("hello-err");
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_read_line_from_set_in_reader_in_test_console()
+    {
+      // Arrange
+      using TestConsole console = new("constructor");
+      console.SetIn(new StringReader("redirected"));
+
+      // Act
+      string? line = console.ReadLine();
+
+      // Assert
+      line.ShouldBe("redirected");
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_read_from_set_in_reader_in_test_console()
+    {
+      // Arrange
+      using TestConsole console = new();
+      console.SetIn(new StringReader("Z"));
+
+      // Act
+      int result = console.Read();
+
+      // Assert
+      result.ShouldBe('Z');
+
+      await Task.CompletedTask;
+    }
   }
 
   [TestTag("ITerminal")]
@@ -398,6 +479,70 @@ namespace TimeWarp.Terminal.Tests.Core.StreamAccess
       // Assert - consumer-assigned stream must remain usable after TestTerminal.Dispose
       customStream.WriteByte(0x41);
       customStream.Length.ShouldBe(1L);
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_write_to_set_out_writer_in_test_terminal()
+    {
+      // Arrange
+      using TestTerminal terminal = new();
+      using StringWriter redirected = new();
+      terminal.SetOut(redirected);
+
+      // Act
+      await terminal.WriteLineAsync("hello-out");
+
+      // Assert
+      redirected.ToString().ShouldContain("hello-out");
+      terminal.Output.ShouldContain("hello-out");
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_write_error_to_set_error_writer_in_test_terminal()
+    {
+      // Arrange
+      using TestTerminal terminal = new();
+      using StringWriter redirected = new();
+      terminal.SetError(redirected);
+
+      // Act
+      await terminal.WriteErrorLineAsync("hello-err");
+
+      // Assert
+      redirected.ToString().ShouldContain("hello-err");
+      terminal.ErrorOutput.ShouldContain("hello-err");
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_read_line_from_set_in_reader_in_test_terminal()
+    {
+      // Arrange
+      using TestTerminal terminal = new("constructor");
+      terminal.SetIn(new StringReader("redirected"));
+
+      // Act
+      string? line = terminal.ReadLine();
+
+      // Assert
+      line.ShouldBe("redirected");
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_read_from_set_in_reader_in_test_terminal()
+    {
+      // Arrange
+      using TestTerminal terminal = new();
+      terminal.SetIn(new StringReader("Z"));
+
+      // Act
+      int result = terminal.Read();
+
+      // Assert
+      result.ShouldBe('Z');
 
       await Task.CompletedTask;
     }
