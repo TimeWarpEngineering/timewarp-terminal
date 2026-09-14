@@ -48,6 +48,7 @@ Do **not** create a sibling “apply 029 findings” task. This child is the pro
 - [x] M14 ReadKey constructor uppercase sets Shift
 - [x] M18 Clear naming/docs
 - [x] `./bin/dev test` (or the repo test command) green for the touched runfiles
+- [x] Effort-1 implementation review (round 1 general) + disposition on this id
 
 ## Notes
 
@@ -60,6 +61,7 @@ Do **not** create a sibling “apply 029 findings” task. This child is the pro
 - Created: 3361369 (2026-09-04)
 - Parent review: Grok `01a06a96-935c-79a0-b334-1e5bc6c6b568` (2026-09-04)
 - Implementer: Grok `01a0a236-27b6-7b13-a0f9-0b2f6578c348` (2026-09-15)
+- Review oracle: Grok `01a0a243-c399-7711-b5e7-0ea48c6a87f0` (2026-09-15); general reviewer `01a0a245-1d44-7970-9cdd-5aaad14b7346`
 
 ## Results
 
@@ -128,3 +130,16 @@ for f in tests/*.cs; do dotnet "$f" || exit 1; done
 ```
 
 **Not in scope:** live console / `TimeWarpTerminal.Default` I/O; `gh pr create` and `ganda kanban done` (later host nodes).
+
+### Review disposition
+
+- **Rounds:** 1
+- **Effort / roster:** 1 — general only
+- **Final counts:** 0 open / 0 fixed / 0 wontfix (bug, suggestion, nit all zero)
+- **Outcome:** `clean` (no issues raised; parent M1, M2, M3, M4, M14, M18 re-verified landed)
+- **Paths:**
+  - `review/review-framework.md`
+  - `review/round-1/general.md`
+  - `review/round-1/merged.md`
+  - `review/disposition.md`
+- Review-session smoke: stream-access 36 passed, rich-input 25 passed, test-terminal-context 12 passed. Unstaged `.gitignore` was out of scope.
