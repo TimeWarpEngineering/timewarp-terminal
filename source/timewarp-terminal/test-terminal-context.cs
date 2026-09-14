@@ -1,5 +1,17 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Ambient async-local TestTerminal for zero-config tests without mutating Terminal.Instance.
+#endregion
+
+#region Design
+// Instance resolution prefers AsyncLocal Current over the process-global Terminal.Instance.
+// FormatProvider overrides are also AsyncLocal (set while a context is active) so parallel Use
+// scopes that assign Terminal.FormatProvider do not race the process-global value.
+// SnapshotHead is an immutable linked list stored in AsyncLocal: Task.Run inside Use copies the
+// head reference, and a nested push allocates a new node only in the forked flow.
+#endregion
+
 /// <summary>
 /// Provides an ambient context for <see cref="TestTerminal"/> that enables zero-configuration testing
 /// of CLI applications. While a context is active, <see cref="TimeWarp.Terminal.Terminal.Instance"/>
@@ -45,12 +57,14 @@ namespace TimeWarp.Terminal;
 public static class TestTerminalContext
 {
   private static readonly AsyncLocal<TestTerminal?> Context = new();
-  private static readonly AsyncLocal<Stack<ContextSnapshot>?> SnapshotStack = new();
+  private static readonly AsyncLocal<ContextSnapshot?> SnapshotHead = new();
 
   private sealed class ContextSnapshot
   {
     public required TestTerminal? PreviousContext { get; init; }
-    public required IFormatProvider? PreviousFormatProvider { get; init; }
+    public required bool HasFormatProviderOverride { get; init; }
+    public IFormatProvider? PreviousFormatProvider { get; init; }
+    public ContextSnapshot? Parent { get; init; }
   }
 
   /// <summary>
@@ -76,42 +90,45 @@ public static class TestTerminalContext
   {
     ArgumentNullException.ThrowIfNull(terminal);
 
-    Stack<ContextSnapshot> stack = GetSnapshotStack();
-    stack.Push
+    TimeWarp.Terminal.Terminal.CaptureFormatProviderOverride
     (
-      new ContextSnapshot
-      {
-        PreviousContext = Context.Value,
-        PreviousFormatProvider = TimeWarp.Terminal.Terminal.FormatProvider
-      }
+      out bool hasFormatProviderOverride,
+      out IFormatProvider? previousFormatProvider
     );
+
+    SnapshotHead.Value = new ContextSnapshot
+    {
+      PreviousContext = Context.Value,
+      HasFormatProviderOverride = hasFormatProviderOverride,
+      PreviousFormatProvider = previousFormatProvider,
+      Parent = SnapshotHead.Value
+    };
 
     Context.Value = terminal;
   }
 
   /// <summary>
-  /// Clears the current context, restoring the previous context and
-  /// <see cref="TimeWarp.Terminal.Terminal.FormatProvider"/>. The process-global
+  /// Clears the current context, restoring the previous context and any async-local
+  /// <see cref="TimeWarp.Terminal.Terminal.FormatProvider"/> override. The process-global
   /// <see cref="TimeWarp.Terminal.Terminal.Instance"/> is never touched — once the context
   /// is cleared, resolution simply falls back to it.
   /// </summary>
   public static void ClearCurrent()
   {
-    Stack<ContextSnapshot>? stack = SnapshotStack.Value;
-    if (stack is null || stack.Count == 0)
+    ContextSnapshot? snapshot = SnapshotHead.Value;
+    if (snapshot is null)
     {
       Context.Value = null;
       return;
     }
 
-    ContextSnapshot snapshot = stack.Pop();
     Context.Value = snapshot.PreviousContext;
-    TimeWarp.Terminal.Terminal.FormatProvider = snapshot.PreviousFormatProvider;
-
-    if (stack.Count == 0)
-    {
-      SnapshotStack.Value = null;
-    }
+    TimeWarp.Terminal.Terminal.RestoreFormatProviderOverride
+    (
+      snapshot.HasFormatProviderOverride,
+      snapshot.PreviousFormatProvider
+    );
+    SnapshotHead.Value = snapshot.Parent;
   }
 
   /// <summary>
@@ -132,18 +149,6 @@ public static class TestTerminalContext
   /// <exception cref="InvalidOperationException">Thrown when no test terminal is set.</exception>
   public static TestTerminal Terminal
     => Context.Value ?? throw new InvalidOperationException("No TestTerminal set in current context. Call TestTerminalContext.SetCurrent or TestTerminalContext.Use first.");
-
-  private static Stack<ContextSnapshot> GetSnapshotStack()
-  {
-    Stack<ContextSnapshot>? stack = SnapshotStack.Value;
-    if (stack is null)
-    {
-      stack = new Stack<ContextSnapshot>();
-      SnapshotStack.Value = stack;
-    }
-
-    return stack;
-  }
 
   private sealed class Scope : IDisposable
   {
