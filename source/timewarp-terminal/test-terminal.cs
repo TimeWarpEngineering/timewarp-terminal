@@ -8,11 +8,16 @@ namespace TimeWarp.Terminal;
 #region Design
 // Captures output via StringWriter instances for both stdout and stderr.
 // Queues individual ConsoleKeyInfo for ReadKey — simulates real keystroke-by-keystroke REPL input.
-// Read, ReadKey, and KeyAvailable fall back to unread constructor input when the key queue is empty,
-// matching System.Console semantics where Read/ReadLine/ReadKey share one input source.
+// Read, ReadKey, and KeyAvailable fall back to unread In input when the key queue is empty,
+// matching System.Console semantics where Read/ReadLine/ReadKey share one input source (constructor
+// input and SetIn).
+// Write*/ReadLine route through Out/Error/In; capture writers are teed so Output/ErrorOutput still
+// work after SetOut/SetError.
 // QueueKey honors modifiers for letters: shift produces an uppercase KeyChar and ctrl produces the
-// control character (char)(key - ConsoleKey.A + 1); QueueKeys sets the shift flag for uppercase letters.
+// control character (char)(key - ConsoleKey.A + 1); QueueKeys and constructor-input ReadKey synthesis
+// set the shift flag for uppercase letters.
 // Clear() writes "[CLEAR]" marker so tests can verify it was called without losing captured output.
+// ClearOutput discards captured stdout/stderr (same helper as TestConsole.ClearOutput).
 // IsInteractive defaults to false; SupportsColor defaults to true for color verification.
 // IDisposable cleans up StringReader and StringWriter resources, plus only the constructor-created
 // MemoryStreams (tracked in Owned* fields) — consumer-assigned Standard*Stream values are never disposed.
@@ -199,7 +204,7 @@ public sealed class TestTerminal : ITerminal, IDisposable
   /// <inheritdoc />
   public ITerminal Write(string message)
   {
-    OutputWriter.Write(message);
+    WriteTo(Out, OutputWriter, message, newLine: false);
     return this;
   }
 
@@ -209,7 +214,7 @@ public sealed class TestTerminal : ITerminal, IDisposable
   /// <inheritdoc />
   public ITerminal WriteLine(string? message = null)
   {
-    OutputWriter.WriteLine(message ?? string.Empty);
+    WriteTo(Out, OutputWriter, message ?? string.Empty, newLine: true);
     return this;
   }
 
@@ -218,12 +223,12 @@ public sealed class TestTerminal : ITerminal, IDisposable
 
   /// <inheritdoc />
   public async Task WriteLineAsync(string? message = null)
-    => await OutputWriter.WriteLineAsync(message ?? string.Empty).ConfigureAwait(false);
+    => await WriteLineToAsync(Out, OutputWriter, message ?? string.Empty).ConfigureAwait(false);
 
   /// <inheritdoc />
   public ITerminal WriteErrorLine(string? message = null)
   {
-    ErrorWriter.WriteLine(message ?? string.Empty);
+    WriteTo(Error, ErrorWriter, message ?? string.Empty, newLine: true);
     return this;
   }
 
@@ -232,11 +237,11 @@ public sealed class TestTerminal : ITerminal, IDisposable
 
   /// <inheritdoc />
   public async Task WriteErrorLineAsync(string? message = null)
-    => await ErrorWriter.WriteLineAsync(message ?? string.Empty).ConfigureAwait(false);
+    => await WriteLineToAsync(Error, ErrorWriter, message ?? string.Empty).ConfigureAwait(false);
 
   /// <inheritdoc />
   public string? ReadLine()
-    => InputReader.ReadLine();
+    => In.ReadLine();
 
   /// <inheritdoc />
   public int Read()
@@ -247,7 +252,7 @@ public sealed class TestTerminal : ITerminal, IDisposable
       return keyInfo.KeyChar;
     }
 
-    return InputReader.Read();
+    return In.Read();
   }
 
   /// <inheritdoc />
@@ -275,7 +280,7 @@ public sealed class TestTerminal : ITerminal, IDisposable
     }
 
     // If no keys queued, try to read from input as a line
-    string? line = InputReader.ReadLine();
+    string? line = In.ReadLine();
     if (line is null)
     {
       // EOF - simulate Ctrl+D
@@ -286,7 +291,8 @@ public sealed class TestTerminal : ITerminal, IDisposable
     foreach (char c in line)
     {
       ConsoleKey key = CharToConsoleKey(c);
-      KeyQueue.Enqueue(new ConsoleKeyInfo(c, key, false, false, false));
+      bool shift = char.IsAsciiLetterUpper(c);
+      KeyQueue.Enqueue(new ConsoleKeyInfo(c, key, shift, false, false));
     }
 
     // Add Enter at end of line
@@ -413,7 +419,9 @@ public sealed class TestTerminal : ITerminal, IDisposable
   /// Does not erase captured output: output history is preserved so tests can assert on everything
   /// written before the clear. Instead, the marker line <c>[CLEAR]</c> is appended to the captured
   /// output to record that <see cref="Clear"/> was called. Use <see cref="ClearOutput"/> to actually
-  /// discard captured output.
+  /// discard captured output. <see cref="TestConsole"/> has no <see cref="ITerminal.Clear"/>;
+  /// its <c>Clear</c>/<see cref="TestConsole.ClearOutput"/> helpers discard capture and do not
+  /// write a marker.
   /// </remarks>
   public void Clear()
     => OutputWriter.WriteLine("[CLEAR]");
@@ -452,7 +460,7 @@ public sealed class TestTerminal : ITerminal, IDisposable
   public string Title { get; set; } = string.Empty;
 
   /// <inheritdoc />
-  public bool KeyAvailable => KeyQueue.Count > 0 || InputReader.Peek() != -1;
+  public bool KeyAvailable => KeyQueue.Count > 0 || In.Peek() != -1;
 
   // ========== Test Helper Methods ==========
 
@@ -642,6 +650,41 @@ public sealed class TestTerminal : ITerminal, IDisposable
     OwnedStandardOutputStream.Dispose();
     OwnedStandardErrorStream.Dispose();
     Disposed = true;
+  }
+
+  private static void WriteTo(TextWriter destination, StringWriter capture, string value, bool newLine)
+  {
+    if (newLine)
+    {
+      destination.WriteLine(value);
+    }
+    else
+    {
+      destination.Write(value);
+    }
+
+    if (ReferenceEquals(destination, capture))
+    {
+      return;
+    }
+
+    if (newLine)
+    {
+      capture.WriteLine(value);
+    }
+    else
+    {
+      capture.Write(value);
+    }
+  }
+
+  private static async Task WriteLineToAsync(TextWriter destination, StringWriter capture, string value)
+  {
+    await destination.WriteLineAsync(value).ConfigureAwait(false);
+    if (!ReferenceEquals(destination, capture))
+    {
+      await capture.WriteLineAsync(value).ConfigureAwait(false);
+    }
   }
 
   private static ConsoleKey CharToConsoleKey(char c) => c switch

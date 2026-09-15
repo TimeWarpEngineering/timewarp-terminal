@@ -221,6 +221,90 @@ namespace TimeWarp.Terminal.Tests.Core.TestTerminalContextIntegration
 
       await Task.CompletedTask;
     }
+
+    public static async Task Should_isolate_format_provider_across_parallel_use_scopes()
+    {
+      IFormatProvider? originalProvider = TimeWarp.Terminal.Terminal.FormatProvider;
+      using TestTerminal terminalA = new();
+      using TestTerminal terminalB = new();
+      System.Globalization.NumberFormatInfo commaProvider = new() { NumberDecimalSeparator = "," };
+      System.Globalization.NumberFormatInfo periodProvider = new() { NumberDecimalSeparator = "." };
+      TaskCompletionSource bothReady = new();
+      int readyCount = 0;
+
+      try
+      {
+        Task taskA = Task.Run(async () =>
+        {
+          using IDisposable scope = TestTerminalContext.Use(terminalA);
+          TimeWarp.Terminal.Terminal.FormatProvider = commaProvider;
+          if (Interlocked.Increment(ref readyCount) == 2)
+          {
+            bothReady.SetResult();
+          }
+
+          await bothReady.Task;
+          TimeWarp.Terminal.Terminal.Write("{0:0.0}", 1.5);
+          TimeWarp.Terminal.Terminal.FormatProvider.ShouldBe(commaProvider);
+        });
+        Task taskB = Task.Run(async () =>
+        {
+          using IDisposable scope = TestTerminalContext.Use(terminalB);
+          TimeWarp.Terminal.Terminal.FormatProvider = periodProvider;
+          if (Interlocked.Increment(ref readyCount) == 2)
+          {
+            bothReady.SetResult();
+          }
+
+          await bothReady.Task;
+          TimeWarp.Terminal.Terminal.Write("{0:0.0}", 1.5);
+          TimeWarp.Terminal.Terminal.FormatProvider.ShouldBe(periodProvider);
+        });
+        await Task.WhenAll(taskA, taskB);
+
+        terminalA.Output.ShouldBe("1,5");
+        terminalB.Output.ShouldBe("1.5");
+        TimeWarp.Terminal.Terminal.FormatProvider.ShouldBe(originalProvider);
+      }
+      finally
+      {
+        TimeWarp.Terminal.Terminal.FormatProvider = originalProvider;
+      }
+    }
+
+    public static async Task Should_not_share_snapshot_stack_across_forked_use_scopes()
+    {
+      ITerminal original = TimeWarp.Terminal.Terminal.Instance;
+      using TestTerminal outer = new();
+      using TestTerminal inner = new();
+      TaskCompletionSource innerEntered = new();
+      TaskCompletionSource parentDisposed = new();
+
+      Task innerTask;
+      using (IDisposable outerScope = TestTerminalContext.Use(outer))
+      {
+        innerTask = Task.Run(async () =>
+        {
+          using IDisposable innerScope = TestTerminalContext.Use(inner);
+          innerEntered.SetResult();
+          await parentDisposed.Task;
+          TimeWarp.Terminal.Terminal.Instance.ShouldBe(inner);
+          TimeWarp.Terminal.Terminal.WriteLine("inner");
+        });
+
+        await innerEntered.Task;
+        TimeWarp.Terminal.Terminal.WriteLine("outer");
+      }
+
+      TimeWarp.Terminal.Terminal.Instance.ShouldBe(original);
+      parentDisposed.SetResult();
+      await innerTask;
+
+      outer.Output.ShouldContain("outer");
+      outer.Output.ShouldNotContain("inner");
+      inner.Output.ShouldContain("inner");
+      inner.Output.ShouldNotContain("outer");
+    }
   }
 
 }

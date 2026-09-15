@@ -11,6 +11,8 @@ namespace TimeWarp.Terminal;
 // Dedicated format overloads for 1-3 args avoid array allocation (params variant for 4+).
 // Format overloads use FormatProvider ?? CurrentCulture (resolved per call), matching
 // System.Console's culture behavior while allowing an invariant override for determinism.
+// FormatProvider is an async-local override while TestTerminalContext is active, else
+// process-global, so parallel Use scopes that assign it do not race.
 // Color methods use AnsiColors to wrap messages with ANSI escape sequences, applied only
 // when Instance.SupportsColor is true (NO_COLOR / redirected output degrade to plain text).
 // A null message writes plain (no color prefix/reset), matching the non-colored overloads.
@@ -53,6 +55,14 @@ using System.Globalization;
 /// </remarks>
 public static class Terminal
 {
+  private static readonly AsyncLocal<FormatProviderBox?> FormatProviderOverride = new();
+  private static IFormatProvider? ProcessFormatProvider { get; set; }
+
+  private sealed class FormatProviderBox
+  {
+    public required IFormatProvider? Provider { get; init; }
+  }
+
   /// <summary>
   /// Gets or sets the terminal instance used by all static methods.
   /// Defaults to <see cref="TimeWarpTerminal.Default"/> for production use.
@@ -84,10 +94,48 @@ public static class Terminal
   /// </value>
   /// <remarks>
   /// Set to <see cref="CultureInfo.InvariantCulture"/> for deterministic output in tests or logs.
-  /// This is process-global startup configuration; <c>TestTerminalContext</c> snapshots and
-  /// restores it alongside <see cref="Instance"/>.
+  /// When a <c>TestTerminalContext</c> is active, the setter writes an async-local override so
+  /// parallel <c>Use</c> scopes do not race; otherwise the value is process-global. The getter
+  /// prefers the async-local override and falls back to the process-global value.
   /// </remarks>
-  public static IFormatProvider? FormatProvider { get; set; }
+  public static IFormatProvider? FormatProvider
+  {
+    get => FormatProviderOverride.Value is FormatProviderBox box
+      ? box.Provider
+      : ProcessFormatProvider;
+    set
+    {
+      if (TestTerminalContext.HasValue)
+      {
+        FormatProviderOverride.Value = new FormatProviderBox { Provider = value };
+      }
+      else
+      {
+        ProcessFormatProvider = value;
+        FormatProviderOverride.Value = null;
+      }
+    }
+  }
+
+  internal static void CaptureFormatProviderOverride(out bool hasOverride, out IFormatProvider? provider)
+  {
+    if (FormatProviderOverride.Value is FormatProviderBox box)
+    {
+      hasOverride = true;
+      provider = box.Provider;
+      return;
+    }
+
+    hasOverride = false;
+    provider = null;
+  }
+
+  internal static void RestoreFormatProviderOverride(bool hasOverride, IFormatProvider? provider)
+  {
+    FormatProviderOverride.Value = hasOverride
+      ? new FormatProviderBox { Provider = provider }
+      : null;
+  }
 
   private static IFormatProvider ActiveFormatProvider => FormatProvider ?? CultureInfo.CurrentCulture;
 
