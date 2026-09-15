@@ -28,6 +28,7 @@ Do **not** create a sibling “apply 029 findings” task. This child is the pro
 - [x] Explicit `displayText` still unmodified
 - [x] Hyperlink regression tests for `\x9c` in URL payload and ESC/BEL in URL-as-display
 - [x] All WriteLink / CreateLink / `.Link()` paths still share the single sanitizer
+- [x] Effort-1 implementation review (round 1 general) + disposition on this id
 
 ## Notes
 
@@ -39,6 +40,7 @@ Do **not** create a sibling “apply 029 findings” task. This child is the pro
 - Created: 3362509 (2026-09-04)
 - Parent review: Grok `01a06a96-935c-79a0-b334-1e5bc6c6b568` (2026-09-04)
 - Implementer: Grok session `01a0a368-5323-7ba0-8bd0-e9c824921ce7` (2026-09-15)
+- Review oracle: Grok `01a0a36f-c1c3-7ea1-ba95-27afff745e24` (2026-09-15); general reviewer `01a0a371-0d52-7182-8906-42f213151b73`
 
 ## Results
 
@@ -93,3 +95,16 @@ dotnet tests/terminal-static-05-widgets.cs
 ```
 
 **Not in scope:** live terminal OSC 8 click-through. Static `Terminal.WriteLink` still requires explicit non-null display text.
+
+### Review disposition
+
+- **Rounds:** 1
+- **Effort / roster:** 1 — general only
+- **Final counts:** 0 open / 0 fixed / 0 wontfix (bug, suggestion, nit all zero)
+- **Outcome:** `clean` (no issues raised; parent M5 and M6 re-verified landed)
+- **Paths:**
+  - `review/review-framework.md`
+  - `review/round-1/general.md`
+  - `review/round-1/merged.md`
+  - `review/disposition.md`
+- Review-session smoke: hyperlink-01-basic 25 passed, terminal-static-05-widgets 16 passed.
