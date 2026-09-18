@@ -3,6 +3,8 @@
 
 // Narrow terminal: bordered panels must not collapse to width 0
 
+using TimeWarp.Flexbox;
+
 #if !JARIBU_MULTI
 return await RunAllTests();
 #endif

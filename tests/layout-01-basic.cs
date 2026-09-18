@@ -3,6 +3,8 @@
 
 // Test basic side-by-side text layout
 
+using TimeWarp.Flexbox;
+
 #if !JARIBU_MULTI
 return await RunAllTests();
 #endif

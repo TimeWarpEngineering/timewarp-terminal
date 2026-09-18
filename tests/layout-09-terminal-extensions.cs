@@ -5,6 +5,8 @@
 // CA1849: We deliberately test sync methods in async test methods
 #pragma warning disable CA1849
 
+using TimeWarp.Flexbox;
+
 #if !JARIBU_MULTI
 return await RunAllTests();
 #endif
@@ -60,6 +62,40 @@ namespace TimeWarp.Terminal.Tests.FlexLayout.TerminalExtensions
       {
         Terminal.Instance = original;
       }
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_write_layout_with_color_when_supported()
+    {
+      using TestTerminal testTerminal = new() { WindowWidth = 40, SupportsColor = true };
+
+      testTerminal.WriteLayout(
+        layout => layout
+          .Direction(FlexDirection.Column)
+          .Item("Colored layout"),
+        ConsoleColor.Cyan);
+
+      testTerminal.Output.ShouldContain(AnsiColors.BrightCyan);
+      testTerminal.Output.ShouldContain("\u001b");
+      testTerminal.Output.ShouldContain("Colored layout");
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_write_layout_plain_when_color_not_supported()
+    {
+      using TestTerminal testTerminal = new() { WindowWidth = 40, SupportsColor = false };
+
+      testTerminal.WriteLayout(
+        layout => layout
+          .Direction(FlexDirection.Column)
+          .Item("Plain layout"),
+        ConsoleColor.Red,
+        ConsoleColor.DarkBlue);
+
+      testTerminal.Output.ShouldContain("Plain layout");
+      testTerminal.Output.ShouldNotContain("\u001b");
 
       await Task.CompletedTask;
     }

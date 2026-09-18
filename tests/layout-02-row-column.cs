@@ -3,6 +3,8 @@
 
 // Test Row vs Column direction stacking
 
+using TimeWarp.Flexbox;
+
 #if !JARIBU_MULTI
 return await RunAllTests();
 #endif

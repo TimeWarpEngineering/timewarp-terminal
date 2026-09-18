@@ -1,7 +1,7 @@
 namespace TimeWarp.Terminal;
 
 #region Purpose
-// Natural width, min-width floor, and height measurement for layout leaves.
+// Natural width and min-width floor measurement for layout leaves.
 #endregion
 
 #region Design
@@ -90,20 +90,6 @@ internal static class WidgetMeasure
       LayoutLeafKind.Rule => [leaf.Rule!.Render(width)],
       _ => [string.Empty]
     };
-  }
-
-  public static int MeasureHeight(LayoutLeaf leaf, int width, FlexItemOptions flex)
-  {
-    ArgumentNullException.ThrowIfNull(leaf);
-    ArgumentNullException.ThrowIfNull(flex);
-
-    if (flex.Height.HasValue)
-    {
-      return Math.Max(1, flex.Height.Value);
-    }
-
-    string[] lines = RenderLeaf(leaf, width);
-    return Math.Max(1, lines.Length);
   }
 
   private static string[] RenderText(string? text, int width)

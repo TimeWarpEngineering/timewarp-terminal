@@ -3,6 +3,8 @@
 
 // Test FlexWrap onto a second row
 
+using TimeWarp.Flexbox;
+
 #if !JARIBU_MULTI
 return await RunAllTests();
 #endif

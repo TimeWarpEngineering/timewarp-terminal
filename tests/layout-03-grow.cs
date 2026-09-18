@@ -3,6 +3,8 @@
 
 // Test Grow proportions and tiling
 
+using TimeWarp.Flexbox;
+
 #if !JARIBU_MULTI
 return await RunAllTests();
 #endif

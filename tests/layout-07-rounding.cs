@@ -3,6 +3,8 @@
 
 // Pin CalculateBoxes tiling contract: no gaps/overlaps, total width = container
 
+using TimeWarp.Flexbox;
+
 #if !JARIBU_MULTI
 return await RunAllTests();
 #endif

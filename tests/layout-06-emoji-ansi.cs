@@ -3,6 +3,8 @@
 
 // Test emoji + ANSI content inside layout items
 
+using TimeWarp.Flexbox;
+
 #if !JARIBU_MULTI
 return await RunAllTests();
 #endif

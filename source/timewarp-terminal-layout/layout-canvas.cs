@@ -6,8 +6,8 @@ namespace TimeWarp.Terminal;
 
 #region Design
 // Never slice ANSI by cell index. Each output row gathers covering leaves sorted by X,
-// PadRightVisible to the leaf width, and fills X-gaps with spaces. Short widgets pad;
-// tall widgets clip to the leaf box height.
+// PadRightVisible to the leaf width, and fills X-gaps with spaces. Overlapping boxes
+// throw (tiling contract). Short widgets pad; tall widgets clip to the leaf box height.
 #endregion
 
 internal static class LayoutCanvas
@@ -67,8 +67,8 @@ internal static class LayoutCanvas
       }
       else if (leaf.Box.X < cursor)
       {
-        // Overlap should not happen under the tiling contract; skip already-covered cells.
-        continue;
+        throw new InvalidOperationException(
+          $"Layout leaf at X={leaf.Box.X} overlaps previous content ending at cursor={cursor}.");
       }
 
       int lineIndex = y - leaf.Box.Y;

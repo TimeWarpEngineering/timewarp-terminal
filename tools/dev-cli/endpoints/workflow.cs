@@ -249,12 +249,13 @@ internal sealed class WorkflowCommand : ICommand<Unit>
         Terminal.WriteLine($"\n✓ Version {version} is available for publishing");
       }
 
-      // Step 6: Pack
+      // Step 6: Pack — only packages not already on NuGet.org (resume / partial publish)
       Terminal.WriteLine("\nStep 6/6: Pack");
       string artifactsDir = Path.Combine(repoRoot, "artifacts", "packages");
       Directory.CreateDirectory(artifactsDir);
 
-      foreach (PackableProject project in packableProjects)
+      HashSet<string> availableSet = available.ToHashSet(StringComparer.Ordinal);
+      foreach (PackableProject project in packableProjects.Where(project => availableSet.Contains(project.PackageId)))
       {
         Terminal.WriteLine($"  Packing {project.PackageId}...");
         exitCode = await Shell.Builder("dotnet")
@@ -270,37 +271,43 @@ internal sealed class WorkflowCommand : ICommand<Unit>
 
       Terminal.WriteLine("\n✓ Release Pipeline completed successfully");
       Terminal.WriteLine($"  Packages created in: {artifactsDir}");
-      Terminal.WriteLine($"  Package ids: {string.Join(", ", packableProjects.Select(static project => project.PackageId))}");
+      Terminal.WriteLine($"  Package ids: {string.Join(", ", available)}");
 
       // Push if api-key provided
       if (!string.IsNullOrEmpty(apiKey))
       {
         Terminal.WriteLine("\nPushing packages to NuGet...");
-        string[] packages = Directory.GetFiles(artifactsDir, "*.nupkg");
-        foreach (string package in packages)
+        foreach (string packageId in available)
         {
-          string packageName = Path.GetFileName(package);
+          string packagePath = Path.Combine(artifactsDir, $"{packageId}.{version}.nupkg");
+          if (!File.Exists(packagePath))
+          {
+            throw new InvalidOperationException($"Expected package not found after pack: {packagePath}");
+          }
+
+          string packageName = Path.GetFileName(packagePath);
           Terminal.WriteLine($"  Pushing {packageName}...");
 
           exitCode = await DotNet.NuGet()
-            .Push(package)
+            .Push(packagePath)
             .WithSource("https://api.nuget.org/v3/index.json")
             .WithApiKey(apiKey)
+            .WithSkipDuplicate()
             .RunAsync(ct);
 
           if (exitCode != 0)
           {
             throw new InvalidOperationException($"NuGet push failed: {packageName}");
           }
+
+          await NotifySoftwareSiteAsync(repoRoot, packageId, version);
         }
 
         Terminal.WriteLine("✓ Packages pushed to NuGet.org");
-
-        await NotifySoftwareSiteAsync(repoRoot, version);
       }
     }
 
-    private async Task NotifySoftwareSiteAsync(string repoRoot, string version)
+    private async Task NotifySoftwareSiteAsync(string repoRoot, string packageId, string version)
     {
       // Signal timewarp-software to rebuild the site so the new release shows up
       // immediately instead of waiting for its nightly cron backstop. Best effort:
@@ -317,7 +324,7 @@ internal sealed class WorkflowCommand : ICommand<Unit>
           "api",
           "repos/TimeWarpEngineering/timewarp-software/dispatches",
           "-f", "event_type=rebuild",
-          "-f", "client_payload[package]=TimeWarp.Terminal",
+          "-f", $"client_payload[package]={packageId}",
           "-f", $"client_payload[version]={version}"
         )
         .WithWorkingDirectory(repoRoot)
