@@ -1,4 +1,4 @@
-namespace TimeWarp.Terminal.Layout;
+namespace TimeWarp.Terminal;
 
 #region Purpose
 // Two-pass Yoga layout: allocate integer widths, then heights, collect leaf boxes.
@@ -7,8 +7,9 @@ namespace TimeWarp.Terminal.Layout;
 #region Design
 // Yoga measure funcs on grow items disturb pixel-grid rounding (unequal Grow ratios
 // stop tiling). Pass 1 sets FlexBasis/fixed widths with no measure funcs; pass 2 pins
-// those widths and content heights. One Config (PointScaleFactor=1) per tree. Positions
-// from Yoga are parent-relative and are accumulated to root-relative LayoutBox values.
+// those widths and content heights with FlexGrow/FlexShrink frozen at 0 so leftover
+// rounding space cannot re-allocate. One Config (PointScaleFactor=1) per tree.
+// Positions from Yoga are parent-relative and are accumulated to root-relative boxes.
 #endregion
 
 internal sealed class LaidOutLeaf
@@ -52,7 +53,7 @@ internal static class LayoutEngine
     }
 
     // Re-walk to apply Height overrides from flex options
-    ApplyHeightOverrides(root, widths, rendered, heights);
+    ApplyHeightOverrides(root, rendered, heights);
 
     Dictionary<LayoutLeaf, Node> pass2Nodes = [];
     Node pass2Root = BuildPass2(root, config, widths, heights, pass2Nodes, isRoot: true);
@@ -78,7 +79,6 @@ internal static class LayoutEngine
 
   private static void ApplyHeightOverrides(
     LayoutContainer container,
-    Dictionary<LayoutLeaf, int> widths,
     Dictionary<LayoutLeaf, string[]> rendered,
     Dictionary<LayoutLeaf, int> heights)
   {
@@ -86,22 +86,13 @@ internal static class LayoutEngine
     {
       if (child.Leaf is not null)
       {
-        int width = widths[child.Leaf];
-        if (child.Flex.Height.HasValue)
-        {
-          heights[child.Leaf] = Math.Max(1, child.Flex.Height.Value);
-        }
-        else
-        {
-          heights[child.Leaf] = Math.Max(1, rendered[child.Leaf].Length);
-        }
-
-        // Keep rendered lines in sync for fixed height (canvas pads/clips).
-        _ = width;
+        heights[child.Leaf] = child.Flex.Height.HasValue
+          ? Math.Max(1, child.Flex.Height.Value)
+          : Math.Max(1, rendered[child.Leaf].Length);
       }
       else if (child.Nested is not null)
       {
-        ApplyHeightOverrides(child.Nested, widths, rendered, heights);
+        ApplyHeightOverrides(child.Nested, rendered, heights);
       }
     }
   }
@@ -180,16 +171,16 @@ internal static class LayoutEngine
         int leafHeight = heights[child.Leaf];
         childNode.Style.SetDimension(Dimension.Width, StyleSizeLength.Points(leafWidth));
         childNode.Style.SetDimension(Dimension.Height, StyleSizeLength.Points(leafHeight));
-        // Preserve grow/shrink so wrap and justify stay consistent with pass 1.
-        childNode.Style.FlexGrow = child.Flex.Grow;
-        childNode.Style.FlexShrink = child.Flex.Shrink;
+        // Freeze pass-1 sizes so leftover rounding space cannot re-grow items.
+        childNode.Style.FlexGrow = 0;
+        childNode.Style.FlexShrink = 0;
         leafNodes[child.Leaf] = childNode;
       }
       else if (child.Nested is not null)
       {
         childNode = BuildPass2(child.Nested, config, widths, heights, leafNodes, isRoot: false);
-        childNode.Style.FlexGrow = child.Flex.Grow;
-        childNode.Style.FlexShrink = child.Flex.Shrink;
+        childNode.Style.FlexGrow = 0;
+        childNode.Style.FlexShrink = 0;
       }
       else
       {

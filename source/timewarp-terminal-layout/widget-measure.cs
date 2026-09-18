@@ -1,4 +1,4 @@
-namespace TimeWarp.Terminal.Layout;
+namespace TimeWarp.Terminal;
 
 #region Purpose
 // Natural width, min-width floor, and height measurement for layout leaves.
@@ -132,7 +132,7 @@ internal static class WidgetMeasure
 
     int maxGrapheme = 1;
     string plain = AnsiStringUtils.StripAnsiCodes(text);
-    foreach (System.Text.Rune rune in plain.EnumerateRunes())
+    foreach (Rune rune in plain.EnumerateRunes())
     {
       maxGrapheme = Math.Max(maxGrapheme, UnicodeWidth.GetRuneWidth(rune));
     }

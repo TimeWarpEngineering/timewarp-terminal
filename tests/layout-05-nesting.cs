@@ -25,7 +25,7 @@ namespace TimeWarp.Terminal.Tests.FlexLayout.Nesting
         .AddRow("boot")
         .Build();
 
-      global::TimeWarp.Terminal.Layout.Layout layout = new LayoutBuilder()
+      Layout layout = new LayoutBuilder()
         .Direction(FlexDirection.Column)
         .Gap(1)
         .Row(r => r.Gap(2).Item(status).Item(version))

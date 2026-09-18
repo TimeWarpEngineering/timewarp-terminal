@@ -1,4 +1,4 @@
-namespace TimeWarp.Terminal.Layout;
+namespace TimeWarp.Terminal;
 
 #region Purpose
 // Composite laid-out leaf lines onto a full-width character-cell canvas.
@@ -55,14 +55,14 @@ internal static class LayoutCanvas
 
     covering.Sort(static (left, right) => left.Box.X.CompareTo(right.Box.X));
 
-    System.Text.StringBuilder builder = new();
+    StringBuilder builder = new();
     int cursor = 0;
 
     foreach (LaidOutLeaf leaf in covering)
     {
       if (leaf.Box.X > cursor)
       {
-        builder.Append(' ', leaf.Box.X - cursor);
+        _ = builder.Append(' ', leaf.Box.X - cursor);
         cursor = leaf.Box.X;
       }
       else if (leaf.Box.X < cursor)
@@ -77,13 +77,13 @@ internal static class LayoutCanvas
         : string.Empty;
 
       string padded = AnsiStringUtils.PadRightVisible(content, leaf.Box.Width);
-      builder.Append(padded);
+      _ = builder.Append(padded);
       cursor += leaf.Box.Width;
     }
 
     if (cursor < width)
     {
-      builder.Append(' ', width - cursor);
+      _ = builder.Append(' ', width - cursor);
     }
 
     return builder.ToString();

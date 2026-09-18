@@ -18,7 +18,7 @@ namespace TimeWarp.Terminal.Tests.FlexLayout.RowColumn
 
     public static async Task Should_place_row_items_horizontally()
     {
-      global::TimeWarp.Terminal.Layout.Layout layout = new LayoutBuilder()
+      Layout layout = new LayoutBuilder()
         .Direction(FlexDirection.Row)
         .Item("A")
         .Item("B")
@@ -34,7 +34,7 @@ namespace TimeWarp.Terminal.Tests.FlexLayout.RowColumn
 
     public static async Task Should_stack_column_items_vertically()
     {
-      global::TimeWarp.Terminal.Layout.Layout layout = new LayoutBuilder()
+      Layout layout = new LayoutBuilder()
         .Direction(FlexDirection.Column)
         .Item("Top")
         .Item("Bottom")

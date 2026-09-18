@@ -1,4 +1,4 @@
-namespace TimeWarp.Terminal.Layout;
+namespace TimeWarp.Terminal;
 
 #region Purpose
 // Static facade mirroring WriteLayout onto Terminal.Instance.

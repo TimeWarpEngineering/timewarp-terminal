@@ -1,4 +1,4 @@
-namespace TimeWarp.Terminal.Layout;
+namespace TimeWarp.Terminal;
 
 #region Purpose
 // Immutable layout tree that renders to terminal lines or exposes leaf boxes for tests.

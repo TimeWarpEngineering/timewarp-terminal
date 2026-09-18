@@ -18,7 +18,7 @@ namespace TimeWarp.Terminal.Tests.FlexLayout.Wrap
 
     public static async Task Should_wrap_items_that_do_not_fit_one_row()
     {
-      global::TimeWarp.Terminal.Layout.Layout layout = new LayoutBuilder()
+      Layout layout = new LayoutBuilder()
         .Direction(FlexDirection.Row)
         .Wrap(TimeWarp.Flexbox.Wrap.Wrap)
         .Gap(1)

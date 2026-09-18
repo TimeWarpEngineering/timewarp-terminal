@@ -33,7 +33,6 @@
     <Using Include="TimeWarp.Jaribu" />
     <Using Include="TimeWarp.Jaribu.TestRunner" Static="true" />
     <Using Include="TimeWarp.Terminal" />
-    <Using Include="TimeWarp.Terminal.Layout" />
     <Using Include="TimeWarp.Flexbox" />
   </ItemGroup>
 

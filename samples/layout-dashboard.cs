@@ -4,7 +4,6 @@
 
 using TimeWarp.Flexbox;
 using TimeWarp.Terminal;
-using TimeWarp.Terminal.Layout;
 
 TimeWarpTerminal terminal = TimeWarpTerminal.Default;
 

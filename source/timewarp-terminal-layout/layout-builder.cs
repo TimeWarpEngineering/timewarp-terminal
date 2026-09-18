@@ -1,4 +1,4 @@
-namespace TimeWarp.Terminal.Layout;
+namespace TimeWarp.Terminal;
 
 #region Purpose
 // Fluent builder for flexbox layouts of terminal widgets and text.
@@ -34,6 +34,7 @@ public sealed class LayoutBuilder : IBuilder<Layout>
   /// <returns>This builder for chaining.</returns>
   public LayoutBuilder Gap(int cells)
   {
+    ArgumentOutOfRangeException.ThrowIfNegative(cells);
     GapValue = cells;
     return this;
   }

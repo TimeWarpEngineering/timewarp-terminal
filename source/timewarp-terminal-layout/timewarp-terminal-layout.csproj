@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AssemblyName>TimeWarp.Terminal.Layout</AssemblyName>
-    <RootNamespace>TimeWarp.Terminal.Layout</RootNamespace>
+    <RootNamespace>TimeWarp.Terminal</RootNamespace>
     <Description>Flexbox-composed terminal layouts for TimeWarp.Terminal widgets</Description>
     <PackageTags>terminal;layout;flexbox;yoga;cli;timewarp</PackageTags>
 

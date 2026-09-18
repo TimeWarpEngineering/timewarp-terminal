@@ -18,7 +18,7 @@ namespace TimeWarp.Terminal.Tests.FlexLayout.Widgets
 
     public static async Task Should_render_panel_table_and_rule_content()
     {
-      global::TimeWarp.Terminal.Layout.Layout layout = new LayoutBuilder()
+      Layout layout = new LayoutBuilder()
         .Direction(FlexDirection.Column)
         .Gap(1)
         .Item(panel => panel.Header("Build").Content("summary"))

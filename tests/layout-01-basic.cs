@@ -18,7 +18,7 @@ namespace TimeWarp.Terminal.Tests.FlexLayout.Basic
 
     public static async Task Should_render_two_text_items_side_by_side()
     {
-      global::TimeWarp.Terminal.Layout.Layout layout = new LayoutBuilder()
+      Layout layout = new LayoutBuilder()
         .Direction(FlexDirection.Row)
         .Gap(2)
         .Item("Left")

@@ -8,7 +8,7 @@ description: TimeWarp.Terminal library - console abstractions (IConsole, ITermin
 Console abstractions and widgets for testable C# applications.
 
 **Repository:** https://github.com/TimeWarpEngineering/timewarp-terminal
-**Package:** `TimeWarp.Terminal`
+**Package:** `TimeWarp.Terminal` (widgets). Companion: `TimeWarp.Terminal.Layout` (flexbox composition).
 
 For detailed API documentation, fetch the README from the repository.
 
@@ -22,6 +22,7 @@ For detailed API documentation, fetch the README from the repository.
 | Unit testing | `TestTerminal` or `TestConsole` |
 | Measure terminal display width | `UnicodeWidth` |
 | Strip/measure ANSI strings | `AnsiStringUtils` |
+| Side-by-side panels / dashboard rows | Companion package `TimeWarp.Terminal.Layout` — `WriteLayout` |
 
 ## Installation
 
@@ -104,6 +105,32 @@ terminal.WriteRule(rule => rule
   .Style(LineStyle.Doubled)
   .Color(AnsiColors.Cyan));
 ```
+
+### Layout (companion package)
+
+`TimeWarp.Terminal.Layout` composes existing widgets into flexbox rows/columns. It is **not** a dependency of `TimeWarp.Terminal`. Types live in the `TimeWarp.Terminal` namespace (`WriteLayout`, `LayoutBuilder`, `Layout`).
+
+```bash
+dotnet add package TimeWarp.Terminal.Layout
+```
+
+```csharp
+using TimeWarp.Terminal;
+using TimeWarp.Flexbox;
+
+terminal.WriteLayout(layout => layout
+  .Direction(FlexDirection.Row)
+  .Gap(2)
+  .Item(i => i.Grow(1), panel => panel.Header("Build").Content(buildSummary))
+  .Item(i => i.Grow(2), table => table.AddColumns("Test", "Result").AddRow("unit", "pass")));
+
+terminal.WriteLayout(layout => layout
+  .Direction(FlexDirection.Column)
+  .Row(r => r.Item(statusPanel).Item(versionPanel))
+  .Row(r => r.Item(i => i.Grow(1), logTable)));
+```
+
+Static facade: `TerminalLayout.WriteLayout(...)`. Sizing uses `WindowWidth`. Color overloads gate on `SupportsColor`. Items never collapse to width 0.
 
 ### Hyperlinks
 

@@ -14,7 +14,6 @@ dotnet add package TimeWarp.Terminal.Layout
 
 ```csharp
 using TimeWarp.Terminal;
-using TimeWarp.Terminal.Layout;
 using TimeWarp.Flexbox;
 
 ITerminal terminal = TimeWarpTerminal.Default;

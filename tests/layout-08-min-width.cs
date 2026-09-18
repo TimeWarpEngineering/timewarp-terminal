@@ -18,7 +18,7 @@ namespace TimeWarp.Terminal.Tests.FlexLayout.MinWidth
 
     public static async Task Should_keep_bordered_panels_above_zero_width()
     {
-      global::TimeWarp.Terminal.Layout.Layout layout = new LayoutBuilder()
+      Layout layout = new LayoutBuilder()
         .Direction(FlexDirection.Row)
         .Gap(1)
         .Item(i => i.Grow(1), panel => panel.Header("A").Content("one"))

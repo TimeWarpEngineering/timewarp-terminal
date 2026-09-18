@@ -59,7 +59,7 @@ namespace TimeWarp.Terminal.Tests.FlexLayout.Rounding
         builder.Item(flex => flex.Grow(grow), label);
       }
 
-      global::TimeWarp.Terminal.Layout.Layout layout = builder.Build();
+      Layout layout = builder.Build();
       IReadOnlyList<LayoutBox> boxes = layout.CalculateBoxes(width);
       boxes.Count.ShouldBe(grows.Length);
 

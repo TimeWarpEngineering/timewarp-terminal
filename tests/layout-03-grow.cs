@@ -21,7 +21,7 @@ namespace TimeWarp.Terminal.Tests.FlexLayout.Grow
       const int width = 80;
       const int gap = 2;
 
-      global::TimeWarp.Terminal.Layout.Layout layout = new LayoutBuilder()
+      Layout layout = new LayoutBuilder()
         .Direction(FlexDirection.Row)
         .Gap(gap)
         .Item(i => i.Grow(1), "A")

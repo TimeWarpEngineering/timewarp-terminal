@@ -18,7 +18,7 @@ namespace TimeWarp.Terminal.Tests.FlexLayout.EmojiAnsi
 
     public static async Task Should_preserve_emoji_and_ansi_alignment()
     {
-      global::TimeWarp.Terminal.Layout.Layout layout = new LayoutBuilder()
+      Layout layout = new LayoutBuilder()
         .Direction(FlexDirection.Row)
         .Gap(2)
         .Item(i => i.Grow(1), panel => panel

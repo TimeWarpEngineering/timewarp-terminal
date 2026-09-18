@@ -1,4 +1,4 @@
-namespace TimeWarp.Terminal.Layout;
+namespace TimeWarp.Terminal;
 
 #region Purpose
 // Fluent flex item options applied to a layout leaf or nested container.
@@ -23,6 +23,7 @@ public sealed class FlexItemBuilder
   /// <returns>This builder for chaining.</returns>
   public FlexItemBuilder Grow(float grow)
   {
+    ArgumentOutOfRangeException.ThrowIfNegative(grow);
     GrowValue = grow;
     return this;
   }
@@ -34,6 +35,7 @@ public sealed class FlexItemBuilder
   /// <returns>This builder for chaining.</returns>
   public FlexItemBuilder Shrink(float shrink)
   {
+    ArgumentOutOfRangeException.ThrowIfNegative(shrink);
     ShrinkValue = shrink;
     return this;
   }
@@ -45,6 +47,7 @@ public sealed class FlexItemBuilder
   /// <returns>This builder for chaining.</returns>
   public FlexItemBuilder Basis(int cells)
   {
+    ArgumentOutOfRangeException.ThrowIfNegative(cells);
     BasisValue = cells;
     return this;
   }
@@ -56,6 +59,7 @@ public sealed class FlexItemBuilder
   /// <returns>This builder for chaining.</returns>
   public FlexItemBuilder Width(int cells)
   {
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cells);
     WidthValue = cells;
     return this;
   }
@@ -67,6 +71,7 @@ public sealed class FlexItemBuilder
   /// <returns>This builder for chaining.</returns>
   public FlexItemBuilder Height(int cells)
   {
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cells);
     HeightValue = cells;
     return this;
   }
@@ -78,6 +83,7 @@ public sealed class FlexItemBuilder
   /// <returns>This builder for chaining.</returns>
   public FlexItemBuilder MinWidth(int cells)
   {
+    ArgumentOutOfRangeException.ThrowIfNegative(cells);
     MinWidthValue = cells;
     return this;
   }
