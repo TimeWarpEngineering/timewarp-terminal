@@ -33,10 +33,13 @@
     <Using Include="TimeWarp.Jaribu" />
     <Using Include="TimeWarp.Jaribu.TestRunner" Static="true" />
     <Using Include="TimeWarp.Terminal" />
+    <Using Include="TimeWarp.Terminal.Layout" />
+    <Using Include="TimeWarp.Flexbox" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- Project reference to timewarp-terminal -->
     <ProjectReference Include="$(MSBuildThisFileDirectory)../source/timewarp-terminal/timewarp-terminal.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../source/timewarp-terminal-layout/timewarp-terminal-layout.csproj" />
   </ItemGroup>
 </Project>

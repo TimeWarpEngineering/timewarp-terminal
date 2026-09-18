@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>TimeWarp.Terminal.Layout</AssemblyName>
+    <RootNamespace>TimeWarp.Terminal.Layout</RootNamespace>
+    <Description>Flexbox-composed terminal layouts for TimeWarp.Terminal widgets</Description>
+    <PackageTags>terminal;layout;flexbox;yoga;cli;timewarp</PackageTags>
+
+    <!-- Package settings -->
+    <IsPackable>true</IsPackable>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <!-- AOT Compatibility -->
+    <IsAotCompatible>true</IsAotCompatible>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TimeWarp.Flexbox" />
+    <ProjectReference Include="../timewarp-terminal/timewarp-terminal.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+</Project>

@@ -23,10 +23,12 @@ internal sealed class WorkflowCommand : ICommand<Unit>
   internal sealed class Handler : ICommandHandler<WorkflowCommand, Unit>
   {
     private readonly ITerminal Terminal;
+    private readonly IPackableProjectService PackableProjectService;
 
-    public Handler(ITerminal terminal)
+    public Handler(ITerminal terminal, IPackableProjectService packableProjectService)
     {
       Terminal = terminal;
+      PackableProjectService = packableProjectService;
     }
 
     public async ValueTask<Unit> Handle(WorkflowCommand command, CancellationToken ct)
@@ -187,29 +189,64 @@ internal sealed class WorkflowCommand : ICommand<Unit>
 
       Terminal.WriteLine("Checking NuGet.org...");
 
-      using HttpClient client = new();
-      string packageId = "TimeWarp.Terminal";
-      string url = $"https://api.nuget.org/v3-flatcontainer/{packageId.ToLowerInvariant()}/{version}/{packageId.ToLowerInvariant()}.nuspec";
+      IReadOnlyList<PackableProject> packableProjects = await PackableProjectService
+        .GetPackableProjectsAsync(repoRoot, ct)
+        .ConfigureAwait(false);
 
-      try
+      if (packableProjects.Count == 0)
       {
-        Uri uri = new(url);
-        HttpResponseMessage response = await client.GetAsync(uri, ct);
-        if (response.IsSuccessStatusCode)
+        throw new InvalidOperationException("No packable projects found under source/");
+      }
+
+      Terminal.WriteLine($"Packable packages: {string.Join(", ", packableProjects.Select(static project => project.PackageId))}");
+
+      using HttpClient client = new();
+      List<string> alreadyPublished = [];
+      List<string> available = [];
+
+      foreach (PackableProject project in packableProjects)
+      {
+        string packageId = project.PackageId;
+        string url = $"https://api.nuget.org/v3-flatcontainer/{packageId.ToLowerInvariant()}/{version}/{packageId.ToLowerInvariant()}.nuspec";
+
+        try
         {
-          Terminal.WriteLine($"\n✗ Version {version} already exists on NuGet.org");
-          Terminal.WriteLine("  Cannot publish - version must be incremented");
-          Environment.Exit(1);
+          Uri uri = new(url);
+          HttpResponseMessage response = await client.GetAsync(uri, ct);
+          if (response.IsSuccessStatusCode)
+          {
+            alreadyPublished.Add(packageId);
+          }
+          else
+          {
+            available.Add(packageId);
+          }
         }
-        else
+        catch (HttpRequestException ex)
         {
-          Terminal.WriteLine($"\n✓ Version {version} is available for publishing");
+          Terminal.WriteLine($"\n⚠ Could not check NuGet for {packageId}: {ex.Message}");
+          Terminal.WriteLine("  Assuming version is available");
+          available.Add(packageId);
         }
       }
-      catch (HttpRequestException ex)
+
+      if (alreadyPublished.Count == packableProjects.Count)
       {
-        Terminal.WriteLine($"\n⚠ Could not check NuGet: {ex.Message}");
-        Terminal.WriteLine("  Assuming version is available");
+        Terminal.WriteLine($"\n✗ Version {version} already exists on NuGet.org for all packages");
+        Terminal.WriteLine($"  Published: {string.Join(", ", alreadyPublished)}");
+        Terminal.WriteLine("  Cannot publish - version must be incremented");
+        Environment.Exit(1);
+      }
+      else if (alreadyPublished.Count > 0)
+      {
+        Terminal.WriteLine($"\n⚠ Partial publish detected for version {version}");
+        Terminal.WriteLine($"  Already published: {string.Join(", ", alreadyPublished)}");
+        Terminal.WriteLine($"  Missing: {string.Join(", ", available)}");
+        Terminal.WriteLine("  Continuing (resume/--skip-duplicate semantics)");
+      }
+      else
+      {
+        Terminal.WriteLine($"\n✓ Version {version} is available for publishing");
       }
 
       // Step 6: Pack
@@ -217,18 +254,23 @@ internal sealed class WorkflowCommand : ICommand<Unit>
       string artifactsDir = Path.Combine(repoRoot, "artifacts", "packages");
       Directory.CreateDirectory(artifactsDir);
 
-      exitCode = await Shell.Builder("dotnet")
-        .WithArguments("pack", Path.Combine(repoRoot, "source", "timewarp-terminal", "timewarp-terminal.csproj"), "-c", "Release", "-o", artifactsDir, "-p:ContinuousIntegrationBuild=true")
-        .WithWorkingDirectory(repoRoot)
-        .RunAsync();
-
-      if (exitCode != 0)
+      foreach (PackableProject project in packableProjects)
       {
-        throw new InvalidOperationException("Pack failed!");
+        Terminal.WriteLine($"  Packing {project.PackageId}...");
+        exitCode = await Shell.Builder("dotnet")
+          .WithArguments("pack", project.ProjectPath, "-c", "Release", "-o", artifactsDir, "-p:ContinuousIntegrationBuild=true")
+          .WithWorkingDirectory(repoRoot)
+          .RunAsync();
+
+        if (exitCode != 0)
+        {
+          throw new InvalidOperationException($"Pack failed for {project.PackageId}!");
+        }
       }
 
       Terminal.WriteLine("\n✓ Release Pipeline completed successfully");
       Terminal.WriteLine($"  Packages created in: {artifactsDir}");
+      Terminal.WriteLine($"  Package ids: {string.Join(", ", packableProjects.Select(static project => project.PackageId))}");
 
       // Push if api-key provided
       if (!string.IsNullOrEmpty(apiKey))

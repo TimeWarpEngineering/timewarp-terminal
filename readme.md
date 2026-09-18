@@ -233,6 +233,32 @@ terminal.WriteRule(rule => rule
 
 **Line Styles:** `Thin`, `Doubled`, `Heavy`
 
+## Layout (companion package)
+
+Flexbox-composed layouts for side-by-side panels, status-bar rows, and dashboards. This is a **companion package** — it is not pulled in by `TimeWarp.Terminal`.
+
+```bash
+dotnet add package TimeWarp.Terminal.Layout
+```
+
+```csharp
+using TimeWarp.Terminal;
+using TimeWarp.Terminal.Layout;
+using TimeWarp.Flexbox;
+
+terminal.WriteLayout(layout => layout
+  .Direction(FlexDirection.Row)
+  .Gap(2)
+  .Item(i => i.Grow(1), panel => panel.Header("Build").Content(buildSummary))
+  .Item(i => i.Grow(2), table => table.AddColumns("Test", "Result").AddRow("unit", "pass")));
+
+// Column of rows (dashboard)
+terminal.WriteLayout(layout => layout
+  .Direction(FlexDirection.Column)
+  .Row(r => r.Item(statusPanel).Item(versionPanel))
+  .Row(r => r.Item(i => i.Grow(1), logTable)));
+```
+
 ## ANSI Colors
 
 Extension methods for colored and styled console output.
