@@ -80,6 +80,7 @@ terminal.WriteLayout(layout => layout
 
 - Created: 096d9aa9-8cec-4987-a576-91698523d859 (2026-07-03)
 - Implementer: grok-4.6 (2026-09-18)
+- Review oracle: Grok `01a0b22f-3a64-7603-8168-e0cb5c4cb292` (2026-09-18); general round-1 `01a0b231-972f-7043-a7c9-5c3fab3a4800`; fix loop `01a0b235-9795-77f3-bd0b-71a942bec601`; general round-2 `01a0b23c-6e2c-7e43-a1b4-7bdcbfb99817`
 
 ## Results
 
@@ -96,7 +97,7 @@ Companion package `TimeWarp.Terminal.Layout` ships from `source/timewarp-termina
 
 **Min-width floor:** bordered Panel/Table ≥ 4 cells, text ≥ 1 (max grapheme), titled Rule ≥ title+4. Default `FlexShrink=1` so items can shrink to the floor, never to 0. Table column math is unchanged — tables still `Render(assignedWidth)`.
 
-**Release:** `workflow.cs` discovers packable projects via `IPackableProjectService`, checks every package id at the shared `source/Directory.Build.props` version (fail only if *all* are already published; partial is resume), and packs each project. `dev check-version` already derived the packable set.
+**Release:** `workflow.cs` discovers packable projects via `IPackableProjectService`, checks every package id at the shared `source/Directory.Build.props` version (fail only if *all* are already published; partial is resume), and packs/pushes **only** `available` ids as `{PackageId}.{version}.nupkg` with `WithSkipDuplicate()`. Site notify dispatches once per successfully pushed package id. `dev check-version` already derived the packable set.
 
 Version left at **1.0.1** (first Layout nupkg at repo version; Terminal 1.0.1 is already on nuget.org, so a release of this commit is a partial publish of Layout only).
 
@@ -105,9 +106,9 @@ Version left at **1.0.1** (first Layout nupkg at repo version; Terminal 1.0.1 is
 - `source/timewarp-terminal-layout/` — new packable project
 - `Directory.Packages.props` — TimeWarp.Flexbox 1.0.0
 - `timewarp-terminal.slnx` — layout project
-- `tools/dev-cli/endpoints/workflow.cs` — multi-package check-version + pack
-- `tests/layout-01-basic.cs` … `layout-10-widgets.cs`
-- `tests/Directory.Build.props` — layout project reference
+- `tools/dev-cli/endpoints/workflow.cs` — multi-package check-version; pack/push only unpublished ids
+- `tests/layout-01-basic.cs` … `layout-10-widgets.cs` (`#:project` layout + `using TimeWarp.Flexbox`)
+- `tests/Directory.Build.props` — Terminal-only (layout tests pin `#:project`)
 - `samples/layout-dashboard.cs`
 - `readme.md`, `skills/terminal/SKILL.md`, package README
 
@@ -129,6 +130,7 @@ dotnet build timewarp-terminal.slnx -c Release
 dotnet tests/layout-01-basic.cs
 dotnet tests/layout-07-rounding.cs
 dotnet tests/layout-08-min-width.cs
+dotnet tests/layout-09-terminal-extensions.cs
 (cd samples && dotnet run layout-dashboard.cs -- --help)
 dotnet pack source/timewarp-terminal-layout/timewarp-terminal-layout.csproj -c Release -o artifacts/packages
 ```
@@ -139,6 +141,7 @@ dotnet pack source/timewarp-terminal-layout/timewarp-terminal-layout.csproj -c R
 - layout-01: `Passed: 1` (Left/Right present, same Y, increasing X)
 - layout-07: `Passed: 3` (grow+gap, odd width 81, three equal grow items tile to container width)
 - layout-08: `Passed: 1` (two bordered panels at width 10 each have Width ≥ 4)
+- layout-09: `Passed: 4` (WindowWidth, static facade, color when SupportsColor, plain when not)
 - sample: exit 0; two headered panels on one row, then a test-results table
 - pack: `artifacts/packages/TimeWarp.Terminal.Layout.1.0.1.nupkg` exists (and `.snupkg`)
 
@@ -154,3 +157,18 @@ for f in tests/layout-*.cs; do dotnet "$f" || exit 1; done
 **Depends on:** .NET 10 SDK; TimeWarp.Flexbox 1.0.0 from nuget.org (central pin in `Directory.Packages.props`).
 
 **Not in scope:** publishing to nuget.org (host open-pr / release workflow); interactive full-screen TUI (timewarp-tui); retrofitting table column math onto flexbox.
+
+### Review disposition
+
+- **Rounds:** 2
+- **Effort / roster:** 1 — general only
+- **Final counts:** 0 open / 6 fixed / 0 wontfix (bug 1 fixed; suggestion 5 fixed; nit 0)
+- **Outcome:** `clean` (M1 partial-publish resume; M2 per-package site notify; M3 dead MeasureHeight; M4 layout test isolation; M5 SupportsColor tests; M6 overlap throw)
+- **Paths:**
+  - `review/review-framework.md`
+  - `review/round-1/general.md`
+  - `review/round-1/merged.md`
+  - `review/round-2/general.md`
+  - `review/round-2/merged.md`
+  - `review/disposition.md`
+- Review-session smoke: layout-01, layout-07, layout-08, layout-09 (4 tests), layout-06, panel-widget-01-basic passed. Release build 0/0.
