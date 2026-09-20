@@ -1,7 +1,6 @@
 {
   // Per-repo configuration for TimeWarp.Terminal dev-cli
   "checkVersionConfig": {
-    "checkVersionStrategy": "nuget-search",
-    "packages": "TimeWarp.Terminal"
+    "checkVersionStrategy": "nuget-search"
   }
 }
