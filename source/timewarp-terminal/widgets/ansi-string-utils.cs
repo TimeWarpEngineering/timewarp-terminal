@@ -380,6 +380,11 @@ public static partial class AnsiStringUtils
   /// <param name="text">The text to wrap, potentially containing ANSI escape codes.</param>
   /// <param name="maxWidth">The maximum visible width per line.</param>
   /// <returns>A list of wrapped lines with ANSI codes properly carried across line breaks.</returns>
+  /// <remarks>
+  /// A grapheme wider than <paramref name="maxWidth"/> is dropped (same as <see cref="TruncateVisible"/>),
+  /// so every returned line's visible width is at most <paramref name="maxWidth"/>
+  /// (after the existing maxWidth &lt; 1 → 1 clamp).
+  /// </remarks>
   /// <example>
   /// <code>
   /// string longText = "This is a very long text that needs wrapping";
@@ -594,6 +599,9 @@ public static partial class AnsiStringUtils
   /// Breaks a word wider than <paramref name="maxWidth"/> across lines grapheme by grapheme,
   /// emitting embedded ANSI codes in place and keeping the carry state current.
   /// </summary>
+  /// <remarks>
+  /// A grapheme wider than <paramref name="maxWidth"/> is dropped (same as <see cref="TruncateVisible"/>).
+  /// </remarks>
   private static void BreakLongWord
   (
     string word,
@@ -630,6 +638,11 @@ public static partial class AnsiStringUtils
         {
           StartNewLine(result, currentLine, sgrState, hyperlinkState);
           currentLineWidth = 0;
+        }
+
+        if (graphemeWidth > maxWidth)
+        {
+          continue;
         }
 
         _ = currentLine.Append(grapheme);

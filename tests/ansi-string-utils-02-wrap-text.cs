@@ -227,6 +227,48 @@ namespace TimeWarp.Terminal.Tests.Core.AnsiStringUtilsWrap
 
       await Task.CompletedTask;
     }
+
+    public static async Task Should_drop_grapheme_wider_than_max_width()
+    {
+      // Arrange - 😀 is two columns; maxWidth 1 cannot fit it (same as TruncateVisible)
+      UnicodeWidth.GetTextWidth("😀").ShouldBe(2);
+
+      // Act
+      IReadOnlyList<string> lines = TimeWarp.Terminal.AnsiStringUtils.WrapText("😀", 1);
+
+      // Assert
+      foreach (string line in lines)
+      {
+        TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line).ShouldBeLessThanOrEqualTo(1);
+        TimeWarp.Terminal.AnsiStringUtils.StripAnsiCodes(line).ShouldNotContain("😀");
+      }
+
+      await Task.CompletedTask;
+    }
+
+    public static async Task Should_drop_wide_grapheme_between_narrow_characters()
+    {
+      // Arrange / Act
+      IReadOnlyList<string> lines = TimeWarp.Terminal.AnsiStringUtils.WrapText("A😀B", 1);
+
+      // Assert - A and B on separate lines; no width-2 line from the emoji
+      List<string> visible = [];
+      foreach (string line in lines)
+      {
+        int width = TimeWarp.Terminal.AnsiStringUtils.GetVisibleLength(line);
+        width.ShouldBeLessThanOrEqualTo(1);
+        string plain = TimeWarp.Terminal.AnsiStringUtils.StripAnsiCodes(line);
+        plain.ShouldNotContain("😀");
+        if (plain.Length > 0)
+        {
+          visible.Add(plain);
+        }
+      }
+
+      visible.ShouldBe(["A", "B"]);
+
+      await Task.CompletedTask;
+    }
   }
 
 } // namespace TimeWarp.Terminal.Tests.Core.AnsiStringUtilsWrap

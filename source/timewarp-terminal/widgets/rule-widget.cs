@@ -151,14 +151,25 @@ public sealed class RuleBuilder : IBuilder<Rule>
   }
 
   /// <summary>
-  /// Builds the configured <see cref="Rule"/> instance.
+  /// Builds a <see cref="Rule"/> snapshot of the current builder state.
+  /// Each call returns an independent rule; mutating the builder afterwards
+  /// does not affect previously built instances.
   /// </summary>
   /// <returns>The configured rule.</returns>
-  public Rule Build() => Rule;
+  public Rule Build()
+  {
+    return new Rule
+    {
+      Title = Rule.Title,
+      Style = Rule.Style,
+      Color = Rule.Color,
+      Width = Rule.Width
+    };
+  }
 
   /// <summary>
-  /// Converts the builder to a <see cref="Rule"/>.
-  /// Alternate method for languages that don't support implicit operators.
+  /// Builds a <see cref="Rule"/> snapshot of the current builder state.
+  /// Explicit alternative to <see cref="Build"/>.
   /// </summary>
   /// <returns>The configured rule.</returns>
   public Rule ToRule() => Build();

@@ -27,12 +27,13 @@ namespace TimeWarp.Terminal.Tests.FlexLayout.MinWidth
         .Item(i => i.Grow(1), panel => panel.Header("B").Content("two"))
         .Build();
 
-      IReadOnlyList<LayoutBox> boxes = layout.CalculateBoxes(10);
+      // Default pad 1 → bordered min 5; two grow panels + gap 1 need width 11+.
+      IReadOnlyList<LayoutBox> boxes = layout.CalculateBoxes(12);
       boxes.Count.ShouldBe(2);
       boxes[0].Width.ShouldBeGreaterThan(0);
       boxes[1].Width.ShouldBeGreaterThan(0);
-      boxes[0].Width.ShouldBeGreaterThanOrEqualTo(4);
-      boxes[1].Width.ShouldBeGreaterThanOrEqualTo(4);
+      boxes[0].Width.ShouldBeGreaterThanOrEqualTo(5);
+      boxes[1].Width.ShouldBeGreaterThanOrEqualTo(5);
 
       await Task.CompletedTask;
     }
