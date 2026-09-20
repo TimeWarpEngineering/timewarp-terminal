@@ -66,6 +66,8 @@ Do **not** add a git `README.md`. Do **not** leave Layout’s on-disk `README.md
       remap)
 - [x] M21 `dev.cs` banner matches the real pipeline
 - [x] A tests-only path change would match `on.pull_request.paths` (inspect YAML)
+- [x] Effort-1 general review under `review/` (round 1)
+- [x] `review/disposition.md` — outcome `clean`
 
 ## Notes
 
@@ -80,6 +82,7 @@ Do **not** add a git `README.md`. Do **not** leave Layout’s on-disk `README.md
 - Parent review: Grok `01a06a96-935c-79a0-b334-1e5bc6c6b568` (2026-09-04)
 - Brief clarified: grok `01a0b207-11c7-73b0-9d4f-66c0c07d8c2f` (2026-09-20)
 - Implementer: Grok `01a0be47-53ca-75b0-848a-aa3dc432dd1d` (2026-09-20)
+- Review oracle: Grok `01a0be4c-c876-7172-9b8e-4d0aa8dc7d7a` (2026-09-20)
 
 ## Results
 
@@ -160,3 +163,17 @@ dotnet run tools/dev-cli/dev.cs -- --help
 Expect: four files (`TimeWarp.Terminal.1.0.2.nupkg` + `.snupkg`, `TimeWarp.Terminal.Layout.1.0.2.nupkg` + `.snupkg`); nupkg entries `readme.md`; nuspec `<readme>readme.md</readme>`; help exits 0.
 
 **Not in scope:** live `dotnet nuget push` / `dev release` (no dummy publish). Layout 1.0.2 has not shipped; this is the pre-release fix.
+
+### Review disposition
+
+- **Rounds:** 1
+- **Effort / roster:** 1 — general only
+- **Final counts:** 0 open / 0 fixed / 0 wontfix (no issues raised)
+- **Outcome:** `clean` (parent 029 M9, M10, M20, M21 closed on this child; no new findings)
+- **Wontfix / escalations:** none
+- **Paths:**
+  - `review/review-framework.md`
+  - `review/round-1/general.md`
+  - `review/round-1/merged.md`
+  - `review/disposition.md`
+- Review-session smoke: `dotnet pack` both packable projects `-c Release -p:ContinuousIntegrationBuild=true` → `TimeWarp.Terminal.1.0.2` and `TimeWarp.Terminal.Layout.1.0.2` nupkg+snupkg; nupkg entries `readme.md`; nuspec `<readme>readme.md</readme>`; `dotnet run tools/dev-cli/dev.cs -- --help` exit 0; nuget.org 1.0.2 nuspecs HTTP 404.
