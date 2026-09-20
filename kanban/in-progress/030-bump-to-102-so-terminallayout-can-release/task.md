@@ -38,6 +38,9 @@ runs `dev release` from origin-home master.
 - [x] `## Results` + `### How to validate` written before done
 - [ ] Host `open-pr` (do not `gh pr create`)
 
+## Review
+
+skip
 ## Notes
 
 Verified 2026-09-20 from origin-home:
@@ -62,12 +65,16 @@ Packages checked: TimeWarp.Terminal
 - `tw-release`: humans/agents type the version once in this props bump PR.
   After merge, wait for the master push CI (Packages-* artifact), then
   `dev release` from a clean synced master.
+- Re-verified 2026-09-20 (this implementer pass): product bump already on
+  `c91d27b`; `check-version` exit 0, both packable ids, source 1.0.2 vs
+  nuget 1.0.1, no packages override. No remaining product work. Review skip.
 
 ## Session
 
 - Created: 2057841 (2026-09-20)
 - Cockpit: grok session 01a0b207-11c7-73b0-9d4f-66c0c07d8c2f (2026-09-20)
 - Implementer: grok session 01a0bcab-a440-7ad3-9b63-4d0e98bd67d4 (2026-09-20)
+- Implementer re-verify: grok session 01a0bcb0-fa04-7d70-8386-9b69758a43c9 (2026-09-20)
 
 ## Results
 
