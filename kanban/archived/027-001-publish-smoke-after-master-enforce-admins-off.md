@@ -19,3 +19,9 @@ because publish was still blocked.
 
 Operator `DELETE .../protection/enforce_admins` ran from 027. This kitchen exists only to
 exercise publish. Archive after 027 Results record the CLI output.
+
+Archived 2026-09-20 (cockpit grok `01a0b207-11c7-73b0-9d4f-66c0c07d8c2f`): parent **027** Results already record `ganda kanban publish 027-001` → `dc075a7`. No further product or publish work.
+
+## Results
+
+Throwaway publish-smoke child. Proof lives on parent 027 (`Published task 027-001… Pushed: dc075a7`). Checklist was already checked. Archived; do not implement.
