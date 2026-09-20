@@ -271,8 +271,10 @@ public interface ITerminal : IConsole
   /// </summary>
   /// <remarks>
   /// This parameterless overload is cross-platform (it emits the BEL character on
-  /// Unix-like systems). When the console is redirected or unavailable, the default
-  /// implementation silently does nothing instead of throwing.
+  /// Unix-like systems). When the console is unavailable, the default implementation
+  /// silently does nothing instead of throwing. When standard output is redirected,
+  /// Unix-like hosts no-op (the BEL is not written to the redirected stream); Windows
+  /// still plays the system beep via the kernel.
   /// </remarks>
   void Beep();
 
@@ -311,7 +313,8 @@ public interface ITerminal : IConsole
   /// <value>The string to display in the title bar of the console.</value>
   /// <remarks>
   /// Implementations targeting the system console may only support reading the title on Windows;
-  /// the default implementation returns an empty string on other platforms. The setter is
+  /// the default implementation returns an empty string on other platforms and when the
+  /// Windows getter fails because the console is redirected or unavailable. The setter is
   /// cross-platform and silently does nothing when the console is redirected or unavailable.
   /// </remarks>
   string Title { get; set; }

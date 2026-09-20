@@ -79,7 +79,7 @@ try
 {
   Terminal.Instance = facadeTerminal;
 
-  // Subscribe via the static facade; the handler lands on the instance
+  // Subscribe via the static facade; the facade forwarder is attached to the instance
   Terminal.CancelKeyPress += StaticHandler;
   facadeTerminal.SimulateCancelKeyPress(ConsoleSpecialKey.ControlC);
 
@@ -91,7 +91,7 @@ try
 
   Console.WriteLine("✓ Static Terminal.CancelKeyPress add forwards to Instance");
 
-  // Unsubscribe via the static facade; the handler is removed from the instance
+  // Unsubscribe via the static facade; the facade forwarder is detached from the instance
   Terminal.CancelKeyPress -= StaticHandler;
   staticEventRaised = false;
   facadeTerminal.SimulateCancelKeyPress();
@@ -106,7 +106,75 @@ try
 }
 finally
 {
+  Terminal.CancelKeyPress -= StaticHandler;
   Terminal.Instance = originalInstance;
+}
+
+// Process-global Instance assignment moves the facade forwarder
+using TestTerminal firstTerminal = new();
+using TestTerminal secondTerminal = new();
+bool reboundRaised = false;
+
+try
+{
+  Terminal.Instance = firstTerminal;
+  Terminal.CancelKeyPress += ReboundHandler;
+  Terminal.Instance = secondTerminal;
+
+  secondTerminal.SimulateCancelKeyPress();
+  if (!reboundRaised)
+  {
+    Console.WriteLine("❌ FAILED: Forwarder did not follow process-global Instance assignment");
+    return;
+  }
+
+  reboundRaised = false;
+  firstTerminal.SimulateCancelKeyPress();
+  if (reboundRaised)
+  {
+    Console.WriteLine("❌ FAILED: Forwarder remained on the previous Instance after reassignment");
+    return;
+  }
+
+  Console.WriteLine("✓ Static Terminal.CancelKeyPress forwarder follows Instance assignment");
+}
+finally
+{
+  Terminal.CancelKeyPress -= ReboundHandler;
+  Terminal.Instance = originalInstance;
+}
+
+// Subscribe inside Use, unsubscribe after the scope ends — must not leak on the test terminal
+using TestTerminal scopedTerminal = new();
+bool scopedRaised = false;
+
+try
+{
+  using (TestTerminalContext.Use(scopedTerminal))
+  {
+    Terminal.CancelKeyPress += ScopedHandler;
+    scopedTerminal.SimulateCancelKeyPress();
+    if (!scopedRaised)
+    {
+      Console.WriteLine("❌ FAILED: Subscribe inside Use did not attach to the scoped terminal");
+      return;
+    }
+  }
+
+  Terminal.CancelKeyPress -= ScopedHandler;
+  scopedRaised = false;
+  scopedTerminal.SimulateCancelKeyPress();
+  if (scopedRaised)
+  {
+    Console.WriteLine("❌ FAILED: Unsubscribe after Use leaked the handler on the test terminal");
+    return;
+  }
+
+  Console.WriteLine("✓ Static Terminal.CancelKeyPress unsubscribe after Use does not leak");
+}
+finally
+{
+  Terminal.CancelKeyPress -= ScopedHandler;
 }
 
 Console.WriteLine("\n🧪 All CancelKeyPress tests passed!");
@@ -122,4 +190,14 @@ void StaticHandler(object? sender, ConsoleCancelEventArgs args)
 {
   staticEventRaised = true;
   staticSpecialKey = args.SpecialKey;
+}
+
+void ReboundHandler(object? sender, ConsoleCancelEventArgs args)
+{
+  reboundRaised = true;
+}
+
+void ScopedHandler(object? sender, ConsoleCancelEventArgs args)
+{
+  scopedRaised = true;
 }

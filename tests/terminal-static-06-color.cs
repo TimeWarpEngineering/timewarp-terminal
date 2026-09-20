@@ -396,6 +396,39 @@ namespace TimeWarp.Terminal.Tests.Core.TerminalStaticColor
       await Task.CompletedTask;
     }
 
+    public static async Task Should_write_error_line_plain_when_error_redirected()
+    {
+      // Arrange - stdout can still support color while stderr is redirected
+      ITerminal original = Terminal.Instance;
+      using TestTerminal testTerminal = new()
+      {
+        SupportsColor = true,
+        IsErrorRedirected = true
+      };
+      Terminal.Instance = testTerminal;
+
+      try
+      {
+        // Act
+        Terminal.WriteErrorLine("Error message", ConsoleColor.Red);
+        Terminal.WriteErrorLine("Fatal", ConsoleColor.White, ConsoleColor.DarkRed);
+        Terminal.WriteLine("stdout still colored", ConsoleColor.Green);
+
+        // Assert - library SGR must not land in redirected stderr; stdout color is unchanged
+        testTerminal.ErrorOutput.ShouldNotContain("\u001b");
+        testTerminal.ErrorOutput.ShouldContain("Error message");
+        testTerminal.ErrorOutput.ShouldContain("Fatal");
+        testTerminal.Output.ShouldContain(AnsiColors.BrightGreen);
+        testTerminal.Output.ShouldContain("stdout still colored");
+      }
+      finally
+      {
+        Terminal.Instance = original;
+      }
+
+      await Task.CompletedTask;
+    }
+
     public static async Task Should_write_widgets_plain_when_color_not_supported()
     {
       // Arrange
