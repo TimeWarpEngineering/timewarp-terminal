@@ -96,7 +96,7 @@ internal sealed class WorkflowCommand : ICommand<Unit>
 
     private async Task RunReleaseWorkflowAsync(string repoRoot, string? apiKey, CancellationToken ct)
     {
-      Terminal.WriteLine("Release Pipeline: clean -> build -> verify-samples -> test -> check-version -> pack");
+      Terminal.WriteLine("Release Pipeline: clean -> build -> verify-samples -> test -> check-version -> pack -> push");
       Terminal.WriteLine("");
 
       // Step 1: Clean
@@ -280,24 +280,34 @@ internal sealed class WorkflowCommand : ICommand<Unit>
         foreach (string packageId in available)
         {
           string packagePath = Path.Combine(artifactsDir, $"{packageId}.{version}.nupkg");
+          string symbolsPath = Path.Combine(artifactsDir, $"{packageId}.{version}.snupkg");
           if (!File.Exists(packagePath))
           {
             throw new InvalidOperationException($"Expected package not found after pack: {packagePath}");
           }
 
-          string packageName = Path.GetFileName(packagePath);
-          Terminal.WriteLine($"  Pushing {packageName}...");
-
-          exitCode = await DotNet.NuGet()
-            .Push(packagePath)
-            .WithSource("https://api.nuget.org/v3/index.json")
-            .WithApiKey(apiKey)
-            .WithSkipDuplicate()
-            .RunAsync(ct);
-
-          if (exitCode != 0)
+          if (!File.Exists(symbolsPath))
           {
-            throw new InvalidOperationException($"NuGet push failed: {packageName}");
+            throw new InvalidOperationException($"Expected symbol package not found after pack: {symbolsPath}");
+          }
+
+          string[] packagePaths = [packagePath, symbolsPath];
+          foreach (string path in packagePaths)
+          {
+            string packageName = Path.GetFileName(path);
+            Terminal.WriteLine($"  Pushing {packageName}...");
+
+            exitCode = await DotNet.NuGet()
+              .Push(path)
+              .WithSource("https://api.nuget.org/v3/index.json")
+              .WithApiKey(apiKey)
+              .WithSkipDuplicate()
+              .RunAsync(ct);
+
+            if (exitCode != 0)
+            {
+              throw new InvalidOperationException($"NuGet push failed: {packageName}");
+            }
           }
 
           await NotifySoftwareSiteAsync(repoRoot, packageId, version);

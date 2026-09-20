@@ -24,8 +24,8 @@
 //
 // Commands (Phase 1 - CI/CD Orchestration):
 //   dev workflow            - Run full CI/CD pipeline (auto-detects mode)
-//   dev workflow --mode pr  - PR workflow: build -> verify-samples -> test
-//   dev workflow --mode release  - Release workflow: build -> check-version -> pack -> push
+//   dev workflow --mode pr  - PR workflow: clean -> build -> verify-samples -> test
+//   dev workflow --mode release  - Release workflow: clean -> build -> verify-samples -> test -> check-version -> pack -> push
 //   dev build              - Build all TimeWarp.Terminal projects
 //   dev clean              - Clean solution and artifacts
 //   dev test               - Run CI test suite
