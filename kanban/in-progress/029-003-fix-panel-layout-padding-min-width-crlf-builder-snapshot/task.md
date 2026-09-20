@@ -40,6 +40,8 @@ Do **not** create a sibling “apply 029 findings” task. This child is the pro
 - [x] M16 WrapText maxWidth for unsplittable wide graphemes
 - [x] M19 negative padding clamped
 - [x] Panel/rule/wrap tests green
+- [x] Effort-1 general review under `review/` (round 1)
+- [x] `review/disposition.md` — outcome `clean`
 
 ## Notes
 
@@ -51,6 +53,7 @@ Do **not** create a sibling “apply 029 findings” task. This child is the pro
 - Created: 3364129 (2026-09-04)
 - Parent review: Grok `01a06a96-935c-79a0-b334-1e5bc6c6b568` (2026-09-04)
 - Implementer: Grok 4.6 session `01a0bcf8-4a45-79a2-b582-dcf1a8c90ce6` (2026-09-20)
+- Review oracle: Grok `01a0bd03-4b65-7a80-9099-836f4e663b77` (2026-09-20); general round-1 `01a0bd04-ff7b-79f2-9ef8-4d546c6d9a18`
 
 ## Results
 
@@ -129,3 +132,17 @@ dotnet tests/table-widget-01-basic.cs
 ```
 
 **Not in scope:** live TTY box-drawing inspection. `dotnet test` on the `.slnx` finds nothing (Jaribu runfiles, not VSTest).
+
+### Review disposition
+
+- **Rounds:** 1
+- **Effort / roster:** 1 — general only
+- **Final counts:** 0 open / 0 fixed / 0 wontfix (no issues raised)
+- **Outcome:** `clean` (parent 029 M7, M8, M15, M16, M19 closed on this child; no new findings)
+- **Wontfix / escalations:** none
+- **Paths:**
+  - `review/review-framework.md`
+  - `review/round-1/general.md`
+  - `review/round-1/merged.md`
+  - `review/disposition.md`
+- Review-session smoke: panel-widget-01-basic 19/19, panel-widget-03-word-wrap 10/10, rule-widget-01-basic 10/10, ansi-string-utils-02-wrap-text 15/15, layout-08-min-width 1/1, layout-10-widgets 1/1, table-widget-01-basic 10/10.
