@@ -6,9 +6,11 @@ Parent **029** round-1 merged findings **M9, M10, M20, M21**.
 
 Four independent hygiene items. Do **not** create a sibling “apply 029 findings” task.
 
-**Kebab SSOT for readmes (M20):** git paths are `readme.md`, never `README.md`.
-NuGet’s *package payload* may still be named `README.md` via `PackagePath` — that is
-not a git filename.
+**Kebab SSOT for readmes (M20):** `readme.md` everywhere — git path, csproj
+`Include`, `PackageReadmeFile`, and the nupkg entry. Do **not** remap to
+`README.md`. Org packs (Nuru, Flexbox, Ganda, State, Jaribu, Builder, Mediator,
+Tazor, …) already use `<PackageReadmeFile>readme.md</PackageReadmeFile>` with
+`Include="…/readme.md"` and empty `PackagePath`.
 
 ## Requirements
 
@@ -31,26 +33,20 @@ not a git filename.
   same folder publishes symbols, and assert that in Results). Layout 1.0.2 has not
   shipped yet — this should be correct before `dev release`.
 
-### M20 — nit — git readme is kebab `readme.md`; csproj still points at `README.md`
+### M20 — nit — use kebab `readme.md` for git, Include, and PackageReadmeFile
 
-**Two different names. Do not mix them.**
-
-| Layer | Required name | Why |
-|-------|----------------|-----|
-| Git / disk | `readme.md` | TimeWarp kebab (tw-csharp). Not an exception. |
-| csproj `Include` | path to that kebab file | Linux pack is case-sensitive; `README.md` misses `readme.md`. |
-| nupkg entry + `PackageReadmeFile` | `README.md` | NuGet gallery readme filename inside the package. Set with `PackagePath="README.md"`. |
+NuGet accepts `readme.md`. Match the rest of the org; do not invent a
+`PackagePath="README.md"` remap.
 
 **Wrong today**
 
-- Repo root git file is already `readme.md`.
-- `source/timewarp-terminal/timewarp-terminal.csproj` still
-  `Include="../../README.md"` (no file of that name). Fix Include to
-  `../../readme.md` and set `PackagePath="README.md"` so the nupkg still contains
-  `README.md`.
-- `source/timewarp-terminal-layout/README.md` is Pascal `README.md` on disk
-  (audit `kebab-path-names`). Rename the **git file** to `readme.md`. Point
-  Include at `readme.md`. Same `PackagePath="README.md"`.
+- Repo root is already `readme.md`.
+- `source/timewarp-terminal/timewarp-terminal.csproj`: `PackageReadmeFile` is
+  `README.md` and `Include="../../README.md"` (no such git file). Set both to
+  `readme.md` (`Include="../../readme.md"`, `PackagePath=""`).
+- `source/timewarp-terminal-layout/README.md` is Pascal on disk (audit
+  `kebab-path-names`). Rename to `readme.md`. csproj Include +
+  `PackageReadmeFile` become `readme.md`.
 
 Do **not** add a git `README.md`. Do **not** leave Layout’s on-disk `README.md`.
 
@@ -65,9 +61,9 @@ Do **not** add a git `README.md`. Do **not** leave Layout’s on-disk `README.md
 - [ ] M9 `tests/**` and `samples/**` in both CI path filters
 - [ ] M10 snupkg in artifact glob and explicit push or documented sibling-push;
       no dummy publish
-- [ ] M20 every **git** readme path is `readme.md` (root already is; Layout
-      renamed). csproj `Include` matches those kebab paths. nupkg entry may be
-      `README.md` via `PackagePath` only
+- [ ] M20 every readme is kebab `readme.md` on disk, in `Include`, and in
+      `PackageReadmeFile` (root already kebab; Layout renamed; no `README.md`
+      remap)
 - [ ] M21 `dev.cs` banner matches the real pipeline
 - [ ] A tests-only path change would match `on.pull_request.paths` (inspect YAML)
 
@@ -75,7 +71,8 @@ Do **not** add a git `README.md`. Do **not** leave Layout’s on-disk `README.md
 
 - Parent: `kanban/done/029-complete-detailed-code-review-of-timewarpterminal/review/round-1/merged.md`
 - 022 already added verify-samples+test and snupkg *production*. Do not remove those.
-- Cockpit 2026-09-20: clarified M20 kebab vs nupkg `README.md`; M10 404 claim is stale.
+- Cockpit 2026-09-20: M20 is kebab `readme.md` all the way (org PackageReadmeFile
+  convention). Earlier “nupkg must be README.md” note was wrong. M10 404 claim is stale.
 
 ## Session
 
