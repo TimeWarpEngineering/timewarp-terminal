@@ -6,7 +6,10 @@ on:
       - master
     paths:
       - 'source/**'
+      - 'tests/**'
+      - 'samples/**'
       - 'tools/**'
+      - 'msbuild/**'
       - '.github/workflows/**'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
@@ -15,7 +18,10 @@ on:
       - master
     paths:
       - 'source/**'
+      - 'tests/**'
+      - 'samples/**'
       - 'tools/**'
+      - 'msbuild/**'
       - '.github/workflows/**'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
@@ -91,5 +97,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Packages-${{ github.run_number }}
-          path: artifacts/packages/*.nupkg
+          path: |
+            artifacts/packages/*.nupkg
+            artifacts/packages/*.snupkg
           if-no-files-found: ignore

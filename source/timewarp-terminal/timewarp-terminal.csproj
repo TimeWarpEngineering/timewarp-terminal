@@ -8,7 +8,7 @@
 
     <!-- Package settings -->
     <IsPackable>true</IsPackable>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="../../README.md" Pack="true" PackagePath="" />
+    <None Include="../../readme.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>
