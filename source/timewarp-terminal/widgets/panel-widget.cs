@@ -5,12 +5,15 @@ namespace TimeWarp.Terminal;
 #endregion
 
 #region Design
-// Every content row is rendered at exactly the content-area width so the right border always
-// aligns: with WordWrap on, lines are wrapped by AnsiStringUtils.WrapText; with WordWrap off,
-// over-long lines are truncated with AnsiStringUtils.TruncateVisible — a plain ANSI-aware,
-// grapheme-aware cut (no ellipsis; the panel has no ellipsis convention) that appends a reset
-// when styling is active at the cut so the border and padding are never styled. A wide grapheme
-// straddling the last column is dropped and the shortfall is absorbed by PadRightVisible.
+// Padding is clamped to >= 0 at render. Bordered width floors at 2 + 2*padH + 1 so contentAreaWidth
+// is naturally >= 1 and every rendered line shares the same visible width. Content newlines are
+// normalized (CRLF and lone CR -> LF) before split so a leftover CR cannot rewind the cursor over
+// the left border. Every content row is rendered at exactly the content-area width so the right
+// border always aligns: with WordWrap on, lines are wrapped by AnsiStringUtils.WrapText; with
+// WordWrap off, over-long lines are truncated with AnsiStringUtils.TruncateVisible — a plain
+// ANSI-aware, grapheme-aware cut (no ellipsis; the panel has no ellipsis convention) that appends
+// a reset when styling is active at the cut so the border and padding are never styled. A wide
+// grapheme straddling the last column is dropped and the shortfall is absorbed by PadRightVisible.
 #endregion
 
 /// <summary>
@@ -109,15 +112,17 @@ public sealed class Panel
       return [];
     }
 
-    return Content.Split('\n');
+    return SplitContentLines(Content);
   }
 
   private string[] RenderWithBorder(int terminalWidth)
   {
     int width = Width ?? terminalWidth;
+    int paddingHorizontal = Math.Max(0, PaddingHorizontal);
+    int paddingVertical = Math.Max(0, PaddingVertical);
 
-    // Ensure minimum width (corners + at least 1 character content area)
-    width = Math.Max(width, 4);
+    // Floor at borders + horizontal padding + at least 1 content column
+    width = Math.Max(width, 2 + (2 * paddingHorizontal) + 1);
 
     char topLeft = BoxChars.GetTopLeft(Border);
     char topRight = BoxChars.GetTopRight(Border);
@@ -127,17 +132,13 @@ public sealed class Panel
     char vertical = BoxChars.GetVertical(Border);
 
     // Content area width = total width - 2 borders - 2×horizontal padding
-    int contentAreaWidth = width - 2 - (2 * PaddingHorizontal);
-    if (contentAreaWidth < 1)
-    {
-      contentAreaWidth = 1;
-    }
+    int contentAreaWidth = width - 2 - (2 * paddingHorizontal);
 
     // Split content into lines and optionally wrap
     List<string> contentLines = [];
     if (!string.IsNullOrEmpty(Content))
     {
-      string[] rawLines = Content.Split('\n');
+      string[] rawLines = SplitContentLines(Content);
       foreach (string rawLine in rawLines)
       {
         if (WordWrap)
@@ -158,27 +159,27 @@ public sealed class Panel
     result.Add(RenderTopBorder(width, topLeft, topRight, horizontal));
 
     // Render vertical padding rows
-    for (int i = 0; i < PaddingVertical; i++)
+    for (int i = 0; i < paddingVertical; i++)
     {
-      result.Add(RenderEmptyContentRow(vertical, contentAreaWidth));
+      result.Add(RenderEmptyContentRow(vertical, contentAreaWidth, paddingHorizontal));
     }
 
     // Render content rows
     foreach (string line in contentLines)
     {
-      result.Add(RenderContentRow(line, vertical, contentAreaWidth));
+      result.Add(RenderContentRow(line, vertical, contentAreaWidth, paddingHorizontal));
     }
 
     // Handle empty content
     if (contentLines.Count == 0)
     {
-      result.Add(RenderEmptyContentRow(vertical, contentAreaWidth));
+      result.Add(RenderEmptyContentRow(vertical, contentAreaWidth, paddingHorizontal));
     }
 
     // Render vertical padding rows
-    for (int i = 0; i < PaddingVertical; i++)
+    for (int i = 0; i < paddingVertical; i++)
     {
-      result.Add(RenderEmptyContentRow(vertical, contentAreaWidth));
+      result.Add(RenderEmptyContentRow(vertical, contentAreaWidth, paddingHorizontal));
     }
 
     // Render bottom border
@@ -229,12 +230,12 @@ public sealed class Panel
     return $"{colorStart}{bottomLeft}{line}{bottomRight}{colorEnd}";
   }
 
-  private string RenderContentRow(string content, char vertical, int contentAreaWidth)
+  private string RenderContentRow(string content, char vertical, int contentAreaWidth, int paddingHorizontal)
   {
     string colorStart = !string.IsNullOrEmpty(BorderColor) ? BorderColor : "";
     string colorEnd = !string.IsNullOrEmpty(BorderColor) ? AnsiColors.Reset : "";
 
-    string padding = new(' ', PaddingHorizontal);
+    string padding = new(' ', paddingHorizontal);
 
     // Truncate (ANSI-aware, grapheme-aware, no ellipsis) then pad to exactly the content area width
     string truncatedContent = AnsiStringUtils.TruncateVisible(content, contentAreaWidth);
@@ -243,9 +244,17 @@ public sealed class Panel
     return $"{colorStart}{vertical}{colorEnd}{padding}{paddedContent}{padding}{colorStart}{vertical}{colorEnd}";
   }
 
-  private string RenderEmptyContentRow(char vertical, int contentAreaWidth)
+  private string RenderEmptyContentRow(char vertical, int contentAreaWidth, int paddingHorizontal)
   {
-    return RenderContentRow("", vertical, contentAreaWidth);
+    return RenderContentRow("", vertical, contentAreaWidth, paddingHorizontal);
+  }
+
+  private static string[] SplitContentLines(string content)
+  {
+    return content
+      .Replace("\r\n", "\n", StringComparison.Ordinal)
+      .Replace('\r', '\n')
+      .Split('\n');
   }
 }
 
@@ -318,8 +327,8 @@ public sealed class PanelBuilder : IBuilder<Panel>
   /// <returns>This builder for method chaining.</returns>
   public PanelBuilder Padding(int horizontal, int vertical)
   {
-    Panel.PaddingHorizontal = horizontal;
-    Panel.PaddingVertical = vertical;
+    Panel.PaddingHorizontal = Math.Max(0, horizontal);
+    Panel.PaddingVertical = Math.Max(0, vertical);
     return this;
   }
 
@@ -330,7 +339,7 @@ public sealed class PanelBuilder : IBuilder<Panel>
   /// <returns>This builder for method chaining.</returns>
   public PanelBuilder PaddingHorizontal(int padding)
   {
-    Panel.PaddingHorizontal = padding;
+    Panel.PaddingHorizontal = Math.Max(0, padding);
     return this;
   }
 
@@ -341,7 +350,7 @@ public sealed class PanelBuilder : IBuilder<Panel>
   /// <returns>This builder for method chaining.</returns>
   public PanelBuilder PaddingVertical(int padding)
   {
-    Panel.PaddingVertical = padding;
+    Panel.PaddingVertical = Math.Max(0, padding);
     return this;
   }
 
@@ -368,14 +377,29 @@ public sealed class PanelBuilder : IBuilder<Panel>
   }
 
   /// <summary>
-  /// Builds the configured <see cref="Panel"/> instance.
+  /// Builds a <see cref="Panel"/> snapshot of the current builder state.
+  /// Each call returns an independent panel; mutating the builder afterwards
+  /// does not affect previously built instances.
   /// </summary>
   /// <returns>The configured panel.</returns>
-  public Panel Build() => Panel;
+  public Panel Build()
+  {
+    return new Panel
+    {
+      Header = Panel.Header,
+      Content = Panel.Content,
+      Border = Panel.Border,
+      BorderColor = Panel.BorderColor,
+      PaddingHorizontal = Panel.PaddingHorizontal,
+      PaddingVertical = Panel.PaddingVertical,
+      Width = Panel.Width,
+      WordWrap = Panel.WordWrap
+    };
+  }
 
   /// <summary>
-  /// Converts the builder to a <see cref="Panel"/>.
-  /// Alternate method for languages that don't support implicit operators.
+  /// Builds a <see cref="Panel"/> snapshot of the current builder state.
+  /// Explicit alternative to <see cref="Build"/>.
   /// </summary>
   /// <returns>The configured panel.</returns>
   public Panel ToPanel() => Build();

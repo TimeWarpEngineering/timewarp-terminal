@@ -157,6 +157,34 @@ namespace TimeWarp.Terminal.Tests.Core.RuleWidget
 
       await Task.CompletedTask;
     }
+
+    public static async Task Should_build_independent_snapshots()
+    {
+      // Regression: Build() returned the live rule instance, so building twice
+      // returned the same object and post-Build builder calls mutated it.
+      // Arrange
+      RuleBuilder builder = new RuleBuilder()
+        .Title("First")
+        .Width(20);
+
+      // Act
+      Rule first = builder.Build();
+
+      _ = builder
+        .Title("Second")
+        .Width(40);
+
+      Rule second = builder.Build();
+
+      // Assert
+      ReferenceEquals(first, second).ShouldBeFalse();
+      first.Title.ShouldBe("First");
+      first.Width.ShouldBe(20);
+      second.Title.ShouldBe("Second");
+      second.Width.ShouldBe(40);
+
+      await Task.CompletedTask;
+    }
   }
 
 } // namespace TimeWarp.Terminal.Tests.Core.RuleWidget

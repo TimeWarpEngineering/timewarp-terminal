@@ -6,7 +6,8 @@ namespace TimeWarp.Terminal;
 
 #region Design
 // Min-width floors prevent silent zero-width collapse under FlexShrink. Table/Panel
-// internals stay authoritative: we only supply a coarse floor, then Render(assignedWidth).
+// internals stay authoritative: we supply a floor that accounts for panel horizontal
+// padding (bordered panel min = 2 + 2*padH + 1), then Render(assignedWidth).
 // Natural widths prefer public widget surface (Columns/Rows, Content, Title) over internals.
 #endregion
 
@@ -144,7 +145,13 @@ internal static class WidgetMeasure
 
   private static int GetPanelMinWidth(Panel panel)
   {
-    return panel.Border == BorderStyle.None ? 1 : 4;
+    if (panel.Border == BorderStyle.None)
+    {
+      return 1;
+    }
+
+    int paddingHorizontal = Math.Max(0, panel.PaddingHorizontal);
+    return 2 + (2 * paddingHorizontal) + 1;
   }
 
   private static int GetPanelNaturalWidth(Panel panel)
@@ -162,7 +169,10 @@ internal static class WidgetMeasure
 
     if (!string.IsNullOrEmpty(panel.Content))
     {
-      foreach (string line in panel.Content.Split('\n'))
+      string normalized = panel.Content
+        .Replace("\r\n", "\n", StringComparison.Ordinal)
+        .Replace('\r', '\n');
+      foreach (string line in normalized.Split('\n'))
       {
         contentMax = Math.Max(contentMax, AnsiStringUtils.GetVisibleLength(line));
       }
@@ -173,8 +183,9 @@ internal static class WidgetMeasure
       return Math.Max(1, contentMax);
     }
 
-    int natural = contentMax + 2 + (2 * panel.PaddingHorizontal);
-    natural = Math.Max(4, natural);
+    int paddingHorizontal = Math.Max(0, panel.PaddingHorizontal);
+    int natural = contentMax + 2 + (2 * paddingHorizontal);
+    natural = Math.Max(GetPanelMinWidth(panel), natural);
 
     // Panel omits the header from the top border when width < headerVisible + 6.
     if (!string.IsNullOrEmpty(panel.Header))
