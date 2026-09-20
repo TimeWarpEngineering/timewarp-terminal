@@ -52,11 +52,11 @@ Then:
 
 ## Checklist
 
-- [ ] Root `.gitignore` has `*.journal.json`
-- [ ] `git ls-files '*.journal.json'` is empty
-- [ ] Audit `routine-journals-gitignore` PASSes
-- [ ] `git check-ignore -v` confirms ignore; porcelain does not list journals
-- [ ] Do not implement on `master`
+- [x] Root `.gitignore` has `*.journal.json`
+- [x] `git ls-files '*.journal.json'` is empty
+- [x] Audit `routine-journals-gitignore` PASSes
+- [x] `git check-ignore -v` confirms ignore; porcelain does not list journals
+- [x] Do not implement on `master`
 
 ## Notes
 
@@ -89,3 +89,30 @@ clean; host unstage-all (ganda).
 - Trigger: `/tw-merge` software 033 — GC refused, then leftover journal
   committed; 262 left consumer sweep out of scope
 - Pattern: `*.journal.json` (cockpit, 2026-09-03) — one glob, not six names
+- Close-out: grok `01a0b207-11c7-73b0-9d4f-66c0c07d8c2f` (2026-09-20) cockpit — already on master via `4aa9bac`; board-only close
+
+## Results
+
+Product work was already on `master` before this kitchen closed. No `.gitignore` change on this task branch.
+
+- `4aa9bac` `chore: ignore routine journals and memsearch memory` added:
+
+```gitignore
+# Routine journals beside kitchens (local; not product)
+*.journal.json
+```
+
+- `.gitignore:427-428` on current master
+- `git ls-files '*.journal.json'` empty
+- `git check-ignore -v kanban/to-do/task-work.journal.json` → `.gitignore:428:*.journal.json`
+- `ganda repo audit --fix --checks routine-journals-gitignore` → `routine-journals-gitignore PASS` (fix no-op: already ignores)
+
+### How to validate
+
+```bash
+git check-ignore -v kanban/to-do/task-work.journal.json
+# expect: .gitignore:428:*.journal.json
+
+git ls-files '*.journal.json'
+# expect: empty
+```
