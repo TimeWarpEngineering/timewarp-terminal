@@ -177,6 +177,50 @@ finally
   Terminal.CancelKeyPress -= ScopedHandler;
 }
 
+// Process-global Instance assignment inside Use rebinds to the assigned field, not Current
+using TestTerminal useScopeTerminal = new();
+using TestTerminal assignedTerminal = new();
+bool assignedRaised = false;
+
+try
+{
+  using (TestTerminalContext.Use(useScopeTerminal))
+  {
+    Terminal.CancelKeyPress += AssignedHandler;
+    Terminal.Instance = assignedTerminal;
+
+    assignedTerminal.SimulateCancelKeyPress();
+    if (!assignedRaised)
+    {
+      Console.WriteLine("❌ FAILED: Forwarder did not follow process-global Instance assignment inside Use");
+      return;
+    }
+
+    assignedRaised = false;
+    useScopeTerminal.SimulateCancelKeyPress();
+    if (assignedRaised)
+    {
+      Console.WriteLine("❌ FAILED: Forwarder stayed on the Use-scoped terminal after Instance assignment");
+      return;
+    }
+  }
+
+  assignedRaised = false;
+  assignedTerminal.SimulateCancelKeyPress();
+  if (!assignedRaised)
+  {
+    Console.WriteLine("❌ FAILED: Forwarder left the process-global Instance after Use ended");
+    return;
+  }
+
+  Console.WriteLine("✓ Static Terminal.CancelKeyPress assignment inside Use follows process-global Instance");
+}
+finally
+{
+  Terminal.CancelKeyPress -= AssignedHandler;
+  Terminal.Instance = originalInstance;
+}
+
 Console.WriteLine("\n🧪 All CancelKeyPress tests passed!");
 
 void Handler(object? sender, ConsoleCancelEventArgs args)
@@ -200,4 +244,9 @@ void ReboundHandler(object? sender, ConsoleCancelEventArgs args)
 void ScopedHandler(object? sender, ConsoleCancelEventArgs args)
 {
   scopedRaised = true;
+}
+
+void AssignedHandler(object? sender, ConsoleCancelEventArgs args)
+{
+  assignedRaised = true;
 }

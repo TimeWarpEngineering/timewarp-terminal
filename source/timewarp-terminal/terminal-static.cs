@@ -19,8 +19,8 @@ namespace TimeWarp.Terminal;
 // Error-colored writers also require !IsErrorRedirected so library SGR is not written into
 // a redirected stderr when stdout is still a TTY.
 // CancelKeyPress handlers live on the facade; a single forwarder is attached to the Instance
-// resolved at first subscribe and follows process-global Instance assignment so add/remove
-// still match after a TestTerminalContext.Use scope ends.
+// resolved at first subscribe. Process-global Instance assignment rebinds the forwarder to the
+// assigned field, not TestTerminalContext.Current; async-local Use swaps do not move it.
 // Colored widget output re-applies the color prefix after every embedded SGR reset (from
 // BorderColor or styled cells) so the requested colors survive styled segments in a line.
 // CA1054 suppressed for WriteLink/WriteLinkLine: OSC 8 hyperlinks use raw URL strings by design.
@@ -91,7 +91,7 @@ public static class Terminal
     set
     {
       field = value ?? throw new ArgumentNullException(nameof(value));
-      SyncCancelKeyPressForwarder();
+      SyncCancelKeyPressForwarder(field);
     }
   } = TimeWarpTerminal.Default;
 
@@ -1233,7 +1233,7 @@ public static class Terminal
     handler?.Invoke(sender, args);
   }
 
-  private static void SyncCancelKeyPressForwarder()
+  private static void SyncCancelKeyPressForwarder(ITerminal processGlobalTerminal)
   {
     lock (CancelKeyPressSync)
     {
@@ -1242,7 +1242,7 @@ public static class Terminal
         return;
       }
 
-      BindCancelKeyPressForwarder(Instance);
+      BindCancelKeyPressForwarder(processGlobalTerminal);
     }
   }
 
