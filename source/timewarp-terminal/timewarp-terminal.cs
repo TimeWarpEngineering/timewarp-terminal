@@ -11,6 +11,8 @@ namespace TimeWarp.Terminal;
 // IOExceptions silently swallowed because redirected output is a valid runtime scenario.
 // Hyperlink detection uses environment variable heuristics for major terminal emulators.
 // Color support respects the NO_COLOR spec (non-empty value disables color) and TERM=dumb.
+// Parameterless Beep swallows IOException when the console is unavailable but does not gate on
+// stdout redirection: Windows BCL still beeps via Kernel32.Beep when output is redirected.
 #endregion
 
 /// <summary>
@@ -477,15 +479,16 @@ public sealed class TimeWarpTerminal : ITerminal
   /// <inheritdoc />
   public void Beep()
   {
-    // Console.Beep() is cross-platform (emits BEL on Unix);
-    // only the (frequency, duration) overload is Windows-only
+    // Console.Beep() is cross-platform (emits BEL on Unix; Unix BCL already no-ops when stdout
+    // is redirected). Windows still calls Kernel32.Beep when stdout is redirected; match that
+    // fallback and only swallow IOException when the console is unavailable.
     try
     {
       Console.Beep();
     }
     catch (IOException)
     {
-      // Silently ignore if console is redirected
+      // Silently ignore if the console is unavailable
     }
   }
 
@@ -540,7 +543,14 @@ public sealed class TimeWarpTerminal : ITerminal
     {
       if (OperatingSystem.IsWindows())
       {
-        return Console.Title;
+        try
+        {
+          return Console.Title;
+        }
+        catch (IOException)
+        {
+          return string.Empty;
+        }
       }
 
       return string.Empty;

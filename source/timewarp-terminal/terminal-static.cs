@@ -16,6 +16,11 @@ namespace TimeWarp.Terminal;
 // Color methods use AnsiColors to wrap messages with ANSI escape sequences, applied only
 // when Instance.SupportsColor is true (NO_COLOR / redirected output degrade to plain text).
 // A null message writes plain (no color prefix/reset), matching the non-colored overloads.
+// Error-colored writers also require !IsErrorRedirected so library SGR is not written into
+// a redirected stderr when stdout is still a TTY.
+// CancelKeyPress handlers live on the facade; a single forwarder is attached to the Instance
+// resolved at first subscribe. Process-global Instance assignment rebinds the forwarder to the
+// assigned field, not TestTerminalContext.Current; async-local Use swaps do not move it.
 // Colored widget output re-applies the color prefix after every embedded SGR reset (from
 // BorderColor or styled cells) so the requested colors survive styled segments in a line.
 // CA1054 suppressed for WriteLink/WriteLinkLine: OSC 8 hyperlinks use raw URL strings by design.
@@ -57,6 +62,10 @@ public static class Terminal
 {
   private static readonly AsyncLocal<FormatProviderBox?> FormatProviderOverride = new();
   private static IFormatProvider? ProcessFormatProvider { get; set; }
+  private static readonly Lock CancelKeyPressSync = new();
+  private static readonly ConsoleCancelEventHandler CancelKeyPressForwarder = OnCancelKeyPress;
+  private static ConsoleCancelEventHandler? CancelKeyPressHandlers;
+  private static ITerminal? CancelKeyPressBoundInstance;
 
   private sealed class FormatProviderBox
   {
@@ -79,7 +88,11 @@ public static class Terminal
   public static ITerminal Instance
   {
     get => TestTerminalContext.Current ?? field;
-    set => field = value ?? throw new ArgumentNullException(nameof(value));
+    set
+    {
+      field = value ?? throw new ArgumentNullException(nameof(value));
+      SyncCancelKeyPressForwarder(field);
+    }
   } = TimeWarpTerminal.Default;
 
   /// <summary>
@@ -303,12 +316,13 @@ public static class Terminal
   /// </example>
   /// <remarks>
   /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
-  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// is <c>true</c> and standard error is not redirected; otherwise the text is written plain
+  /// (honoring NO_COLOR, redirected stdout, and redirected stderr).
   /// </remarks>
   public static void WriteErrorLine(string? message, ConsoleColor foregroundColor)
   {
     ITerminal instance = Instance;
-    if (message is null || !instance.SupportsColor)
+    if (message is null || !instance.SupportsColor || instance.IsErrorRedirected)
     {
       _ = instance.WriteErrorLine(message);
       return;
@@ -332,12 +346,13 @@ public static class Terminal
   /// </example>
   /// <remarks>
   /// The color is applied only when the current instance's <see cref="ITerminal.SupportsColor"/>
-  /// is <c>true</c>; otherwise the text is written plain (honoring NO_COLOR and redirected output).
+  /// is <c>true</c> and standard error is not redirected; otherwise the text is written plain
+  /// (honoring NO_COLOR, redirected stdout, and redirected stderr).
   /// </remarks>
   public static void WriteErrorLine(string? message, ConsoleColor foregroundColor, ConsoleColor backgroundColor)
   {
     ITerminal instance = Instance;
-    if (message is null || !instance.SupportsColor)
+    if (message is null || !instance.SupportsColor || instance.IsErrorRedirected)
     {
       _ = instance.WriteErrorLine(message);
       return;
@@ -1080,12 +1095,36 @@ public static class Terminal
   /// </summary>
   /// <remarks>
   /// This event allows graceful handling of Ctrl+C for interactive applications like REPLs.
-  /// Subscriptions are forwarded to the current <see cref="Instance"/>.
+  /// Handlers are stored on the facade and forwarded through a single handler on
+  /// <see cref="Instance"/>. Add and remove do not require the same instance to be current,
+  /// so a subscription made inside a test context can be removed after that context ends.
+  /// The forwarder follows process-global <see cref="Instance"/> assignment; async-local
+  /// <c>TestTerminalContext</c> swaps do not move it.
   /// </remarks>
   public static event ConsoleCancelEventHandler? CancelKeyPress
   {
-    add => Instance.CancelKeyPress += value;
-    remove => Instance.CancelKeyPress -= value;
+    add
+    {
+      lock (CancelKeyPressSync)
+      {
+        CancelKeyPressHandlers += value;
+        if (CancelKeyPressBoundInstance is null)
+        {
+          BindCancelKeyPressForwarder(Instance);
+        }
+      }
+    }
+    remove
+    {
+      lock (CancelKeyPressSync)
+      {
+        CancelKeyPressHandlers -= value;
+        if (CancelKeyPressHandlers is null)
+        {
+          UnbindCancelKeyPressForwarder();
+        }
+      }
+    }
   }
 
   /// <summary>
@@ -1182,4 +1221,51 @@ public static class Terminal
   /// </summary>
   /// <returns>A tuple containing the column (Left) and row (Top) position of the cursor.</returns>
   public static (int Left, int Top) GetCursorPosition() => Instance.GetCursorPosition();
+
+  private static void OnCancelKeyPress(object? sender, ConsoleCancelEventArgs args)
+  {
+    ConsoleCancelEventHandler? handler;
+    lock (CancelKeyPressSync)
+    {
+      handler = CancelKeyPressHandlers;
+    }
+
+    handler?.Invoke(sender, args);
+  }
+
+  private static void SyncCancelKeyPressForwarder(ITerminal processGlobalTerminal)
+  {
+    lock (CancelKeyPressSync)
+    {
+      if (CancelKeyPressHandlers is null)
+      {
+        return;
+      }
+
+      BindCancelKeyPressForwarder(processGlobalTerminal);
+    }
+  }
+
+  private static void BindCancelKeyPressForwarder(ITerminal terminal)
+  {
+    if (ReferenceEquals(CancelKeyPressBoundInstance, terminal))
+    {
+      return;
+    }
+
+    UnbindCancelKeyPressForwarder();
+    terminal.CancelKeyPress += CancelKeyPressForwarder;
+    CancelKeyPressBoundInstance = terminal;
+  }
+
+  private static void UnbindCancelKeyPressForwarder()
+  {
+    if (CancelKeyPressBoundInstance is null)
+    {
+      return;
+    }
+
+    CancelKeyPressBoundInstance.CancelKeyPress -= CancelKeyPressForwarder;
+    CancelKeyPressBoundInstance = null;
+  }
 }
