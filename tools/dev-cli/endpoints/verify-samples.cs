@@ -13,9 +13,9 @@ namespace DevCli;
 /// Verify sample compilation
 /// </summary>
 [NuruRoute("verify-samples", Description = "Verify sample compilation")]
-internal sealed class VerifySamplesCommand : ICommand<Unit>
+public sealed class VerifySamplesCommand : ICommand<Unit>
 {
-  internal sealed class Handler : ICommandHandler<VerifySamplesCommand, Unit>
+  public sealed class Handler : ICommandHandler<VerifySamplesCommand, Unit>
   {
     private readonly ITerminal Terminal;
 
@@ -24,7 +24,7 @@ internal sealed class VerifySamplesCommand : ICommand<Unit>
       Terminal = terminal;
     }
 
-    public async ValueTask<Unit> Handle(VerifySamplesCommand command, CancellationToken ct)
+    public async Task<Unit> Handle(VerifySamplesCommand command, CancellationToken cancellationToken)
     {
       string repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
       if (!File.Exists(Path.Combine(repoRoot, "timewarp-terminal.slnx")))

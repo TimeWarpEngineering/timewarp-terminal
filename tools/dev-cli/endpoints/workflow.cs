@@ -15,12 +15,12 @@ namespace DevCli;
 /// Run full CI/CD pipeline
 /// </summary>
 [NuruRoute("workflow", Description = "Run full CI/CD pipeline")]
-internal sealed class WorkflowCommand : ICommand<Unit>
+public sealed class WorkflowCommand : ICommand<Unit>
 {
   [Option("api-key", Description = "NuGet API key for publishing (from OIDC Trusted Publishing)")]
   public string? ApiKey { get; set; }
 
-  internal sealed class Handler : ICommandHandler<WorkflowCommand, Unit>
+  public sealed class Handler : ICommandHandler<WorkflowCommand, Unit>
   {
     private readonly ITerminal Terminal;
     private readonly IPackableProjectService PackableProjectService;
@@ -31,8 +31,10 @@ internal sealed class WorkflowCommand : ICommand<Unit>
       PackableProjectService = packableProjectService;
     }
 
-    public async ValueTask<Unit> Handle(WorkflowCommand command, CancellationToken ct)
+    public async Task<Unit> Handle(WorkflowCommand command, CancellationToken cancellationToken)
     {
+      ArgumentNullException.ThrowIfNull(command);
+
       // Auto-detect from GitHub Actions environment
       string? eventName = Environment.GetEnvironmentVariable("GITHUB_EVENT_NAME");
       bool isRelease = eventName == "release" || !string.IsNullOrEmpty(command.ApiKey);
@@ -45,11 +47,11 @@ internal sealed class WorkflowCommand : ICommand<Unit>
 
       if (isRelease)
       {
-        await RunReleaseWorkflowAsync(repoRoot, command.ApiKey, ct);
+        await RunReleaseWorkflowAsync(repoRoot, command.ApiKey, cancellationToken);
       }
       else
       {
-        await RunPrWorkflowAsync(repoRoot, ct);
+        await RunPrWorkflowAsync(repoRoot, cancellationToken);
       }
 
       return Unit.Value;

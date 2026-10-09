@@ -13,9 +13,9 @@ namespace DevCli;
 /// Build all TimeWarp.Terminal projects
 /// </summary>
 [NuruRoute("build", Description = "Build all TimeWarp.Terminal projects")]
-internal sealed class BuildCommand : ICommand<Unit>
+public sealed class BuildCommand : ICommand<Unit>
 {
-  internal sealed class Handler : ICommandHandler<BuildCommand, Unit>
+  public sealed class Handler : ICommandHandler<BuildCommand, Unit>
   {
     private readonly ITerminal Terminal;
 
@@ -24,7 +24,7 @@ internal sealed class BuildCommand : ICommand<Unit>
       Terminal = terminal;
     }
 
-    public async ValueTask<Unit> Handle(BuildCommand command, CancellationToken ct)
+    public async Task<Unit> Handle(BuildCommand command, CancellationToken cancellationToken)
     {
       string repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
       if (!File.Exists(Path.Combine(repoRoot, "timewarp-terminal.slnx")))
