@@ -73,6 +73,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" PrivateAssets="all" />
     <PackageReference Include="TimeWarp.Build.Tasks" PrivateAssets="all" />
+    <PackageReference Include="TimeWarp.SourceGenerators" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

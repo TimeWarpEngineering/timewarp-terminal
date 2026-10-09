@@ -427,6 +427,8 @@ dotnet_diagnostic.IDE0290.severity = none
 dotnet_diagnostic.IDE1006.severity = none
 
 # ganda repo audit configuration
+# TW0007 file-level usings (TimeWarp.SourceGenerators)
+dotnet_diagnostic.TW0007.filename = global-usings.cs
 [ganda.audit]
 # This IS the terminal library that wraps System.Console, so we don't ban it here
 banned-symbols.severity = off
