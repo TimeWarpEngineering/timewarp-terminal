@@ -1,11 +1,13 @@
 ---
 name: terminal
-description: TimeWarp.Terminal library - console abstractions (IConsole, ITerminal), widgets (panels, tables, rules), ANSI colors, hyperlinks, and Unicode width handling for testable C# console apps
+description: TimeWarp.Terminal library - framework-agnostic, testable console and output layer (IConsole, ITerminal, TestTerminal) for any .NET CLI or console app. Widgets, ANSI colors, hyperlinks, and Unicode width. No CLI framework required.
 ---
 
 # TimeWarp.Terminal
 
-Console abstractions and widgets for testable C# applications.
+Framework-agnostic, testable console and output layer for any .NET CLI or console app.
+
+Plain `Main` passes `IConsole` or `ITerminal` in. System.CommandLine, Spectre.Console.Cli, Cocona, and Nuru can pass the same interfaces. The shipped `TimeWarp.Terminal` package references only `TimeWarp.Builder`. Nuru is one host, used by this repo's dev CLI. It is not a package dependency.
 
 **Repository:** https://github.com/TimeWarpEngineering/timewarp-terminal
 **Package:** `TimeWarp.Terminal` (widgets). Companion: `TimeWarp.Terminal.Layout` (flexbox composition).

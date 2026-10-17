@@ -3,8 +3,8 @@
   <PropertyGroup>
     <AssemblyName>TimeWarp.Terminal</AssemblyName>
     <RootNamespace>TimeWarp.Terminal</RootNamespace>
-    <Description>Terminal abstractions and widgets for console applications - IConsole, ITerminal, panels, tables, rules, and ANSI color support</Description>
-    <PackageTags>terminal;console;ansi;colors;widgets;panel;table;cli;timewarp</PackageTags>
+    <Description>Framework-agnostic, testable console and output layer for any .NET CLI or console app. IConsole, ITerminal, TestTerminal, panels, tables, rules, OSC 8 hyperlinks, and ANSI color. No CLI framework required.</Description>
+    <PackageTags>terminal;console;ansi;colors;widgets;panel;table;cli;testing;aot;timewarp</PackageTags>
 
     <!-- Package settings -->
     <IsPackable>true</IsPackable>
