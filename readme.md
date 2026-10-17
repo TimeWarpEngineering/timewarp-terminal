@@ -4,7 +4,7 @@ The testable output layer for [Nuru](https://github.com/TimeWarpEngineering/time
 
 TimeWarp.Terminal writes the text, widgets, and layouts a command prints. It does not run an event loop, and it does not depend on a reactive framework. Tests capture that output with `TestTerminal`, `TestConsole`, and an async-scoped `TestTerminalContext`. Both packages are marked `IsAotCompatible` and run the trim and AOT analyzers.
 
-A Nuru handler can take `ITerminal` or `IConsole`. Call `UseTerminal` with a `TestTerminal` in a test. When you do not call it, Nuru uses `TimeWarpTerminal.Default`.
+A Nuru handler takes `ITerminal`, which also implements `IConsole`. Call `UseTerminal` with a `TestTerminal` in a test. When you do not call it, Nuru uses `TimeWarpTerminal.Default`.
 
 ## What you get
 
