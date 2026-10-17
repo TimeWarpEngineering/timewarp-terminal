@@ -1,4 +1,4 @@
-# Reposition README as the testable output layer for Nuru CLIs
+# Reposition README as a framework-agnostic testable console layer (Nuru as one integration)
 
 ## Goal (implementer restatement)
 
@@ -16,7 +16,20 @@ Steven approved this on 2026-10-17 (relayed by Amina). Busara rated the README r
 
 Out of scope (Steven): no live status / ILiveRegion, no full TUI layer. Do not promise or roadmap either in the README.
 
-## Checklist
+## Rework (2026-10-17, Steven)
+
+Steven rejected the first framing ("the testable output layer for Nuru CLIs") before merge of PR #44. TimeWarp.Terminal is a general-purpose, lower-level console layer that works with ANY .NET CLI or console app (System.CommandLine, Spectre.Console.Cli, Cocona, plain Main, Nuru, ...). It does NOT require Nuru and must not read as Nuru-only.
+
+Rework on this same branch/PR:
+
+- [ ] Tagline and intro lead with TimeWarp.Terminal as a framework-agnostic, testable console/output layer for any .NET CLI or console app
+- [ ] Nuru appears lower down only as one integration that works well with it, not as the identity; show at least one non-Nuru example (plain Main and/or System.CommandLine) of using IConsole/ITerminal and asserting output with TestTerminal
+- [ ] Check package description / PackageTags / csproj metadata, docs, and samples for anything implying a Nuru dependency; fix wording (Directory.Build.props InterceptorsNamespaces for TimeWarp.Nuru.Generated is build plumbing for tests/samples; leave it unless it leaks into the shipped package)
+- [ ] Keep the "when to use something else" section (Spectre.Console, Termina, Terminal.Gui) and the no-ILiveRegion / no-TUI scope
+- [ ] Re-review, audit clean, update PR #44 title and body (proof + before/after of tagline and intro)
+- [ ] Do not merge until Steven approves the new wording
+
+## Original checklist (superseded where it conflicts with Rework)
 
 - [x] Rewrite the README intro/tagline around "testable output layer for Nuru CLIs"
 - [x] Highlight the differentiators: Console-compatible IConsole/ITerminal, test doubles with parallel-safe capture, static widgets (panel, table, rule, OSC 8 hyperlinks, Unicode width), optional flexbox layout package, minimal dependencies, AOT-friendly
