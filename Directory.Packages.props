@@ -5,18 +5,18 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup Label="TimeWarp Packages">
-    <!-- Tools 2.0.0-beta.2 requires Amuru >= 2.0.0-beta.2. Stable 1.1.1 is older.
+    <!-- Nuru 3.0.0 requires Amuru >= 2.0.0. Tools 2.0.0 requires the same.
          dev-cli's project reference to timewarp-terminal satisfies Amuru's
          TimeWarp.Terminal 1.0.2 dependency (restore unifies it as a project). -->
-    <PackageVersion Include="TimeWarp.Amuru" Version="2.0.0-beta.2" />
-    <PackageVersion Include="TimeWarp.Amuru.Tools" Version="2.0.0-beta.2" />
+    <PackageVersion Include="TimeWarp.Amuru" Version="2.0.0" />
+    <PackageVersion Include="TimeWarp.Amuru.Tools" Version="2.0.0" />
     <PackageVersion Include="TimeWarp.Builder" Version="1.0.0" />
     <PackageVersion Include="TimeWarp.Flexbox" Version="1.0.0" />
     <!-- Jaribu beta.12 pulled Amuru beta.21 -> StreamJsonRpc -> MessagePack 2.5.198
          (NU1902/NU1903 under TreatWarningsAsErrors). beta.15 restores clean. -->
     <PackageVersion Include="TimeWarp.Jaribu" Version="1.0.0-beta.15" />
-    <PackageVersion Include="TimeWarp.Nuru" Version="3.0.0-beta.79" />
-    <PackageVersion Include="TimeWarp.Nuru.DevCli" Version="3.0.0-beta.79" />
+    <PackageVersion Include="TimeWarp.Nuru" Version="3.0.0" />
+    <PackageVersion Include="TimeWarp.Nuru.DevCli" Version="3.0.0" />
     <PackageVersion Include="TimeWarp.Build.Tasks" Version="1.0.0" />
     <PackageVersion Include="TimeWarp.SourceGenerators" Version="1.0.0-beta.11" />
   </ItemGroup>
