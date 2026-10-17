@@ -35,6 +35,10 @@ Out of scope (Steven): no live status / ILiveRegion and no full TUI layer. Don't
 - [x] Build and tests green, `ganda repo audit` clean
 - [x] PR body carries proof (build/test/audit output) plus a before/after of the tagline and intro
 
+## Review
+
+- Round 1: Done
+
 ## Notes
 
 Filed 2026-10-17 by Terminal bot at Steven's request (relayed by Amina). File only. Not launched.
@@ -146,3 +150,4 @@ Expect: build `0 Warning(s)` / `0 Error(s)`, `✓ All 44 test file(s) passed`, a
 - Implementer: grok session 01a148f9-9992-7193-af8b-f26b409ad97e (2026-10-17)
 - Implement oracle: implemented by implementer-grok (grok, model grok-4.7), session not reported, max-turns 500, Done — 2026-10-17T08:47:29Z
 - Review oracle: claude (claude-opus-5-5), tw-implementation-review effort 2, roster general, round 1, disposition clean (2026-10-17)
+- Review oracle: review by reviewer-claude (claude, model claude-opus-5-5), session not reported, max-turns 120 — 2026-10-17T08:49:30Z
