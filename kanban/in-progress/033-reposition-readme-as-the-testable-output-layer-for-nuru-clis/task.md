@@ -29,7 +29,8 @@ Out of scope (Steven): no live status / ILiveRegion, no full TUI layer. Do not p
 
 ## Review
 
-- Round 1: M1 fixed on the round-1 ledger. Host runs review round 2. Disposition waits for that round.
+- Round 1: M1 fixed on the round-1 ledger.
+- Round 2: M1 re-verified as fixed. No new findings. Disposition `clean` (`review/disposition.md`).
 
 ## Notes
 
@@ -42,6 +43,7 @@ Filed 2026-10-17 by Terminal bot from Amina's relay of Steven's approval.
 - Review oracle round 1: claude (claude-opus-5-5), effort 1, roster general. 1 open bug (M1). Fix pass requested — 2026-10-17
 - Review oracle: review by reviewer-claude (claude, model claude-opus-5-5), session not reported, max-turns 80 — 2026-10-17T01:26:10Z
 - Fix pass (implement-fix-2): implemented by implementer-grok (grok, model grok-4.7), session not reported — 2026-10-17. M1 reworded in `readme.md`.
+- Review oracle round 2: reviewer-claude (claude, model claude-opus-5-5), effort 1, roster general, max-turns 80, session not reported. 0 open findings, disposition clean — 2026-10-17
 
 ## Results
 
@@ -88,7 +90,7 @@ Observed on this fix: the intro search printed `readme.md:7` and exited 0; the f
 
 ### Review
 
-Round 1 ran at effort 1 with one general reviewer. It found 1 bug (M1), 0 suggestions, and 0 nits. The fix pass marked M1 `fixed` on `review/round-1/merged.md` (bug 0 open, 1 fixed, 0 wontfix). Disposition is not written yet: the host runs review round 2, and `review/disposition.md` waits until that round leaves 0 open findings. Paths: `review/review-framework.md`, `review/round-1/general.md`, `review/round-1/merged.md`.
+Two rounds ran, each at effort 1 with one general reviewer. Round 1 found 1 bug (M1), 0 suggestions, and 0 nits. The fix pass reworded `readme.md:7`. Round 2 reviewed the fix delta `8d6e2a4..6216431`, confirmed M1 fixed, and raised no new findings. It also re-ran `ganda repo audit`: `Repository passes all audit checks.` Final counts: bug 0 open / 1 fixed / 0 wontfix; suggestion 0; nit 0. **Disposition: clean.** There are no wontfix findings and no escalations. Paths: `review/review-framework.md`, `review/round-1/general.md`, `review/round-1/merged.md`, `review/round-2/general.md`, `review/round-2/merged.md`, `review/disposition.md`.
 
 ### PR proof
 
