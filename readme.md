@@ -1,10 +1,10 @@
 # TimeWarp.Terminal
 
-The testable output layer for [Nuru](https://github.com/TimeWarpEngineering/timewarp-nuru) CLIs.
+A framework-agnostic, testable console and output layer for any .NET CLI or console app.
 
-TimeWarp.Terminal writes the text, widgets, and layouts a command prints. It does not run an event loop, and it does not depend on a reactive framework. Tests capture that output with `TestTerminal`, `TestConsole`, and an async-scoped `TestTerminalContext`. Both packages are marked `IsAotCompatible` and run the trim and AOT analyzers.
+TimeWarp.Terminal writes the text, widgets, and layouts a program prints. Plain `Main` passes `IConsole` or `ITerminal` in. System.CommandLine, Spectre.Console.Cli, Cocona, Nuru, and any other host can pass the same interfaces. The library does not require a CLI framework. It does not run an event loop, and it does not depend on a reactive framework. Tests capture output with `TestTerminal`, `TestConsole`, and an async-scoped `TestTerminalContext`. Both packages are marked `IsAotCompatible` and run the trim and AOT analyzers.
 
-A Nuru handler takes `ITerminal`, which also implements `IConsole`. Call `UseTerminal` with a `TestTerminal` in a test. When you do not call it, Nuru uses `TimeWarpTerminal.Default`.
+The only library dependency of the `TimeWarp.Terminal` package is [`TimeWarp.Builder`](https://www.nuget.org/packages/TimeWarp.Builder).
 
 ## What you get
 
@@ -22,7 +22,7 @@ TimeWarp.Terminal is the output you assert on after a command finishes. It does 
 - **[Termina](https://github.com/Aaronontheweb/termina)** is a reactive terminal UI with input and routing. It can take the full screen, or keep one inline live region in the primary buffer. Use it when the program is an interactive view.
 - **[Terminal.Gui](https://github.com/gui-cs/Terminal.Gui)** is a full-screen terminal GUI with windows and controls. Use it when the program is a TUI application rather than a command that prints a result.
 
-A Nuru command handler can call one of these libraries directly. TimeWarp.Terminal stays the default for commands whose output tests should capture.
+A command can call one of these libraries when it needs a live display or a full interactive TUI. TimeWarp.Terminal stays the layer for output a test should capture.
 
 ## Installation
 
@@ -51,35 +51,65 @@ terminal
   .WriteLine("Done!");
 ```
 
-## Testing a Nuru command
+## Testing a plain Main
 
-`NuruAppBuilder.UseTerminal` supplies the `ITerminal` that handlers receive. Pass a `TestTerminal` and assert on what it captured:
+Pass `TimeWarpTerminal.Default` from `Main`. A method that only writes lines can take `IConsole`. A method that needs widgets, color, or cursor control takes `ITerminal`. `ITerminal` implements `IConsole`, so one production instance satisfies both.
 
 ```csharp
-using TimeWarp.Nuru;
+using TimeWarp.Terminal;
+
+ITerminal terminal = TimeWarpTerminal.Default;
+AppStatus.Write(terminal, "ready");
+Greeting.Write(terminal, args.Length > 0 ? args[0] : "World");
+
+static class AppStatus
+{
+  public static void Write(IConsole console, string status)
+  {
+    console.WriteLine(status);
+  }
+}
+
+static class Greeting
+{
+  public static void Write(ITerminal terminal, string name)
+  {
+    terminal.WriteLine($"Hello, {name}");
+  }
+}
+```
+
+Give the test its own `TestTerminal` and pass that same instance. `OutputContains` is on `TestTerminal` and `TestConsole`. `ShouldBeTrue()` is [Shouldly](https://github.com/shouldly/shouldly). `Assert.Contains("Hello, World", terminal.Output)` checks the same string.
+
+```csharp
+using Shouldly;
 using TimeWarp.Terminal;
 
 using TestTerminal terminal = new();
+AppStatus.Write(terminal, "ready");
+Greeting.Write(terminal, "World");
 
-NuruApp app = NuruApp.CreateBuilder()
-  .UseTerminal(terminal)
-  .Map("greet {name}")
-    .WithHandler((string name, ITerminal output) =>
-    {
-      output.WriteLine($"Hello, {name}");
-    })
-    .AsCommand()
-    .Done()
-  .Build();
-
-await app.RunAsync(["greet", "World"]);
-
+terminal.OutputContains("ready").ShouldBeTrue();
 terminal.OutputContains("Hello, World").ShouldBeTrue();
+
+static class AppStatus
+{
+  public static void Write(IConsole console, string status)
+  {
+    console.WriteLine(status);
+  }
+}
+
+static class Greeting
+{
+  public static void Write(ITerminal terminal, string name)
+  {
+    terminal.WriteLine($"Hello, {name}");
+  }
+}
 ```
 
-`OutputContains` is on `TestTerminal` and `TestConsole`. `ShouldBeTrue()` is [Shouldly](https://github.com/shouldly/shouldly). `Assert.Contains("Hello, World", terminal.Output)` checks the same string.
-
-Code that calls the static `Terminal` class, instead of an injected `ITerminal`, uses `TestTerminalContext` in the next section. `TestConsole` is the same idea when the code only needs `IConsole`.
+Code that calls the static `Terminal` class, instead of a passed-in instance, uses `TestTerminalContext` below. `TestConsole` is the double when the code only needs `IConsole` and you do not want the richer `ITerminal` surface.
 
 ## Static Terminal API
 
@@ -129,6 +159,35 @@ Assert.Contains("test output", testTerminal.Output);
 
 // Restore after test
 Terminal.Instance = TimeWarpTerminal.Default;
+```
+
+## Works well with Nuru
+
+[Nuru](https://github.com/TimeWarpEngineering/timewarp-nuru) is one host that takes this library. It is not required, and the `TimeWarp.Terminal` package does not reference it.
+
+A Nuru handler takes `ITerminal`, which also implements `IConsole`. Nuru does not register `IConsole` as its own handler service, so the handler parameter is `ITerminal`. `NuruAppBuilder.UseTerminal` supplies that instance. Pass a `TestTerminal` and assert on what it captured. When you do not call `UseTerminal`, Nuru uses `TimeWarpTerminal.Default`.
+
+```csharp
+using Shouldly;
+using TimeWarp.Nuru;
+using TimeWarp.Terminal;
+
+using TestTerminal terminal = new();
+
+NuruApp app = NuruApp.CreateBuilder()
+  .UseTerminal(terminal)
+  .Map("greet {name}")
+    .WithHandler((string name, ITerminal output) =>
+    {
+      output.WriteLine($"Hello, {name}");
+    })
+    .AsCommand()
+    .Done()
+  .Build();
+
+await app.RunAsync(["greet", "World"]);
+
+terminal.OutputContains("Hello, World").ShouldBeTrue();
 ```
 
 ## Interfaces
