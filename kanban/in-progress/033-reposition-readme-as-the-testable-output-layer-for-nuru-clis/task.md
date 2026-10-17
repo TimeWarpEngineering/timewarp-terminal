@@ -30,8 +30,7 @@ Out of scope (Steven): no live status / ILiveRegion, no full TUI layer. Do not p
 ## Review
 
 - Round 1: M1 fixed on the round-1 ledger.
-- Round 2: M1 re-verified as fixed. No new findings. Disposition `clean` (`review/disposition.md`).
-
+- Round 2: Done
 ## Notes
 
 Filed 2026-10-17 by Terminal bot from Amina's relay of Steven's approval.
