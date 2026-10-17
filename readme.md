@@ -1,6 +1,28 @@
 # TimeWarp.Terminal
 
-Terminal abstractions and widgets for console applications - IConsole, ITerminal, panels, tables, rules, and ANSI color support.
+The testable output layer for [Nuru](https://github.com/TimeWarpEngineering/timewarp-nuru) CLIs.
+
+TimeWarp.Terminal writes the text, widgets, and layouts a command prints. It does not run an event loop, and it does not depend on a reactive framework. Tests capture that output with `TestTerminal`, `TestConsole`, and an async-scoped `TestTerminalContext`. Both packages are marked `IsAotCompatible` and run the trim and AOT analyzers.
+
+A Nuru handler can take `ITerminal` or `IConsole`. Call `UseTerminal` with a `TestTerminal` in a test. When you do not call it, Nuru uses `TimeWarpTerminal.Default`.
+
+## What you get
+
+- **Console-compatible `IConsole` and `ITerminal`.** The static `Terminal` class covers the usual `Console` calls. `TimeWarpTerminal` is the production terminal. `TimeWarpConsole` is the production console.
+- **Parallel-safe test capture.** Give each test its own `TestTerminal` or `TestConsole`. `TestTerminalContext.Use` stores that instance in an async-local scope, so parallel tests do not share or mutate the process-global terminal. One `TestTerminal` serves a single test flow. Its members are not thread-safe.
+- **Static widgets.** Panels, tables, and rules. OSC 8 hyperlinks. Unicode display width for emoji and wide characters. Widgets render once. They do not redraw in place.
+- **Optional flexbox layout.** [`TimeWarp.Terminal.Layout`](https://www.nuget.org/packages/TimeWarp.Terminal.Layout) composes those widgets into rows and columns. It is a separate package, and it is not a dependency of `TimeWarp.Terminal`. Layout output is one-shot scrolling text, not an interactive TUI.
+- **A small dependency set.** The only library dependency of `TimeWarp.Terminal` is [`TimeWarp.Builder`](https://www.nuget.org/packages/TimeWarp.Builder).
+
+## When to use something else
+
+TimeWarp.Terminal is the output you assert on after a command finishes. It does not redraw a live region, and it does not host windows, focus, or a widget event loop.
+
+- **[Spectre.Console](https://github.com/spectreconsole/spectre.console)** draws live displays, progress, and status, and it has its own widgets. Use it when a command should update the same lines while work is still running.
+- **[Termina](https://github.com/Aaronontheweb/termina)** is a reactive terminal UI with input and routing. It can take the full screen, or keep one inline live region in the primary buffer. Use it when the program is an interactive view.
+- **[Terminal.Gui](https://github.com/gui-cs/Terminal.Gui)** is a full-screen terminal GUI with windows and controls. Use it when the program is a TUI application rather than a command that prints a result.
+
+A Nuru command handler can call one of these libraries directly. TimeWarp.Terminal stays the default for commands whose output tests should capture.
 
 ## Installation
 
@@ -28,6 +50,36 @@ terminal
     .AddRow("Status", "OK".Green()))
   .WriteLine("Done!");
 ```
+
+## Testing a Nuru command
+
+`NuruAppBuilder.UseTerminal` supplies the `ITerminal` that handlers receive. Pass a `TestTerminal` and assert on what it captured:
+
+```csharp
+using TimeWarp.Nuru;
+using TimeWarp.Terminal;
+
+using TestTerminal terminal = new();
+
+NuruApp app = NuruApp.CreateBuilder()
+  .UseTerminal(terminal)
+  .Map("greet {name}")
+    .WithHandler((string name, ITerminal output) =>
+    {
+      output.WriteLine($"Hello, {name}");
+    })
+    .AsCommand()
+    .Done()
+  .Build();
+
+await app.RunAsync(["greet", "World"]);
+
+terminal.OutputContains("Hello, World").ShouldBeTrue();
+```
+
+`OutputContains` is on `TestTerminal` and `TestConsole`. `ShouldBeTrue()` is [Shouldly](https://github.com/shouldly/shouldly). `Assert.Contains("Hello, World", terminal.Output)` checks the same string.
+
+Code that calls the static `Terminal` class, instead of an injected `ITerminal`, uses `TestTerminalContext` in the next section. `TestConsole` is the same idea when the code only needs `IConsole`.
 
 ## Static Terminal API
 
@@ -80,6 +132,8 @@ Terminal.Instance = TimeWarpTerminal.Default;
 ```
 
 ## Interfaces
+
+The sketches below are the members the examples use. The full contracts also include streams, encodings, redirection flags, cursor and window geometry, and cancel-key notification.
 
 ### IConsole
 
@@ -251,7 +305,7 @@ terminal.WriteLayout(layout => layout
   .Item(i => i.Grow(1), panel => panel.Header("Build").Content(buildSummary))
   .Item(i => i.Grow(2), table => table.AddColumns("Test", "Result").AddRow("unit", "pass")));
 
-// Column of rows (dashboard)
+// Column of rows. statusPanel, versionPanel, and logTable are widgets built earlier.
 terminal.WriteLayout(layout => layout
   .Direction(FlexDirection.Column)
   .Row(r => r.Item(statusPanel).Item(versionPanel))
