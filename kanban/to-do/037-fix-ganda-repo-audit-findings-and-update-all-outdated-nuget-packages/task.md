@@ -2,12 +2,17 @@
 
 ## Description
 
-[Brief description of the task]
+Bring the repo to a clean `ganda repo audit` and update every outdated NuGet package
+reported by `ganda nuget outdated`, in one PR.
 
 ## Checklist
 
-- [ ] Item 1
-- [ ] Item 2
+- [ ] Run `ganda repo audit --fix`; commit what it changes (audit fixes are policy)
+- [ ] Fix any remaining `ganda repo audit` findings by hand until it exits clean
+- [ ] Run `ganda nuget outdated`; update all outdated packages (major bumps included)
+- [ ] Re-run `ganda nuget outdated` and confirm nothing is left
+- [ ] Build and test pass via the dev CLI (`dev --capabilities` for commands)
+- [ ] Re-run `ganda repo audit` and confirm it is clean after the package updates
 
 ## Session
 
@@ -15,4 +20,5 @@
 
 ## Notes
 
-[Additional context]
+- TimeWarp packages come from https://nuget.pkg.github.com/TimeWarpEngineering/index.json, not nuget.org.
+- If a package update breaks the build, fix the code to match the new API; do not pin the old version.
