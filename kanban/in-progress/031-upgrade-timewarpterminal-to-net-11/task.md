@@ -1,4 +1,4 @@
-﻿# Upgrade TimeWarp.Terminal to .NET 11
+# Upgrade TimeWarp.Terminal to .NET 11
 
 ## Goal (implementer restatement)
 
@@ -91,6 +91,7 @@ Update / unblock these **before** flipping Terminal’s TFM and shipping a net11
 - Created: 56416 (2026-10-02)
 - Analysis: Terminal agent (2026-10-02)
 - Implementation: 01a1bc3c-7674-7272-8ab1-67cbb5dd041e (2026-11-09). Hard cut to `net11.0`, package version `2.0.0`. SDK pin is `11.0.100-rc.3.26522.148` because that is the installed .NET 11 SDK. `ganda repo audit --fix` wrote gitignored `.vscode/settings.json` (`window.title` includes `timewarp-terminal`). That file stays untracked. Audit then passed 35, failed 0.
+- Implement oracle: implemented by implementer-grok (grok, vendor xai, model grok-4.7, response model grok-4.7-build), session 01a1bc3c-7674-7272-8ab1-67cbb5dd041e, max-turns 500, Done — 2026-11-08T17:59:26Z
 
 ## Results
 
