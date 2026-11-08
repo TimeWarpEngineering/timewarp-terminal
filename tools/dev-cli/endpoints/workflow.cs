@@ -20,12 +20,12 @@ public sealed class WorkflowCommand : ICommand<Unit>
   [Option("api-key", Description = "NuGet API key for publishing (from OIDC Trusted Publishing)")]
   public string? ApiKey { get; set; }
 
-  public sealed class Handler : ICommandHandler<WorkflowCommand, Unit>
+  internal sealed class Handler : ICommandHandler<WorkflowCommand, Unit>
   {
     private readonly ITerminal Terminal;
     private readonly IPackableProjectService PackableProjectService;
 
-    internal Handler(ITerminal terminal, IPackableProjectService packableProjectService)
+    public Handler(ITerminal terminal, IPackableProjectService packableProjectService)
     {
       Terminal = terminal;
       PackableProjectService = packableProjectService;
