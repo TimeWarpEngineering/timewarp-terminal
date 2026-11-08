@@ -65,7 +65,7 @@ terminal
   .WritePanel(panel => panel
     .Header("TimeWarp.Terminal".Cyan().Bold())
     .Content(
-        "Terminal abstractions and widgets for .NET 10\n\n" +
+        "Terminal abstractions and widgets for .NET 11\n\n" +
         $"Documentation: {"https://timewarp.dev/terminal".Link("https://timewarp.dev/terminal").Cyan()}\n" +
         $"Source:        {"GitHub".Link("https://github.com/TimeWarpEngineering/timewarp-terminal").Cyan()}\n" +
         $"Issues:        {"Report bugs".Link("https://github.com/TimeWarpEngineering/timewarp-terminal/issues").Yellow()}")

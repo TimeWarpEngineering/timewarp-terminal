@@ -340,7 +340,7 @@ public static partial class AnsiStringUtils
       string url = ExtractHyperlinkUrl(ansiCode);
       hyperlinkState = url.Length == 0 ? null : ansiCode;
     }
-    else if (ansiCode.StartsWith("\x1b[", StringComparison.Ordinal) && ansiCode.EndsWith('m'))
+    else if (ansiCode.StartsWith("\x1b[", StringComparison.Ordinal) && ansiCode.EndsWith('m', StringComparison.Ordinal))
     {
       // SGR styling (colors, bold, ...) accumulates
       _ = sgrState.Append(ansiCode);
@@ -360,13 +360,13 @@ public static partial class AnsiStringUtils
     {
       terminatorLength = 2;
     }
-    else if (ansiCode.EndsWith('\x07'))
+    else if (ansiCode.EndsWith('\x07', StringComparison.Ordinal))
     {
       terminatorLength = 1;
     }
 
     // URL starts after the ';' that ends the params section ("\x1b]8;" is 4 characters)
-    int separatorIndex = ansiCode.IndexOf(';', 4);
+    int separatorIndex = ansiCode.IndexOf(';', 4, StringComparison.Ordinal);
 
     if (separatorIndex < 0 || separatorIndex + 1 > ansiCode.Length - terminatorLength)
     {

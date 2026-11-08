@@ -24,7 +24,7 @@ terminal.WriteLayout(layout => layout
       .BorderColor(AnsiColors.Green))
     .Item(i => i.Grow(1), panel => panel
       .Header("Version".Cyan())
-      .Content("TimeWarp.Terminal.Layout\n1.0.2")
+      .Content("TimeWarp.Terminal.Layout\n2.0.0")
       .BorderColor(AnsiColors.Cyan)))
   .Row(row => row
     .Item(i => i.Grow(1), table => table

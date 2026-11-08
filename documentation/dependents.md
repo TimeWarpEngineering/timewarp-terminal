@@ -2,6 +2,12 @@
 
 Repos that depend on `TimeWarp.Terminal`. When making breaking changes, create a GitHub issue in each repo to notify them of the update.
 
+## Consumer impact (2.0.0)
+
+`TimeWarp.Terminal` and `TimeWarp.Terminal.Layout` 2.0.0 target `net11.0` only. A `net10.0` project cannot reference them. Stay on 1.0.2 for `net10.0`. There is no multi-target build. The public API is unchanged; the break is the dropped target framework.
+
+`TimeWarp.Builder` 1.0.0 and `TimeWarp.Flexbox` 1.0.0 still publish `lib/net10.0`. A `net11.0` project consumes those assets through NuGet's compatible-framework fallback.
+
 ## Known Dependents
 
 | Repository | Dependency Type | Notes |

@@ -1,8 +1,4 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
-  <PropertyGroup>
-    <!-- TimeWarp.Amuru 3 targets net11.0. The product libraries stay on the root net10.0 pin. -->
-    <TargetFramework>net11.0</TargetFramework>
-  </PropertyGroup>
 </Project>
