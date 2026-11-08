@@ -46,7 +46,7 @@ Acceptance criteria:
 
 Amuru 3.0.0-beta.1 ships `net11.0` only. dev-cli and the `.githooks` runfiles now target `net11.0`. The product libraries stay on `net10.0`. CI installs the 10.0.x SDK and the 11.0.x preview SDK. `WorkflowCommand.Handler`'s constructor is internal because `IPackableProjectService` is internal in DevCli 4.
 
-Seven files over the 500-line cap were split by responsibility. `Terminal`, `TimeWarpTerminal`, `TestTerminal`, `Table`, and `AnsiStringUtils` stay one public type each, in partial files. The static-facade tests and the terminal stream-access tests moved into their own test classes. `ganda repo audit` then passed (35 passed, 0 failed, 2 skipped). `ganda nuget outdated` printed `All packages are up to date!`.
+Seven files over the 500-line cap were split by responsibility. `Terminal`, `TimeWarpTerminal`, `TestTerminal`, `Table`, and `AnsiStringUtils` stay one public type each, in partial files. The static-facade tests and the terminal stream-access tests moved into their own test classes, and those new runfiles keep the executable bit the other test files use. `ganda repo audit` then passed (35 passed, 0 failed, 2 skipped). `ganda nuget outdated` printed `All packages are up to date!`.
 
 `dotnet run tools/dev-cli/dev.cs -- build` succeeded with 0 warnings and 0 errors. `dotnet run tools/dev-cli/dev.cs -- test` passed all 47 test files. `dotnet run tools/dev-cli/dev.cs -- verify-samples` passed all 6 samples.
 
