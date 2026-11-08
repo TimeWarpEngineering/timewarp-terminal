@@ -55,7 +55,7 @@ The release job no longer builds or tests. A master push that matches the path a
 
 `ganda repo audit` passes (36 passed, 0 failed, 2 skipped) after the partial-file split. Release build with `-p:ContinuousIntegrationBuild=true` emitted `TimeWarp.Terminal` and `TimeWarp.Terminal.Layout` at `2.0.0-beta.1`, nupkg and snupkg, 0 warnings. `dev test` passed all 47 files. `dev verify-samples` passed all 6 samples. `workflow --mode release` on this branch exited 1 at tag pin (`v2.0.0-beta.1` is `5744388`, HEAD was `ad7a900`) and did not build.
 
-No release was cut. The trusted-publishing probe is dispatched against this branch after the push; the run link is recorded below when it finishes.
+No release was cut. Probe run [42519838727](https://github.com/TimeWarpEngineering/timewarp-terminal/actions/runs/42519838727) (`mode=probe` on `1de33f1`) succeeded: the release job logged `Trusted publishing OK`, the release pipeline step was skipped, and the ci job was skipped.
 
 ### How to validate
 
