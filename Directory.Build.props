@@ -7,6 +7,8 @@
   <PropertyGroup Label="MSBuild/NuGet Configuration">
     <!-- Output packages to our local feed directory -->
     <PackageOutputPath>$(PackagesDirectory)</PackageOutputPath>
+    <!-- Master CI uploads these bytes; the release run promotes them and does not pack again. -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 
     <!-- Suppress .NET preview SDK message -->
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
