@@ -3,6 +3,16 @@
 #region Purpose
 // Development CLI for TimeWarp.Terminal repository operations
 #endregion
+#region Design
+// UseTelemetry is on so a CI job or a ganda walk that shells out to dev
+// exports one command span per route, including the DevCli routes. The OTLP
+// endpoint stays unset here: a non-literal OtlpEndpoint is ignored, and an
+// unset OTEL_EXPORTER_OTLP_ENDPOINT exports nothing. ServiceName is the
+// literal timewarp-terminal-dev. OTEL_SERVICE_NAME overrides it. This repo has
+// no ActivitySource of its own, so none is registered. IncomingTraceContext
+// restores TRACEPARENT before RunAsync because TelemetryBehavior parents its
+// span to Activity.Current. See tools/dev-cli/telemetry.md.
+#endregion
 // ═══════════════════════════════════════════════════════════════════════════════
 // DEV CLI - TIMEWARP.TERMINAL DEVELOPMENT TOOL
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -33,6 +43,11 @@
 //   dev check-version      - Check if version already published
 //   dev self-install       - AOT compile and install dev CLI to ./bin
 //
+// Telemetry (tools/dev-cli/telemetry.md):
+//   UseTelemetry service name is the literal "timewarp-terminal-dev".
+//   Export follows OTEL_EXPORTER_OTLP_ENDPOINT. Unset exports nothing.
+//   TRACEPARENT / TRACESTATE join a parent process's trace.
+//
 // To bootstrap:
 //   dotnet run tools/dev-cli/dev.cs -- self-install
 //   direnv allow
@@ -41,6 +56,7 @@
 
 NuruApp app = NuruApp.CreateBuilder()
   .WithDescription("Development CLI for timewarp-terminal")
+  .UseTelemetry(options => options.ServiceName = "timewarp-terminal-dev")
   .ConfigureServices(services =>
   {
     services.AddSingleton<IRepoCleanService, RepoCleanService>();
@@ -51,4 +67,5 @@ NuruApp app = NuruApp.CreateBuilder()
   .DiscoverEndpoints()
   .Build();
 
+using IDisposable? incomingTrace = IncomingTraceContext.Restore();
 return await app.RunAsync(args);
