@@ -55,11 +55,21 @@ Smoke: from this worktree, run `./bin/dev --capabilities`, then `./bin/dev build
 
 Expect: capabilities JSON includes `build`, `clean`, `check-version`, `release`, and `self-install`. The build ends with `Build completed successfully` and 0 warnings. The collector receives one `check-version` span for service `timewarp-terminal-dev` on source `TimeWarp.Nuru.Behavior`, trace id `a036a036a036a036a036a036a036a036`, parented to span `b036b036b036b036`, plus a `nuru.behavior.commands.duration` metric. `check-version` exits 0 while source version `2.0.0-beta.1` is ahead of published `1.0.2`. Unset `OTEL_EXPORTER_OTLP_ENDPOINT` exports nothing.
 
+### Review disposition
+
+Review ran 1 round at effort 2 with a general reviewer. Final counts are 0 bug, 0 suggestion, and 0 nit, all statuses closed. The outcome is `clean`. The reviewer confirmed that `incoming-trace-context.cs` is byte-identical to the timewarp-nuru reference, found no repo `ActivitySource`, confirmed that `dotnet build tools/dev-cli/dev.cs -c Release` passes, and confirmed that AOT `./bin/dev --capabilities` exits 0 when `TRACEPARENT` is unset, valid, or invalid. Artifacts: `review/review-framework.md`, `review/round-1/general.md`, `review/round-1/merged.md`, `review/disposition.md`.
+
 ## Session
 
 - Created: b3be0249-1852-425a-9e90-5a7e56049503 (2026-11-08)
 - Implementation: 01a1bc61-6e53-72e3-bef1-dd5da359f792 (2026-11-09). Audit --fix wrote the gitignored VS Code window title. No repo ActivitySource to register.
 - Implement oracle: implemented by implementer-grok (grok, vendor xai, model grok-4.7, response model grok-4.7-build), session 01a1bc61-6e53-72e3-bef1-dd5da359f792, max-turns 500, Done — 2026-11-08T18:24:49Z
+- Review oracle: claude opus-5.5, effort 2, roster general, turn cap 120. Round 1 is clean, with disposition `clean` (2026-11-09).
+- Review oracle: review by reviewer-claude (claude, vendor anthropic, model claude-opus-5-5, response model claude-opus-5-5), session 6ea04830-27c4-4fe7-926c-341d81bc6456, max-turns 120, artifacts general.md, merged.md, disposition.md — 2026-11-08T18:26:35Z
+
+## Review
+
+- Round 1: Done
 
 ## Notes
 
