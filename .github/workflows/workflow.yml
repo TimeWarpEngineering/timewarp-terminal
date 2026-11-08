@@ -89,8 +89,9 @@ jobs:
       - name: Upload Artifacts
         # Green master only. Release mode promotes Packages-* from a push run
         # at the tag SHA. PRs, failed runs, probe, and release runs do not
-        # upload. The bytes are this job's Release build (GeneratePackageOnBuild),
-        # including the sibling symbol packages.
+        # upload. The bytes are this job's Release build. GeneratePackageOnBuild
+        # is Release-only, and the workflow hash gate refuses the run if the
+        # sample or test steps repack those nupkgs or snupkgs.
         id: upload-packages
         if: success() && github.ref == 'refs/heads/master' && github.event_name == 'push'
         uses: actions/upload-artifact@v4

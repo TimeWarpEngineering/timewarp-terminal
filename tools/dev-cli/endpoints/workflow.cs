@@ -11,6 +11,9 @@
 // `dotnet nuget push`. A nupkg push also uploads a sibling snupkg in the same
 // directory, which is what logged Created and then Conflict on symbolpackage
 // for v2.0.0-beta.1. Isolated pushes send each file once.
+// Packing is Release-only. Samples and tests still build the source projects
+// in Debug, so the merge pipeline hashes every nupkg and snupkg after the
+// Release build and fails if a later step changes those bytes.
 // workflow_dispatch maps to merge unless --mode release is passed. The workflow
 // file only passes that behind confirm=release.
 #endregion
@@ -127,11 +130,17 @@ public sealed partial class WorkflowCommand : ICommand<Unit>
         throw new InvalidOperationException("Build failed!");
       }
 
+      string packagesDir = Path.Combine(repoRoot, ArtifactsSubPath);
+      Dictionary<string, string> packageHashes = HashPackages(packagesDir);
+      RequireReleasePackages(packageHashes);
+
       Terminal.WriteLine("\nStep 3/4: Verify Samples");
       await VerifySamplesAsync(repoRoot, cancellationToken);
 
       Terminal.WriteLine("\nStep 4/4: Test");
       await RunTestSuiteAsync(repoRoot, cancellationToken);
+
+      AssertPackagesUnchanged(packagesDir, packageHashes);
 
       Terminal.WriteLine("\n✓ CI Pipeline completed successfully");
     }
@@ -160,6 +169,90 @@ public sealed partial class WorkflowCommand : ICommand<Unit>
       {
         Directory.Delete(artifactsDir, recursive: true);
       }
+    }
+
+    // Release packing writes both a nupkg and an snupkg. An empty directory
+    // would otherwise look like a successful build whose artifact is missing.
+    private static void RequireReleasePackages(Dictionary<string, string> packageHashes)
+    {
+      bool hasNupkg = false;
+      bool hasSnupkg = false;
+      foreach (string name in packageHashes.Keys)
+      {
+        if (name.EndsWith(".nupkg", StringComparison.OrdinalIgnoreCase))
+        {
+          hasNupkg = true;
+        }
+        else if (name.EndsWith(".snupkg", StringComparison.OrdinalIgnoreCase))
+        {
+          hasSnupkg = true;
+        }
+      }
+
+      if (!hasNupkg || !hasSnupkg)
+      {
+        throw new InvalidOperationException(
+          "Release build did not write both a nupkg and an snupkg. GeneratePackageOnBuild must pack Release builds into artifacts/packages.");
+      }
+    }
+
+    // Samples and tests build the source projects in Debug. Those builds must
+    // leave the Release packages byte-identical, because the upload step ships
+    // whatever is in artifacts/packages when the job ends.
+    private void AssertPackagesUnchanged(string packagesDir, Dictionary<string, string> packageHashes)
+    {
+      Dictionary<string, string> finalHashes = HashPackages(packagesDir);
+      List<string> changedPackages = [];
+      foreach ((string packageName, string packageHash) in packageHashes)
+      {
+        if (!finalHashes.TryGetValue(packageName, out string? finalHash))
+        {
+          changedPackages.Add($"{packageName} (disappeared)");
+        }
+        else if (!string.Equals(packageHash, finalHash, StringComparison.Ordinal))
+        {
+          changedPackages.Add($"{packageName} (changed)");
+        }
+      }
+
+      foreach (string packageName in finalHashes.Keys)
+      {
+        if (!packageHashes.ContainsKey(packageName))
+        {
+          changedPackages.Add($"{packageName} (appeared)");
+        }
+      }
+
+      if (changedPackages.Count > 0)
+      {
+        string detail = string.Join(", ", changedPackages.Order(StringComparer.Ordinal));
+        Terminal.WriteErrorLine(
+          $"Package integrity gate failed: the samples or tests steps rebuilt or repacked a package after the Release build: {detail}. The artifact must not ship.");
+        throw new InvalidOperationException("Package integrity gate failed!");
+      }
+
+      Terminal.WriteLine($"Package integrity verified: {packageHashes.Count} packages unchanged since build.");
+    }
+
+    private static Dictionary<string, string> HashPackages(string packagesDir)
+    {
+      Dictionary<string, string> hashes = new(StringComparer.Ordinal);
+      if (!Directory.Exists(packagesDir))
+      {
+        return hashes;
+      }
+
+      string[] patterns = ["*.nupkg", "*.snupkg"];
+      foreach (string pattern in patterns)
+      {
+        foreach (string file in Directory.EnumerateFiles(packagesDir, pattern))
+        {
+          using FileStream stream = File.OpenRead(file);
+          hashes[Path.GetFileName(file)] = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(stream));
+        }
+      }
+
+      return hashes;
     }
 
     private static string ShortSha(string? sha) =>

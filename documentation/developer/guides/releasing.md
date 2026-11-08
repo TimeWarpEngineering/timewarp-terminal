@@ -37,9 +37,12 @@ After it merges, the `push` event runs `workflow.yml` in merge mode:
 
 `clean → build → verify-samples → test`
 
-`GeneratePackageOnBuild` writes the nupkgs and snupkgs during the Release build
-(`ContinuousIntegrationBuild=true`). On success, and only for a push to
-`master`, the job uploads `Packages-{run_number}` with
+`GeneratePackageOnBuild` is set only for Release, in `source/Directory.Build.props`.
+The Release build (`ContinuousIntegrationBuild=true`) writes the nupkgs and
+snupkgs. A later Debug build, including the sample and test runfiles in the
+same job, does not pack again. The merge pipeline hashes every nupkg and
+snupkg after the build and fails if a later step changes them. On success,
+and only for a push to `master`, the job uploads `Packages-{run_number}` with
 `artifacts/packages/*.nupkg` and `artifacts/packages/*.snupkg`
 (`if-no-files-found: error`, `retention-days: 7`). Older `Packages-*` artifacts
 are then deleted, keeping the two newest. Pull requests do not upload. Nothing

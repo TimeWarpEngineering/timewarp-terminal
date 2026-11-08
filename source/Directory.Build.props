@@ -2,6 +2,18 @@
   <!-- Import parent Directory.Build.props -->
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
+  <PropertyGroup Label="MsBuild Packaging Defaults">
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <!-- Pack only Release builds. Samples, tests, and file-based programs reference
+       these projects and build them in Debug. With GeneratePackageOnBuild
+       unconditional, any Debug build repacked a Debug nupkg over the Release one
+       in artifacts/packages, and CI uploaded that artifact (timewarp-nuru task 503). -->
+  <PropertyGroup Label="Release-only packing">
+    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
   <!-- Default package metadata (can be overridden in individual projects) -->
   <PropertyGroup Label="Package Metadata">
     <Version>2.0.0-beta.1</Version>
