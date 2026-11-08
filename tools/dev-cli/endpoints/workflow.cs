@@ -25,7 +25,7 @@ public sealed class WorkflowCommand : ICommand<Unit>
     private readonly ITerminal Terminal;
     private readonly IPackableProjectService PackableProjectService;
 
-    public Handler(ITerminal terminal, IPackableProjectService packableProjectService)
+    internal Handler(ITerminal terminal, IPackableProjectService packableProjectService)
     {
       Terminal = terminal;
       PackableProjectService = packableProjectService;

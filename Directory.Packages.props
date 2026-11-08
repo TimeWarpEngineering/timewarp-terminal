@@ -1,22 +1,24 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project>
   <!-- MSBuild and NuGet behavior configuration -->
   <PropertyGroup Label="MSBuild/NuGet Configuration">
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup Label="TimeWarp Packages">
-    <!-- Nuru 3.0.0 requires Amuru >= 2.0.0. Tools 2.0.0 requires the same.
-         dev-cli's project reference to timewarp-terminal satisfies Amuru's
-         TimeWarp.Terminal 1.0.2 dependency (restore unifies it as a project). -->
-    <PackageVersion Include="TimeWarp.Amuru" Version="2.0.0" />
-    <PackageVersion Include="TimeWarp.Amuru.Tools" Version="2.0.0" />
+    <!-- Nuru 4.0.0-beta.11 depends on Amuru 2.0.0 (net10.0). The nuru audit fix
+         raises direct TimeWarp companion pins to the latest feed version, and
+         Amuru 3.0.0-beta.1 / Tools 3.0.0-beta.1 ship net11.0 only. dev-cli targets
+         net11.0 so that pin restores. Its project reference to timewarp-terminal
+         satisfies Amuru's TimeWarp.Terminal 1.0.2 dependency. -->
+    <PackageVersion Include="TimeWarp.Amuru" Version="3.0.0-beta.1" />
+    <PackageVersion Include="TimeWarp.Amuru.Tools" Version="3.0.0-beta.1" />
     <PackageVersion Include="TimeWarp.Builder" Version="1.0.0" />
     <PackageVersion Include="TimeWarp.Flexbox" Version="1.0.0" />
     <!-- Jaribu beta.12 pulled Amuru beta.21 -> StreamJsonRpc -> MessagePack 2.5.198
          (NU1902/NU1903 under TreatWarningsAsErrors). beta.15 restores clean. -->
     <PackageVersion Include="TimeWarp.Jaribu" Version="1.0.0-beta.15" />
-    <PackageVersion Include="TimeWarp.Nuru" Version="3.0.0" />
-    <PackageVersion Include="TimeWarp.Nuru.DevCli" Version="3.0.0" />
+    <PackageVersion Include="TimeWarp.Nuru" Version="4.0.0-beta.11" />
+    <PackageVersion Include="TimeWarp.Nuru.DevCli" Version="4.0.0-beta.11" />
     <PackageVersion Include="TimeWarp.Build.Tasks" Version="1.0.0" />
     <PackageVersion Include="TimeWarp.SourceGenerators" Version="1.0.0-beta.11" />
   </ItemGroup>
@@ -27,7 +29,7 @@
     <PackageVersion Include="Roslynator.Analyzers" Version="5.0.1" />
     <PackageVersion Include="Roslynator.CodeAnalysis.Analyzers" Version="5.0.1" />
     <PackageVersion Include="Roslynator.Formatting.Analyzers" Version="5.0.1" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.401" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.403" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="5.9.0" />
   </ItemGroup>
 </Project>

@@ -16,6 +16,7 @@ on:
   pull_request:
     branches:
       - master
+      - 'feature/**'
     paths:
       - 'source/**'
       - 'tests/**'
@@ -50,10 +51,18 @@ jobs:
         with:
           fetch-depth: 0  # Required for version detection
 
-      - name: Setup .NET
+      - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+
+      # dev-cli targets net11.0 because TimeWarp.Amuru 3 ships that moniker only.
+      # The product libraries stay on net10.0, so the net10 SDK stays installed.
+      - name: Setup .NET 11
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: preview
 
       - name: NuGet login (OIDC Trusted Publishing)
         if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'probe')
