@@ -22,3 +22,7 @@ reported by `ganda nuget outdated`, in one PR.
 
 - TimeWarp packages come from https://nuget.pkg.github.com/TimeWarpEngineering/index.json, not nuget.org.
 - If a package update breaks the build, fix the code to match the new API; do not pin the old version.
+- Audit failures at task creation (2026-11-08): editorconfig-charset, glossary, kanban-porcelain-gitignore,
+  nuru (TimeWarp.Nuru 3.0.0 -> 4.0.0-beta.11), required-gitignore-entries, routine-journals-gitignore,
+  source-file-line-cap (7 C# files over 500 lines, no auto-fix: split by responsibility),
+  vscode-settings-gitignore, workflow-file (pull_request.branches missing 'feature/**').
