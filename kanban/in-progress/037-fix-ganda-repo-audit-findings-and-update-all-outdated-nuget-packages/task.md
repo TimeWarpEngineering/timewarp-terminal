@@ -41,6 +41,7 @@ Acceptance criteria:
 - Implementation: task-work implementer (2026-11-08)
 - Implement oracle: implemented by implementer-grok (grok, vendor xai, model grok-4.7, response model grok-4.7-build), session 01a1bbfc-6256-73a0-a329-2b9fde02588a, max-turns 500, Done — 2026-11-08T17:00:58Z
 - Review oracle: tw-implementation-review, effort 3 (by-diff, 7826 lines), roster general (Claude Opus 5.5, headless print mode), turn cap 200, 1 round, disposition clean — 2026-11-09
+- CI fix (PR #47): WorkflowCommand.Handler made internal with a public ctor so MS DI can activate it (IPackableProjectService is internal in DevCli 4.0.0-beta.11) — 2026-11-09
 - Review oracle: review by reviewer-claude (claude, vendor anthropic, model claude-opus-5-5, response model claude-opus-5-5), session 40bfec98-6baa-4dc9-abeb-7f8727e47924, max-turns 200, artifacts general.md, merged.md, disposition.md — 2026-11-08T17:09:38Z
 
 ## Results
