@@ -79,6 +79,10 @@ Update / unblock these **before** flipping Terminal’s TFM and shipping a net11
 - [x] Document consumer impact. Release cut stays with cockpit after merge
 - [x] Prerequisites checked on 2026-11-09; the hard cut is implemented in this walk
 
+## Review
+
+- Round 1: Done
+
 ## Notes
 
 - Requested by Steven via Grok Bot → Terminal agent (2026-10-02). Scope: impact review + this kanban task only.
@@ -92,6 +96,8 @@ Update / unblock these **before** flipping Terminal’s TFM and shipping a net11
 - Analysis: Terminal agent (2026-10-02)
 - Implementation: 01a1bc3c-7674-7272-8ab1-67cbb5dd041e (2026-11-09). Hard cut to `net11.0`, package version `2.0.0`. SDK pin is `11.0.100-rc.3.26522.148` because that is the installed .NET 11 SDK. `ganda repo audit --fix` wrote gitignored `.vscode/settings.json` (`window.title` includes `timewarp-terminal`). That file stays untracked. Audit then passed 35, failed 0.
 - Implement oracle: implemented by implementer-grok (grok, vendor xai, model grok-4.7, response model grok-4.7-build), session 01a1bc3c-7674-7272-8ab1-67cbb5dd041e, max-turns 500, Done — 2026-11-08T17:59:26Z
+- Review oracle: Claude Opus 5.5 (claude-opus-5-5), body `tw-implementation-review`, effort 2, roster general, turn cap 120, round 1 → clean (2026-11-09)
+- Review oracle: review by reviewer-claude (claude, vendor anthropic, model claude-opus-5-5, response model claude-opus-5-5), session a554e27b-c591-4119-ac50-d589a14a60e4, max-turns 120, artifacts general.md, merged.md, disposition.md — 2026-11-08T18:05:15Z
 
 ## Results
 
@@ -116,3 +122,13 @@ ganda repo audit
 Expect: `dotnet --version` prints `11.0.100-rc.3.26522.148`. Workflow exits 0 with Release build 0 warnings and `47 test file(s) passed`. Both packages contain `lib/net11.0/`. `check-version` prints source `2.0.0`, latest NuGet `1.0.2`, and `safe to release`. `ganda repo audit` exits 0.
 
 This walk saw that output. GitHub Actions has not run, so runner resolution of the RC SDK is still unproven on `ubuntu-latest`.
+
+### Review
+
+- Rounds: 1. Effort 2. Roster: `general`.
+- Final counts: 0 bug, 0 suggestion, 0 nit. 0 open, 0 fixed, 0 wontfix.
+- Disposition: **clean**.
+- The reviewer reran `dev workflow` (exit 0, 47 test files passed) and `ganda repo audit` (passed).
+- SDK `11.0.100-rc.3.26522.148` is listed in the public .NET 11 release metadata, and NetAnalyzers `11.0.100-rc.3.26522.148` is on nuget.org. `setup-dotnet` with `global-json-file` should therefore resolve the pin on the runner. The first CI run confirms it.
+- Follow-up: re-pin to stable `11.0.100` before the 2.0.0 release.
+- Artifacts: `review/review-framework.md`, `review/round-1/general.md`, `review/round-1/merged.md`, `review/disposition.md`.
