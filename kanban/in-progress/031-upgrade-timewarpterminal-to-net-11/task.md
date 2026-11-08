@@ -98,6 +98,7 @@ Update / unblock these **before** flipping Terminal’s TFM and shipping a net11
 - Implement oracle: implemented by implementer-grok (grok, vendor xai, model grok-4.7, response model grok-4.7-build), session 01a1bc3c-7674-7272-8ab1-67cbb5dd041e, max-turns 500, Done — 2026-11-08T17:59:26Z
 - Review oracle: Claude Opus 5.5 (claude-opus-5-5), body `tw-implementation-review`, effort 2, roster general, turn cap 120, round 1 → clean (2026-11-09)
 - Review oracle: review by reviewer-claude (claude, vendor anthropic, model claude-opus-5-5, response model claude-opus-5-5), session a554e27b-c591-4119-ac50-d589a14a60e4, max-turns 120, artifacts general.md, merged.md, disposition.md — 2026-11-08T18:05:15Z
+- Version is 2.0.0-beta.1 per user request (why: Steve 2026-11-09)
 
 ## Results
 
