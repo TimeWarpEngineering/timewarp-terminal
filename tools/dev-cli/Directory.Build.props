@@ -3,6 +3,9 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
   <PropertyGroup>
+    <!-- Amuru 3 targets net11.0. The product libraries stay on the root net10.0 pin. -->
+    <TargetFramework>net11.0</TargetFramework>
+
     <!-- Suppress warnings that don't apply to CLI tools -->
     <!-- CA1031: Catch general exception types - OK for CLI error handling -->
     <!-- CA1034: Nested types - used by Nuru command pattern -->
