@@ -379,7 +379,7 @@ public sealed class WorkflowCommand : ICommand<Unit>
 
     private async Task RunTestSuiteAsync(string repoRoot)
     {
-      // The test suite is .NET 10 file-based apps (runfiles) under tests/,
+      // The test suite is .NET 11 file-based apps (runfiles) under tests/,
       // not VSTest projects, so `dotnet test` on the solution finds nothing
       string testsDir = Path.Combine(repoRoot, "tests");
       string[] testFiles = Directory.GetFiles(testsDir, "*.cs", SearchOption.TopDirectoryOnly);

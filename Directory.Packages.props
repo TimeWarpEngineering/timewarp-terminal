@@ -7,9 +7,9 @@
   <ItemGroup Label="TimeWarp Packages">
     <!-- Nuru 4.0.0-beta.11 depends on Amuru 2.0.0 (net10.0). The nuru audit fix
          raises direct TimeWarp companion pins to the latest feed version, and
-         Amuru 3.0.0-beta.1 / Tools 3.0.0-beta.1 ship net11.0 only. dev-cli targets
-         net11.0 so that pin restores. Its project reference to timewarp-terminal
-         satisfies Amuru's TimeWarp.Terminal 1.0.2 dependency. -->
+         Amuru 3.0.0-beta.1 / Tools 3.0.0-beta.1 ship net11.0 only. The product
+         targets net11.0, so that pin restores. dev-cli's project reference to
+         timewarp-terminal satisfies Amuru's TimeWarp.Terminal 1.0.2 dependency. -->
     <PackageVersion Include="TimeWarp.Amuru" Version="3.0.0-beta.1" />
     <PackageVersion Include="TimeWarp.Amuru.Tools" Version="3.0.0-beta.1" />
     <PackageVersion Include="TimeWarp.Builder" Version="1.0.0" />
@@ -29,7 +29,7 @@
     <PackageVersion Include="Roslynator.Analyzers" Version="5.0.1" />
     <PackageVersion Include="Roslynator.CodeAnalysis.Analyzers" Version="5.0.1" />
     <PackageVersion Include="Roslynator.Formatting.Analyzers" Version="5.0.1" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.403" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="11.0.100-rc.3.26522.148" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="5.9.0" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 # TimeWarp.Terminal
 
-A framework-agnostic, testable console and output layer for any .NET CLI or console app.
+A framework-agnostic, testable console and output layer for any .NET CLI or console app. Version 2.0.0-beta.1 targets `net11.0`. The last release that targets `net10.0` is 1.0.2.
 
 TimeWarp.Terminal writes the text, widgets, and layouts a program prints. Plain `Main` passes `IConsole` or `ITerminal` in. System.CommandLine, Spectre.Console.Cli, Cocona, Nuru, and any other host can pass the same interfaces. The library does not require a CLI framework. It does not run an event loop, and it does not depend on a reactive framework. Tests capture output with `TestTerminal`, `TestConsole`, and an async-scoped `TestTerminalContext`. Both packages are marked `IsAotCompatible` and run the trim and AOT analyzers.
 
