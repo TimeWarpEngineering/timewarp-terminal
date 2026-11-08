@@ -61,6 +61,7 @@ if a later step changes, adds, or removes a package.
 - Review oracle round 1: claude-opus-5-5 (Claude Code, headless `ganda task work`), effort 3, roster general, 2026-11-09. Result: 1 open bug (M1), fix pass requested.
 - Review oracle: review by reviewer-claude (claude, vendor anthropic, model claude-opus-5-5, response model claude-opus-5-5), session 8997b980-c410-426f-a959-599246d7e665, max-turns 200, artifacts general.md, merged.md — 2026-11-08T20:28:42Z
 - Fix pass (review round 1 M1): grok implementer (2026-11-09). `GeneratePackageOnBuild` is Release-only in `source/Directory.Build.props`. The merge pipeline hashes every nupkg and snupkg after the Release build and fails if a later step changes them.
+- Review oracle round 2: claude-opus-5-5 (Claude Code, headless `ganda task work`), effort 2, roster general, turn cap 120, 2026-11-09. Scope: fix delta `ede47ae..6336379`. Result: M1 fixed, 0 open, disposition clean. Goal restatement checked against the task: it is consistent with the task, so no misread.
 
 ## Results
 
@@ -72,11 +73,13 @@ No release was cut. Probe run [42519838727](https://github.com/TimeWarpEngineeri
 
 ### Review
 
-Round 1 (effort 3, roster: general): 1 bug open. Fix pass addressed M1. Round 2 has not run.
+**Disposition: clean.** There were 2 rounds, each with a general reviewer (claude-opus-5-5): round 1 at effort 3, round 2 at effort 2 on the fix delta `ede47ae..6336379`. Final counts: bug 0 open / 1 fixed / 0 wontfix; suggestion 0; nit 0. Round 2 reran the round 1 reproduction. After a Release build, `samples/rule-widget.cs` and `samples/layout-dashboard.cs` rebuilt both source projects in Debug, and all four package sha256 hashes stayed the same. The dev CLI also compiles. Round 2 found no new issues. Two non-blocking observations are in `review/round-2/general.md`: a stale comment in `tools/dev-cli/Directory.Build.props`, and that `RequireReleasePackages` checks only for at least one nupkg and one snupkg.
+
+Round 1 history:
 
 - M1 (bug, fixed in this pass): packing is Release-only. `source/Directory.Build.props` sets `GeneratePackageOnBuild` only when `Configuration` is Release, and `IsPackable` is true for source projects. The root props no longer set `GeneratePackageOnBuild`. The merge pipeline (`workflow --mode pr`) hashes every nupkg and snupkg after the Release build and fails if samples or tests change, add, or remove one.
 - Check: MSBuild reports `GeneratePackageOnBuild=false` for Debug and `true` for Release on both source projects. A Release build wrote four packages whose assemblies match `bin/Release` and not `bin/Debug`. `samples/layout-dashboard.cs`, `samples/rule-widget.cs`, `tests/layout-01-basic.cs`, Debug builds of both source projects, and a Debug dev-cli run left the four sha256 hashes unchanged. `workflow --mode pr` then ran all 6 samples and all 47 test files and printed `Package integrity verified: 4 packages unchanged since build`.
-- Paths: `review/review-framework.md`, `review/round-1/general.md`, `review/round-1/merged.md`.
+- Paths: `review/review-framework.md`, `review/round-1/general.md`, `review/round-1/merged.md`, `review/round-2/general.md`, `review/round-2/merged.md` (final ledger), `review/disposition.md`.
 
 ### How to validate
 
@@ -113,8 +116,8 @@ Expect: the run's release job logs `Trusted publishing OK` and does not run the 
 
 ## Review
 
-- Round 1: open M1, addressed in the fix pass. Round 2 has not run.
-
+- Round 1: open M1, addressed in the fix pass.
+- Round 2: Done
 ## Notes
 
 - Do not cut a release to test this; validate on the next real release, or with `mode=probe` plus a dry review of the job graph.
