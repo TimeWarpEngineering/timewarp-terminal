@@ -1,13 +1,29 @@
 #region Purpose
-// Development CLI for TimeWarp.Terminal repository operations
+// CI/CD pipeline for TimeWarp.Terminal: PR/merge builds and tests; release promotes the CI artifact.
+#endregion
+
+#region Design
+// Release mode never rebuilds. It promotes the Packages-* artifact the green
+// master push already built and tested for this commit (tag-gate, check-version,
+// locate-run, download-artifact, verify, push). The pure locate/verify rules
+// live in TimeWarp.Nuru.DevCli (CiRunPromotion, TagAssertion, CiModeDetector).
+// Each nupkg and its snupkg is copied into its own temp directory before
+// `dotnet nuget push`. A nupkg push also uploads a sibling snupkg in the same
+// directory, which is what logged Created and then Conflict on symbolpackage
+// for v2.0.0-beta.1. Isolated pushes send each file once.
+// Packing is Release-only. Samples and tests still build the source projects
+// in Debug, so the merge pipeline hashes every nupkg and snupkg after the
+// Release build and fails if a later step changes those bytes.
+// workflow_dispatch maps to merge unless --mode release is passed. The workflow
+// file only passes that behind confirm=release.
 #endregion
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // WORKFLOW COMMAND
 // ═══════════════════════════════════════════════════════════════════════════════
-// Orchestrates the full CI/CD pipeline.
-// For PR: clean -> build -> verify-samples -> test
-// For release: clean -> build -> verify-samples -> test -> check-version -> pack -> push -> notify timewarp-software
+// Orchestrates the CI/CD pipeline.
+// PR/merge: clean -> build -> verify-samples -> test
+// Release:  tag-gate -> check-version -> locate-run -> download-artifact -> verify -> push
 
 namespace DevCli;
 
@@ -15,19 +31,35 @@ namespace DevCli;
 /// Run full CI/CD pipeline
 /// </summary>
 [NuruRoute("workflow", Description = "Run full CI/CD pipeline")]
-public sealed class WorkflowCommand : ICommand<Unit>
+public sealed partial class WorkflowCommand : ICommand<Unit>
 {
+  [Option("mode", Description = "CI mode: pr, merge, or release (auto-detected from GITHUB_EVENT_NAME if not specified)")]
+  public string? Mode { get; set; }
+
   [Option("api-key", Description = "NuGet API key for publishing (from OIDC Trusted Publishing)")]
   public string? ApiKey { get; set; }
 
-  internal sealed class Handler : ICommandHandler<WorkflowCommand, Unit>
+  internal sealed partial class Handler : ICommandHandler<WorkflowCommand, Unit>
   {
+    private const string ArtifactsSubPath = "artifacts/packages";
+    private const string NuGetSource = "https://api.nuget.org/v3/index.json";
+
     private readonly ITerminal Terminal;
+    private readonly NuGetVersionService NuGetVersionService;
+    private readonly IRepoConfigService RepoConfigService;
     private readonly IPackableProjectService PackableProjectService;
 
-    public Handler(ITerminal terminal, IPackableProjectService packableProjectService)
+    public Handler
+    (
+      ITerminal terminal,
+      NuGetVersionService nuGetVersionService,
+      IRepoConfigService repoConfigService,
+      IPackableProjectService packableProjectService
+    )
     {
       Terminal = terminal;
+      NuGetVersionService = nuGetVersionService;
+      RepoConfigService = repoConfigService;
       PackableProjectService = packableProjectService;
     }
 
@@ -35,17 +67,23 @@ public sealed class WorkflowCommand : ICommand<Unit>
     {
       ArgumentNullException.ThrowIfNull(command);
 
-      // Auto-detect from GitHub Actions environment
       string? eventName = Environment.GetEnvironmentVariable("GITHUB_EVENT_NAME");
-      bool isRelease = eventName == "release" || !string.IsNullOrEmpty(command.ApiKey);
+      CiMode mode = CiModeDetector.DetermineMode(command.Mode, eventName);
 
-      string repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
-      if (!File.Exists(Path.Combine(repoRoot, "timewarp-terminal.slnx")))
+      if (string.IsNullOrEmpty(command.Mode))
       {
-        repoRoot = Path.GetFullPath(Directory.GetCurrentDirectory());
+        string displayEventName = eventName ?? "(not set)";
+        Terminal.WriteLine($"Detected GITHUB_EVENT_NAME: {displayEventName} -> Mode: {mode}");
       }
 
-      if (isRelease)
+      Terminal.WriteLine("===============================================================================");
+      Terminal.WriteLine($"  CI/CD Pipeline - Mode: {mode}");
+      Terminal.WriteLine("===============================================================================");
+      Terminal.WriteLine("");
+
+      string repoRoot = ResolveRepoRoot();
+
+      if (mode == CiMode.Release)
       {
         await RunReleaseWorkflowAsync(repoRoot, command.ApiKey, cancellationToken);
       }
@@ -63,296 +101,181 @@ public sealed class WorkflowCommand : ICommand<Unit>
       Terminal.WriteLine("CI Pipeline: clean -> build -> verify-samples -> test");
       Terminal.WriteLine("");
 
-      // Step 1: Clean
       Terminal.WriteLine("Step 1/4: Clean");
       int exitCode = await Shell.Builder("dotnet")
         .WithArguments("clean", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-v", "q")
         .WithWorkingDirectory(repoRoot)
-        .RunAsync();
+        .RunAsync(cancellationToken);
       if (exitCode != 0)
       {
         throw new InvalidOperationException("Clean failed!");
       }
 
-      // Step 2: Build
+      // A previous local pack must not be uploaded beside this build's packages.
+      ResetPackagesDirectory(repoRoot);
+
       Terminal.WriteLine("\nStep 2/4: Build");
       exitCode = await Shell.Builder("dotnet")
-        .WithArguments("build", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-c", "Release")
+        .WithArguments
+        (
+          "build",
+          Path.Combine(repoRoot, "timewarp-terminal.slnx"),
+          "-c", "Release",
+          "-p:ContinuousIntegrationBuild=true"
+        )
         .WithWorkingDirectory(repoRoot)
-        .RunAsync();
+        .RunAsync(cancellationToken);
       if (exitCode != 0)
       {
         throw new InvalidOperationException("Build failed!");
       }
 
-      // Step 3: Verify Samples
-      Terminal.WriteLine("\nStep 3/4: Verify Samples");
-      await VerifySamplesAsync(repoRoot);
+      string packagesDir = Path.Combine(repoRoot, ArtifactsSubPath);
+      Dictionary<string, string> packageHashes = HashPackages(packagesDir);
+      RequireReleasePackages(packageHashes);
 
-      // Step 4: Test
+      Terminal.WriteLine("\nStep 3/4: Verify Samples");
+      await VerifySamplesAsync(repoRoot, cancellationToken);
+
       Terminal.WriteLine("\nStep 4/4: Test");
-      await RunTestSuiteAsync(repoRoot);
+      await RunTestSuiteAsync(repoRoot, cancellationToken);
+
+      AssertPackagesUnchanged(packagesDir, packageHashes);
 
       Terminal.WriteLine("\n✓ CI Pipeline completed successfully");
     }
 
-    private async Task RunReleaseWorkflowAsync(string repoRoot, string? apiKey, CancellationToken ct)
+    private static string ResolveRepoRoot()
     {
-      Terminal.WriteLine("Release Pipeline: clean -> build -> verify-samples -> test -> check-version -> pack -> push");
+      string? gitRoot = Git.FindRoot();
+      if (gitRoot is not null && File.Exists(Path.Combine(gitRoot, "timewarp-terminal.slnx")))
+      {
+        return gitRoot;
+      }
+
+      string repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+      if (!File.Exists(Path.Combine(repoRoot, "timewarp-terminal.slnx")))
+      {
+        repoRoot = Path.GetFullPath(Directory.GetCurrentDirectory());
+      }
+
+      return repoRoot;
+    }
+
+    private static void ResetPackagesDirectory(string repoRoot)
+    {
+      string artifactsDir = Path.Combine(repoRoot, ArtifactsSubPath);
+      if (Directory.Exists(artifactsDir))
+      {
+        Directory.Delete(artifactsDir, recursive: true);
+      }
+    }
+
+    // Release packing writes both a nupkg and an snupkg. An empty directory
+    // would otherwise look like a successful build whose artifact is missing.
+    private static void RequireReleasePackages(Dictionary<string, string> packageHashes)
+    {
+      bool hasNupkg = false;
+      bool hasSnupkg = false;
+      foreach (string name in packageHashes.Keys)
+      {
+        if (name.EndsWith(".nupkg", StringComparison.OrdinalIgnoreCase))
+        {
+          hasNupkg = true;
+        }
+        else if (name.EndsWith(".snupkg", StringComparison.OrdinalIgnoreCase))
+        {
+          hasSnupkg = true;
+        }
+      }
+
+      if (!hasNupkg || !hasSnupkg)
+      {
+        throw new InvalidOperationException(
+          "Release build did not write both a nupkg and an snupkg. GeneratePackageOnBuild must pack Release builds into artifacts/packages.");
+      }
+    }
+
+    // Samples and tests build the source projects in Debug. Those builds must
+    // leave the Release packages byte-identical, because the upload step ships
+    // whatever is in artifacts/packages when the job ends.
+    private void AssertPackagesUnchanged(string packagesDir, Dictionary<string, string> packageHashes)
+    {
+      Dictionary<string, string> finalHashes = HashPackages(packagesDir);
+      List<string> changedPackages = [];
+      foreach ((string packageName, string packageHash) in packageHashes)
+      {
+        if (!finalHashes.TryGetValue(packageName, out string? finalHash))
+        {
+          changedPackages.Add($"{packageName} (disappeared)");
+        }
+        else if (!string.Equals(packageHash, finalHash, StringComparison.Ordinal))
+        {
+          changedPackages.Add($"{packageName} (changed)");
+        }
+      }
+
+      foreach (string packageName in finalHashes.Keys)
+      {
+        if (!packageHashes.ContainsKey(packageName))
+        {
+          changedPackages.Add($"{packageName} (appeared)");
+        }
+      }
+
+      if (changedPackages.Count > 0)
+      {
+        string detail = string.Join(", ", changedPackages.Order(StringComparer.Ordinal));
+        Terminal.WriteErrorLine(
+          $"Package integrity gate failed: the samples or tests steps rebuilt or repacked a package after the Release build: {detail}. The artifact must not ship.");
+        throw new InvalidOperationException("Package integrity gate failed!");
+      }
+
+      Terminal.WriteLine($"Package integrity verified: {packageHashes.Count} packages unchanged since build.");
+    }
+
+    private static Dictionary<string, string> HashPackages(string packagesDir)
+    {
+      Dictionary<string, string> hashes = new(StringComparer.Ordinal);
+      if (!Directory.Exists(packagesDir))
+      {
+        return hashes;
+      }
+
+      string[] patterns = ["*.nupkg", "*.snupkg"];
+      foreach (string pattern in patterns)
+      {
+        foreach (string file in Directory.EnumerateFiles(packagesDir, pattern))
+        {
+          using FileStream stream = File.OpenRead(file);
+          hashes[Path.GetFileName(file)] = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(stream));
+        }
+      }
+
+      return hashes;
+    }
+
+    private static string ShortSha(string? sha) =>
+      string.IsNullOrEmpty(sha) ? "(unknown)" : sha.Length > 7 ? sha[..7] : sha;
+
+    private void WriteStepBanner(string title)
+    {
       Terminal.WriteLine("");
-
-      // Step 1: Clean
-      Terminal.WriteLine("Step 1/6: Clean");
-      int exitCode = await Shell.Builder("dotnet")
-        .WithArguments("clean", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-v", "q")
-        .WithWorkingDirectory(repoRoot)
-        .RunAsync();
-      if (exitCode != 0)
-      {
-        throw new InvalidOperationException("Clean failed!");
-      }
-
-      // Step 2: Build
-      Terminal.WriteLine("\nStep 2/6: Build");
-      exitCode = await Shell.Builder("dotnet")
-        .WithArguments("build", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-c", "Release")
-        .WithWorkingDirectory(repoRoot)
-        .RunAsync();
-      if (exitCode != 0)
-      {
-        throw new InvalidOperationException("Build failed!");
-      }
-
-      // Step 3: Verify Samples — a release must never ship from a commit
-      // whose samples or tests were not exercised on the release event itself
-      Terminal.WriteLine("\nStep 3/6: Verify Samples");
-      await VerifySamplesAsync(repoRoot);
-
-      // Step 4: Test
-      Terminal.WriteLine("\nStep 4/6: Test");
-      await RunTestSuiteAsync(repoRoot);
-
-      // Step 5: Check Version
-      Terminal.WriteLine("\nStep 5/6: Check Version");
-      string propsPath = Path.Combine(repoRoot, "source", "Directory.Build.props");
-      string? version = null;
-      if (File.Exists(propsPath))
-      {
-        string content = await File.ReadAllTextAsync(propsPath, ct);
-        int versionStart = content.IndexOf("<Version>");
-        if (versionStart > 0)
-        {
-          versionStart += "<Version>".Length;
-          int versionEnd = content.IndexOf("</Version>", versionStart);
-          if (versionEnd > versionStart)
-          {
-            version = content[versionStart..versionEnd];
-          }
-        }
-      }
-
-      if (string.IsNullOrEmpty(version))
-      {
-        throw new InvalidOperationException("Could not determine version from project files");
-      }
-
-      Terminal.WriteLine($"Current version: {version}");
-
-      // A release event must publish the version named by its tag — otherwise publishing
-      // a "v1.0.0" GitHub release with props still at an older version silently pushes that stale version
-      string? tagName = Environment.GetEnvironmentVariable("GITHUB_REF_NAME");
-      if (string.IsNullOrEmpty(tagName))
-      {
-        string? gitHubRef = Environment.GetEnvironmentVariable("GITHUB_REF");
-        if (!string.IsNullOrEmpty(gitHubRef) && gitHubRef.StartsWith("refs/tags/", StringComparison.Ordinal))
-        {
-          tagName = gitHubRef["refs/tags/".Length..];
-        }
-      }
-
-      string? releaseEventName = Environment.GetEnvironmentVariable("GITHUB_EVENT_NAME");
-      if (releaseEventName == "release" && !string.IsNullOrEmpty(tagName))
-      {
-        string tagVersion = tagName.StartsWith('v') ? tagName[1..] : tagName;
-        if (!string.Equals(tagVersion, version, StringComparison.Ordinal))
-        {
-          Terminal.WriteLine("\n✗ Release tag does not match project version");
-          Terminal.WriteLine($"  Tag:     {tagName} (version {tagVersion})");
-          Terminal.WriteLine($"  Project: {version}");
-          throw new InvalidOperationException($"Release tag '{tagName}' does not match project version '{version}'");
-        }
-
-        Terminal.WriteLine($"✓ Release tag {tagName} matches project version");
-      }
-      else
-      {
-        Terminal.WriteLine("No release tag available (local run) - skipping tag/version match check");
-      }
-
-      Terminal.WriteLine("Checking NuGet.org...");
-
-      IReadOnlyList<PackableProject> packableProjects = await PackableProjectService
-        .GetPackableProjectsAsync(repoRoot, ct)
-        .ConfigureAwait(false);
-
-      if (packableProjects.Count == 0)
-      {
-        throw new InvalidOperationException("No packable projects found under source/");
-      }
-
-      Terminal.WriteLine($"Packable packages: {string.Join(", ", packableProjects.Select(static project => project.PackageId))}");
-
-      using HttpClient client = new();
-      List<string> alreadyPublished = [];
-      List<string> available = [];
-
-      foreach (PackableProject project in packableProjects)
-      {
-        string packageId = project.PackageId;
-        string url = $"https://api.nuget.org/v3-flatcontainer/{packageId.ToLowerInvariant()}/{version}/{packageId.ToLowerInvariant()}.nuspec";
-
-        try
-        {
-          Uri uri = new(url);
-          HttpResponseMessage response = await client.GetAsync(uri, ct);
-          if (response.IsSuccessStatusCode)
-          {
-            alreadyPublished.Add(packageId);
-          }
-          else
-          {
-            available.Add(packageId);
-          }
-        }
-        catch (HttpRequestException ex)
-        {
-          Terminal.WriteLine($"\n⚠ Could not check NuGet for {packageId}: {ex.Message}");
-          Terminal.WriteLine("  Assuming version is available");
-          available.Add(packageId);
-        }
-      }
-
-      if (alreadyPublished.Count == packableProjects.Count)
-      {
-        Terminal.WriteLine($"\n✗ Version {version} already exists on NuGet.org for all packages");
-        Terminal.WriteLine($"  Published: {string.Join(", ", alreadyPublished)}");
-        Terminal.WriteLine("  Cannot publish - version must be incremented");
-        Environment.Exit(1);
-      }
-      else if (alreadyPublished.Count > 0)
-      {
-        Terminal.WriteLine($"\n⚠ Partial publish detected for version {version}");
-        Terminal.WriteLine($"  Already published: {string.Join(", ", alreadyPublished)}");
-        Terminal.WriteLine($"  Missing: {string.Join(", ", available)}");
-        Terminal.WriteLine("  Continuing (resume/--skip-duplicate semantics)");
-      }
-      else
-      {
-        Terminal.WriteLine($"\n✓ Version {version} is available for publishing");
-      }
-
-      // Step 6: Pack — only packages not already on NuGet.org (resume / partial publish)
-      Terminal.WriteLine("\nStep 6/6: Pack");
-      string artifactsDir = Path.Combine(repoRoot, "artifacts", "packages");
-      Directory.CreateDirectory(artifactsDir);
-
-      HashSet<string> availableSet = available.ToHashSet(StringComparer.Ordinal);
-      foreach (PackableProject project in packableProjects.Where(project => availableSet.Contains(project.PackageId)))
-      {
-        Terminal.WriteLine($"  Packing {project.PackageId}...");
-        exitCode = await Shell.Builder("dotnet")
-          .WithArguments("pack", project.ProjectPath, "-c", "Release", "-o", artifactsDir, "-p:ContinuousIntegrationBuild=true")
-          .WithWorkingDirectory(repoRoot)
-          .RunAsync();
-
-        if (exitCode != 0)
-        {
-          throw new InvalidOperationException($"Pack failed for {project.PackageId}!");
-        }
-      }
-
-      Terminal.WriteLine("\n✓ Release Pipeline completed successfully");
-      Terminal.WriteLine($"  Packages created in: {artifactsDir}");
-      Terminal.WriteLine($"  Package ids: {string.Join(", ", available)}");
-
-      // Push if api-key provided
-      if (!string.IsNullOrEmpty(apiKey))
-      {
-        Terminal.WriteLine("\nPushing packages to NuGet...");
-        foreach (string packageId in available)
-        {
-          string packagePath = Path.Combine(artifactsDir, $"{packageId}.{version}.nupkg");
-          string symbolsPath = Path.Combine(artifactsDir, $"{packageId}.{version}.snupkg");
-          if (!File.Exists(packagePath))
-          {
-            throw new InvalidOperationException($"Expected package not found after pack: {packagePath}");
-          }
-
-          if (!File.Exists(symbolsPath))
-          {
-            throw new InvalidOperationException($"Expected symbol package not found after pack: {symbolsPath}");
-          }
-
-          string[] packagePaths = [packagePath, symbolsPath];
-          foreach (string path in packagePaths)
-          {
-            string packageName = Path.GetFileName(path);
-            Terminal.WriteLine($"  Pushing {packageName}...");
-
-            exitCode = await DotNet.NuGet()
-              .Push(path)
-              .WithSource("https://api.nuget.org/v3/index.json")
-              .WithApiKey(apiKey)
-              .WithSkipDuplicate()
-              .RunAsync(ct);
-
-            if (exitCode != 0)
-            {
-              throw new InvalidOperationException($"NuGet push failed: {packageName}");
-            }
-          }
-
-          await NotifySoftwareSiteAsync(repoRoot, packageId, version);
-        }
-
-        Terminal.WriteLine("✓ Packages pushed to NuGet.org");
-      }
+      Terminal.WriteLine("===============================================================================");
+      Terminal.WriteLine($"  {title}");
+      Terminal.WriteLine("===============================================================================");
     }
 
-    private async Task NotifySoftwareSiteAsync(string repoRoot, string packageId, string version)
+    private void AbortPipeline(string reason)
     {
-      // Signal timewarp-software to rebuild the site so the new release shows up
-      // immediately instead of waiting for its nightly cron backstop. Best effort:
-      // a failure here must never fail a release that already pushed to NuGet.
-      // Cross-repo repository_dispatch needs a credential with write access to
-      // timewarp-software — locally gh's stored auth suffices; in GitHub Actions
-      // the default GITHUB_TOKEN cannot reach other repos, so workflow.yml mints a
-      // short-lived installation token from the org's Rebuild Dispatcher GitHub App
-      // and passes it as GH_TOKEN.
-      Terminal.WriteLine("\nNotifying timewarp-software to rebuild the site...");
-      int exitCode = await Shell.Builder("gh")
-        .WithArguments
-        (
-          "api",
-          "repos/TimeWarpEngineering/timewarp-software/dispatches",
-          "-f", "event_type=rebuild",
-          "-f", $"client_payload[package]={packageId}",
-          "-f", $"client_payload[version]={version}"
-        )
-        .WithWorkingDirectory(repoRoot)
-        .RunAsync();
-
-      if (exitCode == 0)
-      {
-        Terminal.WriteLine("✓ timewarp-software rebuild dispatched");
-      }
-      else
-      {
-        Terminal.WriteLine("⚠ Could not dispatch timewarp-software rebuild (non-fatal; the site rebuilds nightly)");
-      }
+      Terminal.WriteLine("");
+      Terminal.WriteLine("===============================================================================");
+      Terminal.WriteLine($"  Pipeline ABORTED — {reason}");
+      Terminal.WriteLine("===============================================================================");
+      Environment.ExitCode = 1;
     }
 
-    private async Task VerifySamplesAsync(string repoRoot)
+    private async Task VerifySamplesAsync(string repoRoot, CancellationToken cancellationToken)
     {
       string samplesDir = Path.Combine(repoRoot, "samples");
       if (!Directory.Exists(samplesDir))
@@ -364,12 +287,13 @@ public sealed class WorkflowCommand : ICommand<Unit>
       Array.Sort(sampleFiles, StringComparer.Ordinal);
       foreach (string sampleFile in sampleFiles)
       {
+        cancellationToken.ThrowIfCancellationRequested();
         string fileName = Path.GetFileName(sampleFile);
         Terminal.WriteLine($"  Verifying {fileName}...");
         int exitCode = await Shell.Builder("dotnet")
           .WithArguments("run", sampleFile, "--", "--help")
           .WithWorkingDirectory(samplesDir)
-          .RunAsync();
+          .RunAsync(cancellationToken);
         if (exitCode != 0)
         {
           throw new InvalidOperationException($"Sample verification failed: {fileName}");
@@ -377,10 +301,8 @@ public sealed class WorkflowCommand : ICommand<Unit>
       }
     }
 
-    private async Task RunTestSuiteAsync(string repoRoot)
+    private async Task RunTestSuiteAsync(string repoRoot, CancellationToken cancellationToken)
     {
-      // The test suite is .NET 11 file-based apps (runfiles) under tests/,
-      // not VSTest projects, so `dotnet test` on the solution finds nothing
       string testsDir = Path.Combine(repoRoot, "tests");
       string[] testFiles = Directory.GetFiles(testsDir, "*.cs", SearchOption.TopDirectoryOnly);
       Array.Sort(testFiles, StringComparer.Ordinal);
@@ -388,12 +310,13 @@ public sealed class WorkflowCommand : ICommand<Unit>
       List<string> failed = [];
       foreach (string testFile in testFiles)
       {
+        cancellationToken.ThrowIfCancellationRequested();
         string fileName = Path.GetFileName(testFile);
         Terminal.WriteLine($"  Running {fileName}...");
         int exitCode = await Shell.Builder("dotnet")
           .WithArguments(testFile)
           .WithWorkingDirectory(repoRoot)
-          .RunAsync();
+          .RunAsync(cancellationToken);
         if (exitCode != 0)
         {
           failed.Add(fileName);

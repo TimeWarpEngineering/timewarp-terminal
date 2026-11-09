@@ -5,6 +5,7 @@
   <PropertyGroup>
     <!-- Tests should not be packaged -->
     <IsPackable>false</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <!-- Suppress warnings for test projects:
          CA1303: Localization not needed in tests
          CA1307: String comparison culture not critical in tests

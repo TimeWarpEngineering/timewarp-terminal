@@ -5,6 +5,7 @@
   <PropertyGroup>
     <!-- Samples should not be packaged -->
     <IsPackable>false</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <!-- Suppress warnings for samples:
          CA1303: Localization not needed in samples
          IDE0211: Sample runfiles are file-based apps and require top-level statements -->

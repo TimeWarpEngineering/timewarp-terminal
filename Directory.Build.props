@@ -7,6 +7,8 @@
   <PropertyGroup Label="MSBuild/NuGet Configuration">
     <!-- Output packages to our local feed directory -->
     <PackageOutputPath>$(PackagesDirectory)</PackageOutputPath>
+    <!-- Release-only packing lives in source/Directory.Build.props. A Debug
+         build of a referenced source project must not rewrite artifacts/packages. -->
 
     <!-- Suppress .NET preview SDK message -->
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
