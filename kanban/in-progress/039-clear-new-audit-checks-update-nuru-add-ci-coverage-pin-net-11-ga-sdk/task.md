@@ -44,6 +44,8 @@ Nuru release. .NET 11 went GA on 2026-11-10, so also move the RC pins to stable.
 - Created: 271402fa-1014-4c38-986b-db3f26ab9720 (2026-11-11)
 - Implementation: implementer-cursor (2026-11-11)
 - Implement oracle: implemented by implementer-cursor (cursor, vendor google, model gemini-4-carbon-high), session not reported, max-turns uncapped (no --max-turns flag; bound 500), Done — 2026-11-10T19:45:14Z
+- Review oracle: reviewer-cursor (cursor, Claude Opus 5.5), session not reported, effort 3 (by-diff, 842 lines), roster general, max-turns uncapped (no --max-turns flag; bound 200), 1 round, disposition clean — 2026-11-11
+- Review oracle: review by reviewer-cursor (cursor, vendor anthropic, model claude-opus-5-5-high), session not reported, max-turns uncapped (no --max-turns flag; bound 200), artifacts general.md, merged.md, disposition.md — 2026-11-10T19:51:28Z
 
 ## Results
 
@@ -54,6 +56,21 @@ Nuru release. .NET 11 went GA on 2026-11-10, so also move the RC pins to stable.
 - Pinned stable `.NET 11.0.100` GA in `global.json` (`allowPrerelease: false`, `rollForward: latestFeature`) and `Microsoft.CodeAnalysis.NetAnalyzers` `11.0.100`. Verified the public `.NET 11.0` `releases-index.json` and `releases.json` metadata report `support-phase: active` and `latest-sdk: 11.0.100`, which `actions/setup-dotnet@v4` with `global-json-file: global.json` resolves directly.
 - Applied all remaining `ganda nuget outdated` updates: `TimeWarp.Builder` `1.0.0 -> 1.1.0` and `TimeWarp.SourceGenerators` `1.0.0-beta.11 -> 1.0.0-beta.13`. Added `#region Purpose` blocks to the 14 `source/`, 6 `samples/`, and 46 `tests/` C# files that lacked them so `TWA0004` passes cleanly with zero added suppressions. `ganda nuget outdated` reports all 15 packages up to date.
 - `./bin/dev self-install`, `./bin/dev workflow`, and `ganda repo audit` (42 passed, 0 failed, 2 skipped) all exit 0 locally. No release was cut.
+
+### Review disposition
+
+- Rounds: 1. Roster: general. Effort: 3 (by-diff budget, 842 lines changed).
+- Final counts: bug 0, suggestion 0, nit 0. None open, fixed, or wontfix.
+- Disposition: **clean**. No findings were raised, so there are no wontfix items or escalations.
+- The reviewer re-verified in the review sandbox:
+  - `dotnet --version` prints `11.0.100`.
+  - All six target audit checks pass, and so does `dev-cli-capabilities`. The only failure, `self-hosted-runner`, needs `gh` network access the sandbox denied.
+  - A non-incremental Release build finishes with `0 Warning(s)` and `0 Error(s)`.
+  - `dotnet-coverage collect` propagates the child exit code and keeps the child's console output.
+  - The coverage file reports 77.2% line rate for `TimeWarp.Terminal` and `TimeWarp.Terminal.Layout`.
+  - The diff adds no new suppressions.
+- Not re-run: end-to-end `dev workflow` and `ganda nuget outdated`, because the sandbox blocked the runfile cache and nuget.org.
+- Paths: `review/review-framework.md`, `review/round-1/general.md`, `review/round-1/merged.md`, `review/disposition.md`.
 
 ### How to validate
 
@@ -72,6 +89,10 @@ Expect:
 - `ganda nuget outdated` exits 0 and prints `All packages are up to date!`.
 - `./bin/dev workflow` exits 0: cleans, builds `TimeWarp.Terminal` and `TimeWarp.Terminal.Layout` in Release with `0 Warning(s)` and `0 Error(s)`, verifies all 6 samples, passes all 47 Jaribu test runfiles, writes `artifacts/coverage/coverage.cobertura.xml` covering `TimeWarp.Terminal` and `TimeWarp.Terminal.Layout`, and prints `Package integrity verified: 4 packages unchanged since build.`.
 - `ganda repo audit` exits 0 with `Passed: 42 | Failed: 0 | Skipped: 2`, including `ci-code-coverage`, `workflow-pwsh-shell`, `nuru`, `analyzer-suppressions`, `timewarp-signals-gitignore`, `memsearch-scaffold`, and `dev-cli-capabilities`.
+
+## Review
+
+- Round 1: Done
 
 ## Notes
 
