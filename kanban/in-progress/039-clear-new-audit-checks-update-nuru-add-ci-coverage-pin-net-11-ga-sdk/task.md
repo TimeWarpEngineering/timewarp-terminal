@@ -46,6 +46,7 @@ Nuru release. .NET 11 went GA on 2026-11-10, so also move the RC pins to stable.
 - Implement oracle: implemented by implementer-cursor (cursor, vendor google, model gemini-4-carbon-high), session not reported, max-turns uncapped (no --max-turns flag; bound 500), Done — 2026-11-10T19:45:14Z
 - Review oracle: reviewer-cursor (cursor, Claude Opus 5.5), session not reported, effort 3 (by-diff, 842 lines), roster general, max-turns uncapped (no --max-turns flag; bound 200), 1 round, disposition clean — 2026-11-11
 - Review oracle: review by reviewer-cursor (cursor, vendor anthropic, model claude-opus-5-5-high), session not reported, max-turns uncapped (no --max-turns flag; bound 200), artifacts general.md, merged.md, disposition.md — 2026-11-10T19:51:28Z
+- Installed ganda changed during this walk: was 51756808 bytes a18f3dc25f245e28614a218db4f6294c4e02bfabf5529c0b4a7a94f7b048c6ec; now 51811208 bytes 95d609125d069c357aa5683f61c2a03fac99d7793cb5c008e758c828fd37bcdf
 
 ## Results
 
