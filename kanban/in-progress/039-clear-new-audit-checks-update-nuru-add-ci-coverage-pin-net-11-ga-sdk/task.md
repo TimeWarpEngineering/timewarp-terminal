@@ -1,5 +1,19 @@
 # Clear new audit checks, update Nuru, add CI coverage, pin .NET 11 GA SDK
 
+## Goal (implementer restatement)
+
+Make `ganda repo audit` pass on this repo and pin the .NET 11 GA SDK, in one branch.
+
+Acceptance:
+
+- `ganda repo audit --fix` changes are committed: Nuru moves to 4.0.0-beta.12, a suppression baseline exists, `/.timewarp/signals/` is gitignored, and the five `.githooks/*.cs` hooks match the current scaffold.
+- `.github/workflows/workflow.yml` sets top-level `defaults.run.shell` to `pwsh`, and every `run:` step is PowerShell, including the Packages artifact retention step. The release path (tag gate, locate run, download, verify, push) still promotes the master `Packages-*` artifact and does not rebuild.
+- CI collects code coverage during the test run and uploads an artifact named `coverage`. The check stays on. Tests are Jaribu runfiles via `dev test`, so the collector has to fit that runner.
+- `global.json` and `Microsoft.CodeAnalysis.NetAnalyzers` pin stable 11.0.100, and CI setup-dotnet can resolve that SDK.
+- `ganda nuget outdated` updates that are safe are taken.
+- `./bin/dev workflow` passes locally (build, verify-samples, test, package-hash gate).
+- `ganda repo audit` exits clean. No release is cut.
+
 ## Description
 
 `ganda repo audit` on master (2026-11-11) fails 6 checks. Five are new checks, and one is a new
