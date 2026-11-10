@@ -1,0 +1,18 @@
+# Clear new audit checks, update Nuru, add CI coverage, pin .NET 11 GA SDK
+
+## Description
+
+[Brief description of the task]
+
+## Checklist
+
+- [ ] Item 1
+- [ ] Item 2
+
+## Session
+
+- Created: 271402fa-1014-4c38-986b-db3f26ab9720 (2026-11-10)
+
+## Notes
+
+[Additional context]
