@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
-// Demonstrates emoji and wide character alignment in table/panel/rule borders
+#region Purpose
+// Demonstrates emoji and wide character alignment in table, panel, and rule borders.
+#endregion
 using TimeWarp.Terminal;
 
 TimeWarpTerminal terminal = new();

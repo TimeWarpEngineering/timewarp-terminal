@@ -1,5 +1,9 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Unicode box-drawing character lookup by BorderStyle.
+#endregion
+
 /// <summary>
 /// Provides box-drawing characters for each <see cref="BorderStyle"/>.
 /// </summary>

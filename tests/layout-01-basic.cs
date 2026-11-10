@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal-layout/timewarp-terminal-layout.csproj
 
+#region Purpose
 // Test basic side-by-side text layout
+#endregion
 
 using TimeWarp.Flexbox;
 

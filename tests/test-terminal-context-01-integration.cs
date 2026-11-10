@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
+#region Purpose
 // Tests for TestTerminalContext integration with Terminal.Instance
+#endregion
 #pragma warning disable CA1849
 
 #if !JARIBU_MULTI

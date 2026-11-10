@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
+#region Purpose
 // Test Terminal static facade class - Operations
+#endregion
 // CA1849: We deliberately test sync methods in async test methods
 // IDE0008: Allow var for brevity in tests
 #pragma warning disable CA1849, IDE0008

@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal-layout/timewarp-terminal-layout.csproj
 
+#region Purpose
 // Test ITerminal WriteLayout + static TerminalLayout facade
+#endregion
 // CA1849: We deliberately test sync methods in async test methods
 #pragma warning disable CA1849
 

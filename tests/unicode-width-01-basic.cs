@@ -3,7 +3,9 @@
 
 using System.Text;
 
+#region Purpose
 // Test UnicodeWidth functionality
+#endregion
 
 #if !JARIBU_MULTI
 return await RunAllTests();

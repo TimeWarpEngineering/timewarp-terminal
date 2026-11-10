@@ -1,5 +1,9 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Horizontal alignment options for terminal widget content.
+#endregion
+
 /// <summary>
 /// Specifies horizontal alignment for table column content.
 /// </summary>

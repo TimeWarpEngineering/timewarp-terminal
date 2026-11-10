@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal-layout/timewarp-terminal-layout.csproj
 
+#region Purpose
 // Test column of rows (dashboard sketch)
+#endregion
 
 using TimeWarp.Flexbox;
 

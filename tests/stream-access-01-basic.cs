@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
+#region Purpose
 // Test IConsole stream access APIs
+#endregion
 
 #if !JARIBU_MULTI
 return await RunAllTests();

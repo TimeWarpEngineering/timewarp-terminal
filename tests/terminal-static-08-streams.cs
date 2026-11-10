@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
+#region Purpose
 // Terminal stream, encoding, redirection, and rich-input facade tests.
+#endregion
 using System.Text;
 
 #if !JARIBU_MULTI

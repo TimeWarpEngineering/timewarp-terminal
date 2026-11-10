@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
+#region Purpose
 // Test Table widget with emoji content
+#endregion
 
 #if !JARIBU_MULTI
 return await RunAllTests();

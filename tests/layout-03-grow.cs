@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal-layout/timewarp-terminal-layout.csproj
 
+#region Purpose
 // Test Grow proportions and tiling
+#endregion
 
 using TimeWarp.Flexbox;
 

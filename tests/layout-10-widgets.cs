@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal-layout/timewarp-terminal-layout.csproj
 
+#region Purpose
 // Test Panel, Table, Rule as layout items
+#endregion
 
 using TimeWarp.Flexbox;
 

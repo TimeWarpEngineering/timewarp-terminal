@@ -1,5 +1,9 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Horizontal divider line styles and corresponding box-drawing characters.
+#endregion
+
 /// <summary>
 /// Defines the visual style for horizontal lines in terminal widgets.
 /// </summary>

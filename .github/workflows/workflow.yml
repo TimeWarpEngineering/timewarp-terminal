@@ -15,6 +15,7 @@ on:
       - 'samples/**'
       - 'tools/**'
       - 'msbuild/**'
+      - '.config/dotnet-tools.json'
       - '.github/workflows/**'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
@@ -29,6 +30,7 @@ on:
       - 'samples/**'
       - 'tools/**'
       - 'msbuild/**'
+      - '.config/dotnet-tools.json'
       - '.github/workflows/**'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
@@ -56,6 +58,10 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: pwsh
 
 jobs:
   ci:
@@ -86,6 +92,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: dotnet run --file tools/dev-cli/dev.cs -- workflow
 
+      - name: coverage
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: artifacts/coverage
+          if-no-files-found: warn
+
       - name: Upload Artifacts
         # Green master only. Release mode promotes Packages-* from a push run
         # at the tag SHA. PRs, failed runs, probe, and release runs do not
@@ -109,30 +123,50 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           EXPECTED_ARTIFACT: Packages-${{ github.run_number }}
         run: |
-          set -euo pipefail
-          tmp="$(mktemp)"
-          trap 'rm -f "$tmp"' EXIT
-          gh api --paginate \
-            -H "Accept: application/vnd.github+json" \
-            "/repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
-            --jq '.artifacts[] | select((.name | startswith("Packages-")) and (.expired == false)) | [.created_at, (.id | tostring), .name] | @tsv' \
-            | LC_ALL=C sort -r > "$tmp"
-          if ! cut -f3 "$tmp" | grep -qxF "$EXPECTED_ARTIFACT"; then
-            echo "Just-uploaded artifact ${EXPECTED_ARTIFACT} is not listed yet; skipping prune (keep-last-2 runs on the next green master push)."
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrEmpty($env:GITHUB_REPOSITORY) -or [string]::IsNullOrEmpty($env:EXPECTED_ARTIFACT)) {
+            throw 'GITHUB_REPOSITORY and EXPECTED_ARTIFACT must be set.'
+          }
+          $raw = @(gh api --paginate `
+            -H 'Accept: application/vnd.github+json' `
+            "/repos/$env:GITHUB_REPOSITORY/actions/artifacts?per_page=100" `
+            --jq '.artifacts[] | select((.name | startswith("Packages-")) and (.expired == false)) | [.created_at, (.id | tostring), .name] | @tsv')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $sorted = [System.Collections.Generic.List[string]]::new()
+          foreach ($line in $raw) {
+            if (-not [string]::IsNullOrEmpty($line)) { $sorted.Add($line) }
+          }
+          $sorted.Sort([System.StringComparer]::Ordinal)
+          $sorted.Reverse()
+          $listed = $false
+          foreach ($line in $sorted) {
+            $fields = $line.Split("`t", 3)
+            if ($fields.Length -ge 3 -and $fields[2] -ceq $env:EXPECTED_ARTIFACT) {
+              $listed = $true
+              break
+            }
+          }
+          if (-not $listed) {
+            Write-Output "Just-uploaded artifact $env:EXPECTED_ARTIFACT is not listed yet; skipping prune (keep-last-2 runs on the next green master push)."
             exit 0
-          fi
-          keep=2
-          n=0
-          while IFS=$'\t' read -r created_at id name; do
-            [ -n "$id" ] || continue
-            n=$((n + 1))
-            if [ "$n" -le "$keep" ]; then
-              echo "Keeping ${name} (id=${id}, created=${created_at})"
+          }
+          $keep = 2
+          $n = 0
+          foreach ($line in $sorted) {
+            $fields = $line.Split("`t", 3)
+            if ($fields.Length -lt 3 -or [string]::IsNullOrEmpty($fields[1])) { continue }
+            $createdAt = $fields[0]
+            $id = $fields[1]
+            $name = $fields[2]
+            $n++
+            if ($n -le $keep) {
+              Write-Output "Keeping $name (id=$id, created=$createdAt)"
               continue
-            fi
-            echo "Deleting ${name} (id=${id}, created=${created_at})"
-            gh api --method DELETE "/repos/${GITHUB_REPOSITORY}/actions/artifacts/${id}"
-          done < "$tmp"
+            }
+            Write-Output "Deleting $name (id=$id, created=$createdAt)"
+            gh api --method DELETE "/repos/$env:GITHUB_REPOSITORY/actions/artifacts/$id"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
 
   release:
     # Release event, break-glass dispatch (mode=release) and the trusted
@@ -162,7 +196,7 @@ jobs:
       - name: Validate break-glass confirmation
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'release' && inputs.confirm != 'release'
         run: |
-          echo "::error::mode=release requires confirm=release. Refusing to run a break-glass release."
+          Write-Output '::error::mode=release requires confirm=release. Refusing to run a break-glass release.'
           exit 1
 
       - name: NuGet login (OIDC Trusted Publishing)
@@ -174,7 +208,7 @@ jobs:
 
       - name: Trusted publishing probe result
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'probe'
-        run: echo "Trusted publishing OK — OIDC exchange succeeded for this repo + workflow.yml. (A failure of the NuGet login step above means the policy is missing or misconfigured on NuGet.org.)"
+        run: Write-Output 'Trusted publishing OK — OIDC exchange succeeded for this repo + workflow.yml. (A failure of the NuGet login step above means the policy is missing or misconfigured on NuGet.org.)'
 
       # Cross-repo repository_dispatch (timewarp-software rebuild) cannot use the
       # default GITHUB_TOKEN. A short-lived installation token is minted from the
@@ -199,4 +233,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           # App token for the best-effort timewarp-software rebuild dispatch only.
           REBUILD_DISPATCH_TOKEN: ${{ steps.rebuild-token.outputs.token }}
-        run: dotnet run --file tools/dev-cli/dev.cs -- workflow --mode release --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}"
+          NUGET_LOGIN_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        run: |
+          dotnet run --file tools/dev-cli/dev.cs -- workflow --mode release --api-key $env:NUGET_LOGIN_API_KEY
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

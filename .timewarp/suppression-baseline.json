@@ -1,0 +1,146 @@
+{
+  "files": {
+    ".editorconfig": {
+      "CA1034": 1,
+      "IDE0290": 1,
+      "IDE1006": 1,
+      "RCS0036": 1,
+      "RCS0051": 1,
+      "RCS0052": 1,
+      "RCS1021": 1,
+      "RCS1045": 1,
+      "RCS1123": 1,
+      "RCS1124": 1,
+      "RCS1139": 1,
+      "RCS1140": 1,
+      "RCS1141": 1,
+      "RCS1142": 1,
+      "RCS1181": 1,
+      "RCS1194": 1,
+      "RCS1238": 1,
+      "RCS9001": 1,
+      "RCS9002": 1,
+      "RCS9003": 1,
+      "TWA002": 1,
+      "ca1308": 1
+    },
+    ".githooks/post-checkout.cs": {
+      "CA2007": 1
+    },
+    ".githooks/post-commit.cs": {
+      "CA2007": 1
+    },
+    ".githooks/post-merge.cs": {
+      "CA2007": 1
+    },
+    ".githooks/pre-commit.cs": {
+      "CA1849": 2,
+      "CA2007": 1,
+      "RS0030": 2
+    },
+    ".githooks/pre-push.cs": {
+      "CA1849": 3,
+      "CA2007": 1,
+      "RS0030": 3
+    },
+    "Directory.Build.props": {
+      "CA1014": 1,
+      "CA1716": 1,
+      "CA1724": 1,
+      "CA1812": 1,
+      "CS1591": 1
+    },
+    "samples/Directory.Build.props": {
+      "CA1303": 1,
+      "IDE0211": 1
+    },
+    "source/timewarp-terminal/ansi-color-extensions.cs": {
+      "CA1822": 1
+    },
+    "source/timewarp-terminal/ansi-hyperlink-extensions.cs": {
+      "CA1054": 1,
+      "CA1822": 1
+    },
+    "source/timewarp-terminal/terminal-hyperlink-extensions.cs": {
+      "CA1054": 1
+    },
+    "source/timewarp-terminal/terminal-static.widgets.cs": {
+      "CA1054": 2
+    },
+    "tests/Directory.Build.props": {
+      "CA1031": 1,
+      "CA1050": 1,
+      "CA1052": 1,
+      "CA1303": 1,
+      "CA1307": 1,
+      "CA1515": 1,
+      "CA1707": 1,
+      "CA2000": 1,
+      "CA2007": 1,
+      "CS0050": 1,
+      "IDE0211": 1,
+      "RCS1046": 1,
+      "RCS1102": 1,
+      "RCS1110": 1
+    },
+    "tests/cancel-key-press-01-basic.cs": {
+      "CA1508": 1
+    },
+    "tests/console-encoding-01-basic.cs": {
+      "CA1859": 2
+    },
+    "tests/layout-09-terminal-extensions.cs": {
+      "CA1849": 1
+    },
+    "tests/plain-main-01-capture.cs": {
+      "CA1849": 1
+    },
+    "tests/rich-input-01-basic.cs": {
+      "CA1859": 1
+    },
+    "tests/stream-access-02-terminal.cs": {
+      "CA1859": 2
+    },
+    "tests/terminal-static-01-basic.cs": {
+      "CA1849": 1
+    },
+    "tests/terminal-static-03-operations.cs": {
+      "CA1849": 1,
+      "IDE0008": 1
+    },
+    "tests/terminal-static-04-format.cs": {
+      "CA1849": 1
+    },
+    "tests/terminal-static-05-widgets.cs": {
+      "CA1849": 1
+    },
+    "tests/terminal-static-06-color.cs": {
+      "CA1849": 1
+    },
+    "tests/terminal-window-buffer-geometry.cs": {
+      "CA1859": 1
+    },
+    "tests/test-terminal-context-01-integration.cs": {
+      "CA1849": 1
+    },
+    "tools/dev-cli/Directory.Build.props": {
+      "CA1031": 1,
+      "CA1034": 1,
+      "CA1303": 1,
+      "CA1508": 1,
+      "CA1515": 1,
+      "CA1849": 1,
+      "CA2000": 1,
+      "CA2007": 1,
+      "CA2016": 1,
+      "CA5399": 1,
+      "IDE0005": 1,
+      "IDE0211": 1,
+      "IL2026": 1,
+      "IL2104": 1,
+      "IL3050": 1,
+      "IL3053": 1,
+      "RCS1046": 1
+    }
+  }
+}

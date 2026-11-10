@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
+#region Purpose
 // Tests for CancelKeyPress event on ITerminal
+#endregion
 #pragma warning disable CA1508 // Avoid dead conditional code
 
 // Create test terminal
