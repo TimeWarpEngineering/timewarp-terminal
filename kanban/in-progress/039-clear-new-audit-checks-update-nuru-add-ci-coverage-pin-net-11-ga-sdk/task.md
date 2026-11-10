@@ -43,6 +43,7 @@ Nuru release. .NET 11 went GA on 2026-11-10, so also move the RC pins to stable.
 
 - Created: 271402fa-1014-4c38-986b-db3f26ab9720 (2026-11-11)
 - Implementation: implementer-cursor (2026-11-11)
+- Implement oracle: implemented by implementer-cursor (cursor, vendor google, model gemini-4-carbon-high), session not reported, max-turns uncapped (no --max-turns flag; bound 500), Done — 2026-11-10T19:45:14Z
 
 ## Results
 
