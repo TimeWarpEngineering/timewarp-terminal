@@ -1,5 +1,9 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Border visual style options for terminal box widgets.
+#endregion
+
 /// <summary>
 /// Defines the visual style for borders in terminal widgets.
 /// </summary>

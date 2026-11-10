@@ -1,5 +1,9 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Column configuration model for Table widgets.
+#endregion
+
 /// <summary>
 /// Represents a column definition for a <see cref="Table"/> widget.
 /// </summary>

@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
-// Demonstrates the Table widget for rendering columnar data
+#region Purpose
+// Demonstrates the Table widget for rendering columnar data.
+#endregion
 using TimeWarp.Terminal;
 
 // Create a terminal for colored output

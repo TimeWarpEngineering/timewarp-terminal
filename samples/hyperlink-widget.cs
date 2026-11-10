@@ -3,6 +3,10 @@
 // GitHub Issue: https://github.com/TimeWarpEngineering/timewarp-terminal/issues/95
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
+#region Purpose
+// Demonstrates OSC 8 clickable hyperlinks in terminal output.
+#endregion
+
 using TimeWarp.Terminal;
 
 // Get a terminal instance

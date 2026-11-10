@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal-layout/timewarp-terminal-layout.csproj
 
+#region Purpose
 // Narrow terminal: bordered panels must not collapse to width 0
+#endregion
 
 using TimeWarp.Flexbox;
 

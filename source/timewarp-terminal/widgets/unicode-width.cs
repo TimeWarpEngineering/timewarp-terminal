@@ -1,5 +1,9 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Terminal cell-width measurement for Unicode runes, CJK characters, and emoji grapheme clusters.
+#endregion
+
 #region Design
 // Measurement rules (target: match modern terminal wcwidth, e.g. foot/kitty/wezterm):
 // 1. Rune width comes from Unicode 16 East_Asian_Width (W/F => 2) plus

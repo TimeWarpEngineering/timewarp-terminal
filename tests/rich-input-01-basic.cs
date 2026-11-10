@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
+#region Purpose
 // Test IConsole rich input APIs (Read, ReadKey)
+#endregion
 #pragma warning disable CA1859 // Intentionally testing interface access
 
 #if !JARIBU_MULTI

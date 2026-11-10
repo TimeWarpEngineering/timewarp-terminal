@@ -1,5 +1,9 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Ellipsis placement modes when truncating overflowing column text.
+#endregion
+
 /// <summary>
 /// Specifies where to place the ellipsis when truncating content that exceeds column width.
 /// </summary>

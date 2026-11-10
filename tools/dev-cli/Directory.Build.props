@@ -18,14 +18,12 @@
     <!-- CA2016: CancellationToken forwarding - will address where needed -->
     <!-- CA2000: Dispose on app builder - handled by framework -->
     <!-- RCS1046: Async suffix - private methods don't need it -->
-    <!-- IDE0005, IDE0022, IDE0046, IDE0052, IDE0055, IDE0058, IDE0066, IDE0078, IDE0160,
-         IDE0290: style rules violated by TimeWarp.Nuru.DevCli content files compiled
-         from the NuGet cache, where repo .editorconfig cannot reach -->
+    <!-- IDE0005: requires GenerateDocumentationFile, which is off for AOT runfile publish -->
     <!-- IDE0211: dev.cs is a file-based app (runfile) and requires top-level statements -->
     <!-- IL2026, IL3050: reflection-based JsonSerializer in TimeWarp.Nuru.DevCli content
          files; suppressed here only — the library itself builds clean under full
          trim/AOT analysis -->
-    <NoWarn>$(NoWarn);CA1031;CA1034;CA1303;CA1508;CA1515;CA1849;CA2007;CA2016;CA2000;RCS1046;CA5399;IL2026;IL2104;IL3050;IL3053;IDE0065;IDE0005;IDE0022;IDE0046;IDE0052;IDE0055;IDE0058;IDE0066;IDE0078;IDE0160;IDE0211;IDE0290</NoWarn>
+    <NoWarn>$(NoWarn);CA1031;CA1034;CA1303;CA1508;CA1515;CA1849;CA2007;CA2016;CA2000;RCS1046;CA5399;IL2026;IL2104;IL3050;IL3053;IDE0005;IDE0211</NoWarn>
 
     <!-- The dev CLI is a runfile, not a product assembly. With XML docs on, the AOT publish
          (worktree onCreate self-install) fails MSB3030 looking for bin/release/dev.xml.
@@ -80,5 +78,34 @@
     <PackageReference Include="TimeWarp.Nuru" />
     <PackageReference Include="TimeWarp.Nuru.DevCli" />
   </ItemGroup>
+
+  <!-- TimeWarp.Nuru.DevCli ships C# content files compiled from $(NuGetPackageRoot),
+       where the repo .editorconfig cannot reach and two upstream files exceed 500 lines
+       (TWA0038). Exempt only Compile items under $(NuGetPackageRoot) so all analyzers
+       stay active on this repo's own tools/dev-cli sources (matches timewarp-architecture
+       task 470). -->
+  <Target Name="ExemptPackageContentFromAnalyzers"
+          BeforeTargets="CoreCompile"
+          Condition="'$(NuGetPackageRoot)' != ''">
+    <PropertyGroup>
+      <_TwPackageContentConfig>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'package-content-analyzers.globalconfig'))</_TwPackageContentConfig>
+      <_TwNuGetPackageRoot>$([System.String]::Copy('$(NuGetPackageRoot)').Replace('\','/'))</_TwNuGetPackageRoot>
+    </PropertyGroup>
+    <ItemGroup>
+      <_TwPackageContentCompile Include="@(Compile->'%(FullPath)'->Replace('\','/'))" />
+      <_TwPackageContentCompile Remove="@(_TwPackageContentCompile)"
+                                Condition="!$([System.String]::Copy('%(Identity)').StartsWith('$(_TwNuGetPackageRoot)'))" />
+      <_TwPackageContentLine Include="is_global = true" />
+      <_TwPackageContentLine Include="@(_TwPackageContentCompile->'[%(Identity)]%0Adotnet_analyzer_diagnostic.severity = none')" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(_TwPackageContentConfig)"
+                      Lines="@(_TwPackageContentLine)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <EditorConfigFiles Include="$(_TwPackageContentConfig)" />
+      <FileWrites Include="$(_TwPackageContentConfig)" />
+    </ItemGroup>
+  </Target>
 
 </Project>

@@ -3,6 +3,10 @@
 // GitHub Issue: https://github.com/TimeWarpEngineering/timewarp-terminal/issues/90
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
+#region Purpose
+// Demonstrates the Panel widget for bordered boxes with headers and styled content.
+#endregion
+
 using TimeWarp.Terminal;
 
 // Get a terminal instance

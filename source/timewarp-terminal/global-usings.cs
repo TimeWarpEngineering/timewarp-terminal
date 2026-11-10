@@ -1,3 +1,7 @@
+#region Purpose
+// Shared usings for the TimeWarp.Terminal core package.
+#endregion
+
 global using System;
 global using System.Collections.Generic;
 global using System.Globalization;

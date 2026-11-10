@@ -39,7 +39,7 @@ public sealed partial class WorkflowCommand : ICommand<Unit>
   [Option("api-key", Description = "NuGet API key for publishing (from OIDC Trusted Publishing)")]
   public string? ApiKey { get; set; }
 
-  internal sealed partial class Handler : ICommandHandler<WorkflowCommand, Unit>
+  internal sealed partial class Handler : IRequestHandler<WorkflowCommand, Unit>
   {
     private const string ArtifactsSubPath = "artifacts/packages";
     private const string NuGetSource = "https://api.nuget.org/v3/index.json";
@@ -63,7 +63,7 @@ public sealed partial class WorkflowCommand : ICommand<Unit>
       PackableProjectService = packableProjectService;
     }
 
-    public async Task<Unit> Handle(WorkflowCommand command, CancellationToken cancellationToken)
+    public async ValueTask<Unit> Handle(WorkflowCommand command, CancellationToken cancellationToken)
     {
       ArgumentNullException.ThrowIfNull(command);
 
@@ -138,7 +138,8 @@ public sealed partial class WorkflowCommand : ICommand<Unit>
       await VerifySamplesAsync(repoRoot, cancellationToken);
 
       Terminal.WriteLine("\nStep 4/4: Test");
-      await RunTestSuiteAsync(repoRoot, cancellationToken);
+      TestCommand.Handler testHandler = new(Terminal);
+      await testHandler.Handle(new TestCommand { Coverage = true }, cancellationToken);
 
       AssertPackagesUnchanged(packagesDir, packageHashes);
 
@@ -299,42 +300,6 @@ public sealed partial class WorkflowCommand : ICommand<Unit>
           throw new InvalidOperationException($"Sample verification failed: {fileName}");
         }
       }
-    }
-
-    private async Task RunTestSuiteAsync(string repoRoot, CancellationToken cancellationToken)
-    {
-      string testsDir = Path.Combine(repoRoot, "tests");
-      string[] testFiles = Directory.GetFiles(testsDir, "*.cs", SearchOption.TopDirectoryOnly);
-      Array.Sort(testFiles, StringComparer.Ordinal);
-
-      List<string> failed = [];
-      foreach (string testFile in testFiles)
-      {
-        cancellationToken.ThrowIfCancellationRequested();
-        string fileName = Path.GetFileName(testFile);
-        Terminal.WriteLine($"  Running {fileName}...");
-        int exitCode = await Shell.Builder("dotnet")
-          .WithArguments(testFile)
-          .WithWorkingDirectory(repoRoot)
-          .RunAsync(cancellationToken);
-        if (exitCode != 0)
-        {
-          failed.Add(fileName);
-        }
-      }
-
-      if (failed.Count > 0)
-      {
-        Terminal.WriteLine($"\n✗ {failed.Count} of {testFiles.Length} test file(s) failed:");
-        foreach (string fileName in failed)
-        {
-          Terminal.WriteLine($"    {fileName}");
-        }
-
-        throw new InvalidOperationException("Tests failed!");
-      }
-
-      Terminal.WriteLine($"  ✓ {testFiles.Length} test file(s) passed");
     }
   }
 }

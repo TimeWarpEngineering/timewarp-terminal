@@ -1,5 +1,9 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Horizontal rule widget and fluent builder for terminal divider lines.
+#endregion
+
 /// <summary>
 /// Represents a horizontal rule (divider line) for terminal output.
 /// Can optionally include a centered title.

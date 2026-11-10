@@ -3,6 +3,10 @@
 // GitHub Issue: https://github.com/TimeWarpEngineering/timewarp-terminal/issues/89
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
+#region Purpose
+// Demonstrates the Rule widget for horizontal divider lines with centered titles.
+#endregion
+
 using TimeWarp.Terminal;
 
 // Get a terminal instance

@@ -3,6 +3,10 @@
 
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Fluent string extension methods for applying ANSI color and text-style escape codes.
+#endregion
+
 /// <summary>
 /// Fluent extension methods for applying ANSI color codes to strings.
 /// Provides a clean, chainable API for colored console output.

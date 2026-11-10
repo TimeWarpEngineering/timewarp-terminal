@@ -2,6 +2,10 @@
 // layout-dashboard - Demonstrates flexbox-composed terminal layouts
 #:project $(SourceDirectory)timewarp-terminal-layout/timewarp-terminal-layout.csproj
 
+#region Purpose
+// Demonstrates flexbox-composed terminal layouts with rows and grow tables.
+#endregion
+
 using TimeWarp.Flexbox;
 using TimeWarp.Terminal;
 

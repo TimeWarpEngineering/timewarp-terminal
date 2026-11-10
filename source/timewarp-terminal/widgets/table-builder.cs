@@ -1,5 +1,9 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Fluent builder for configuring and constructing Table widgets.
+#endregion
+
 #region Design
 // AddRow uses params string[] because rows are ordered, homogeneous positional data
 // that maps 1:1 to already-defined columns. A row builder (.AddRow(r => r.Cell("x")))

@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
+#region Purpose
 // Test Rule widget terminal extension methods
+#endregion
 
 #if !JARIBU_MULTI
 return await RunAllTests();

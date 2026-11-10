@@ -1,5 +1,9 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// ITerminal extension methods for rendering Panel widgets.
+#endregion
+
 /// <summary>
 /// Extension methods for writing <see cref="Panel"/> widgets to an <see cref="ITerminal"/>.
 /// </summary>

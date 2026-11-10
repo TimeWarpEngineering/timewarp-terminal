@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal/timewarp-terminal.csproj
 
+#region Purpose
 // Test IConsole encoding and redirection properties
+#endregion
 using System.Text;
 
 #if !JARIBU_MULTI

@@ -1,7 +1,9 @@
 #!/usr/bin/env -S dotnet --
 #:project $(SourceDirectory)timewarp-terminal-layout/timewarp-terminal-layout.csproj
 
+#region Purpose
 // Pin CalculateBoxes tiling contract: no gaps/overlaps, total width = container
+#endregion
 
 using TimeWarp.Flexbox;
 

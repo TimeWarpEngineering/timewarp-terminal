@@ -1,5 +1,9 @@
 namespace TimeWarp.Terminal;
 
+#region Purpose
+// Production IConsole implementation wrapping System.Console.
+#endregion
+
 /// <summary>
 /// Default implementation of <see cref="IConsole"/> that wraps <see cref="System.Console"/>.
 /// </summary>
