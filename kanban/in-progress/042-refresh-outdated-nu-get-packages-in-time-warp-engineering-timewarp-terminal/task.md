@@ -36,6 +36,8 @@ Acceptance criteria:
   `memsearch-scaffold` redeployed `.githooks/*.cs` (Purpose regions); `vscode-window-icon` set the
   window title in the gitignored `.vscode/settings.json`.
 - Implement oracle: implemented by implementer-claude (claude, vendor anthropic, model claude-opus-5-5, response model claude-opus-5-5), session a5e337d8-d18c-4978-acfc-2059b6dd9b08, max-turns 500, Done — 2026-11-14T10:44:38Z
+- Review oracle: effort 1, roster general, Grok session 01a1d9a8-dafb-71a1-92a2-8bab7532364e, turn cap 80, disposition clean — 2026-11-14
+- Review oracle: review by reviewer-grok (grok, vendor xai, model grok-4.7, response model grok-4.7-build), session 01a1d9a8-dafb-71a1-92a2-8bab7532364e, max-turns 80, artifacts general.md, merged.md, disposition.md — 2026-11-14T10:49:49Z
 
 ## Results
 
@@ -59,3 +61,18 @@ Smoke: `./bin/dev build && ./bin/dev test && ganda repo audit`
 Expect: build has 0 warnings and 0 errors, "All 47 test file(s) passed", audit exits 0, and
 `grep -E 'Jaribu|Nuru|SourceGenerators|CodeStyle|Builder|Flexbox|Build.Tasks' Directory.Packages.props`
 shows the versions above.
+
+### Review
+
+- Round 1, effort 1, roster general.
+- Counts: bug 0 open / 0 fixed / 0 wontfix; suggestion 0 / 0 / 0; nit 0 / 0 / 0.
+- Disposition: clean. No wontfix and no escalation.
+- Paths: `review/review-framework.md`, `review/round-1/general.md`, `review/round-1/merged.md`, `review/disposition.md`.
+
+## Learnings
+
+The implementer restatement's acceptance line "Only `Directory.Packages.props` pins change (plus the version bump); no other package edits" is tighter than the task. "Edit Directory.Packages.props in this repo only" limits the refresh to this repository. The task also requires the `<Version>` edit in `source/Directory.Build.props`. It does not forbid the source edits CodeStyle 5.12.0 needed, or the pins `ganda repo audit --fix` rewrites. The landed diff still matches the five listed pins and the hyphen `2.0.0-beta.2` suffix, and Results record the extra audit and IDE0028 edits. That scope sentence was a misread; it is not a product defect.
+
+## Review
+
+- Round 1: Done
