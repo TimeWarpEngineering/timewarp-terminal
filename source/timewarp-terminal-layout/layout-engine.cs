@@ -68,7 +68,7 @@ internal static class LayoutEngine
   public static IReadOnlyList<LayoutBox> CalculateBoxes(LayoutContainer root, int width)
   {
     IReadOnlyList<LaidOutLeaf> leaves = Calculate(root, width);
-    List<LayoutBox> boxes = new(leaves.Count);
+    List<LayoutBox> boxes = [with(leaves.Count)];
     foreach (LaidOutLeaf leaf in leaves)
     {
       boxes.Add(leaf.Box);
