@@ -51,6 +51,10 @@ non-build paths (kanban, docs, ...) must pass that check quickly without buildin
 - [x] `ganda repo audit` clean
 - [ ] This task's pull request shows a `CI` run (record the URL in Results)
 
+## Review
+
+- Round 1: Done
+
 ## Notes
 
 The ganda 656 survey thought terminal had no `workflow` command in `tools/dev-cli/`. Confirm what CI runs first, and put the classifier call where the pull-request build starts.
@@ -63,6 +67,9 @@ plain `ganda pr merge` (no `--allow-no-ci`).
 - Implement (2026-11-17): merged master (kanban-only commit), ran `ganda repo audit --fix` (added
   `.githooks/prepare-commit-msg` hook, committed 1846dd4), then the changes below.
 - Implement oracle: implemented by implementer-claude (claude, vendor anthropic, model claude-opus-5-5, response model claude-opus-5-5), session ca195ba2-89fc-4c22-8baf-6f603c3bb39e, max-turns 500, Done — 2026-11-16T18:06:58Z
+- Review (2026-11-17): round 1, effort 2, roster general. Disposition clean (0 findings). The implementer restatement matches the original requirements.
+- Reviewer: grok session 01a1e58a-9417-7770-ad3c-045b9c3c3c3b (2026-11-17)
+- Review oracle: review by reviewer-grok (grok, vendor xai, model grok-4.7, response model grok-4.7-build), session 01a1e58a-9417-7770-ad3c-045b9c3c3c3b, max-turns 120, artifacts general.md, merged.md, disposition.md — 2026-11-16T18:14:35Z
 
 ## Results
 
@@ -100,4 +107,13 @@ Expect: `Pull request changes only declared non-build paths. Skipping build and 
 and `exit=0` (38bc7b1..3701383 is a kanban-only diff). With a base/head pair that touches
 `.github/workflows/` or `source/`, the output is `Build path changed: <path>. Full build.` followed by
 `CI Pipeline: clean -> build -> verify-samples -> test`. On GitHub, this task's PR shows a `CI` check.
+
+### Review
+
+- Round 1. Effort 2. Roster: general. Session `01a1e58a-9417-7770-ad3c-045b9c3c3c3b`.
+- Counts: bug 0 open / 0 fixed / 0 wontfix; suggestion 0; nit 0.
+- Disposition: clean. No wontfix and no escalation.
+- The implementer restatement matches the original requirements. No misread.
+- Paths: `review/review-framework.md`, `review/round-1/merged.md`, `review/disposition.md`.
+- Build, test, and audit were not re-run. They stay on the gates recorded above.
 
