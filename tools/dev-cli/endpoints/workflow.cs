@@ -16,13 +16,20 @@
 // Release build and fails if a later step changes those bytes.
 // workflow_dispatch maps to merge unless --mode release is passed. The workflow
 // file only passes that behind confirm=release.
+// The PR/merge pipeline starts with PullRequestBuildClassifier
+// (TimeWarp.Nuru.DevCli). workflow.yml has no paths filter on pull_request, so
+// every pull request reports CI; a pull request that changes only declared
+// non-build paths prints the classifier's message and exits 0 without
+// building. Push, dispatch, and local runs always build. Repo build inputs
+// outside the classifier's protected roots (samples, the packed readme.md and
+// assets/logo.png) are declared in .timewarp/dev.jsonc pullRequestBuild.
 #endregion
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // WORKFLOW COMMAND
 // ═══════════════════════════════════════════════════════════════════════════════
 // Orchestrates the CI/CD pipeline.
-// PR/merge: clean -> build -> verify-samples -> test
+// PR/merge: classify -> clean -> build -> verify-samples -> test
 // Release:  tag-gate -> check-version -> locate-run -> download-artifact -> verify -> push
 
 namespace DevCli;
@@ -98,6 +105,13 @@ public sealed partial class WorkflowCommand : ICommand<Unit>
     private async Task RunPrWorkflowAsync(string repoRoot, CancellationToken cancellationToken)
     {
       cancellationToken.ThrowIfCancellationRequested();
+      PullRequestBuildDecision decision = await PullRequestBuildClassifier.DecideAsync(repoRoot, cancellationToken);
+      Terminal.WriteLine(decision.Message);
+      if (!decision.RequiresBuild)
+      {
+        return;
+      }
+
       Terminal.WriteLine("CI Pipeline: clean -> build -> verify-samples -> test");
       Terminal.WriteLine("");
 

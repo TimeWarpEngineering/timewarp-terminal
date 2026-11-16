@@ -4,11 +4,14 @@ on:
   push:
     branches:
       - master
+    # A kanban-only merge must not rebuild and upload packages, so push keeps
+    # this allowlist. Pull requests do not use it (see pull_request below).
     # Allowlist, not paths-ignore. A push that matches nothing gets no run at
     # all. That is deliberate: a skipped-but-successful run would still look
     # tested to `dev release` and to release-mode locate-run. No run lets
-    # `dev release` walk back to the newest green workflow.yml run. Pull
-    # requests use the same list. Use `dir/**` or exact file names.
+    # `dev release` walk back to the newest green workflow.yml run.
+    # readme.md and assets/logo.png are packed into the nupkgs, so they build.
+    # Use `dir/**` or exact file names.
     paths:
       - 'source/**'
       - 'tests/**'
@@ -20,21 +23,16 @@ on:
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
       - 'global.json'
+      - 'readme.md'
+      - 'assets/logo.png'
   pull_request:
+    # No paths filter: every pull request reports CI, so ganda pr merge sees a
+    # check. dev workflow calls PullRequestBuildClassifier (TimeWarp.Nuru.DevCli)
+    # and exits 0 without building when the pull request changes only declared
+    # non-build paths (kanban, documentation, ...).
     branches:
       - master
       - 'feature/**'
-    paths:
-      - 'source/**'
-      - 'tests/**'
-      - 'samples/**'
-      - 'tools/**'
-      - 'msbuild/**'
-      - '.config/dotnet-tools.json'
-      - '.github/workflows/**'
-      - 'Directory.Build.props'
-      - 'Directory.Packages.props'
-      - 'global.json'
   release:
     types: [published]
   workflow_dispatch:
