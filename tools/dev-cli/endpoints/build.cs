@@ -34,8 +34,8 @@ public sealed class BuildCommand : ICommand<Unit>
 
       Terminal.WriteLine("Building solution...");
 
-      int exitCode = await Shell.Builder("dotnet")
-        .WithArguments("build", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-c", "Release")
+      int exitCode = await DotNet.Build(Path.Combine(repoRoot, "timewarp-terminal.slnx"))
+        .WithConfiguration("Release")
         .WithWorkingDirectory(repoRoot)
         .RunAsync();
 

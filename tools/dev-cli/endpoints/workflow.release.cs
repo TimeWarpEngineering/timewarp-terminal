@@ -329,9 +329,12 @@ public sealed partial class WorkflowCommand
 
         Terminal.WriteLine($"  Pushing {fileName}...");
 
-        int exitCode = await Shell.Builder("dotnet")
-          .WithArguments("nuget", "push", isolatedPath, "--source", NuGetSource, "--api-key", apiKey, "--skip-duplicate")
+        int exitCode = await DotNet.NuGet()
           .WithWorkingDirectory(isolatedDir)
+          .Push(isolatedPath)
+          .WithSource(NuGetSource)
+          .WithApiKey(apiKey)
+          .WithSkipDuplicate()
           .WithNoValidation()
           .RunAsync(cancellationToken);
 
@@ -357,15 +360,10 @@ public sealed partial class WorkflowCommand
 
       string? rebuildToken = Environment.GetEnvironmentVariable("REBUILD_DISPATCH_TOKEN");
 
-      ShellBuilder dispatch = Shell.Builder("gh")
-        .WithArguments
-        (
-          "api",
-          "repos/TimeWarpEngineering/timewarp-software/dispatches",
-          "-f", "event_type=rebuild",
-          "-f", $"client_payload[package]={packageId}",
-          "-f", $"client_payload[version]={version}"
-        )
+      GhApiBuilder dispatch = Gh.Api("repos/TimeWarpEngineering/timewarp-software/dispatches")
+        .WithRawField("event_type", "rebuild")
+        .WithRawField("client_payload[package]", packageId)
+        .WithRawField("client_payload[version]", version)
         .WithWorkingDirectory(repoRoot)
         .WithNoValidation();
 
@@ -396,8 +394,9 @@ public sealed partial class WorkflowCommand
 
     private static async Task<string?> ResolveProjectVersionAsync(string repoRoot, string projectPath, CancellationToken cancellationToken)
     {
-      CommandOutput result = await Shell.Builder("dotnet")
-        .WithArguments("msbuild", projectPath, "-getProperty:Version", "-nologo")
+      CommandOutput result = await DotNet.MsBuild(projectPath)
+        .WithGetProperty("Version")
+        .WithNoLogo()
         .WithWorkingDirectory(repoRoot)
         .WithNoValidation()
         .CaptureAsync(cancellationToken);

@@ -69,10 +69,10 @@ public sealed class TestCommand : ICommand<Unit>
 
       Directory.CreateDirectory(coverageDirectory);
 
-      int restoreExitCode = await Shell.Builder("dotnet")
-        .WithArguments("tool", "restore")
+      int restoreExitCode = await DotNet.Tool()
         .WithWorkingDirectory(repoRoot)
         .WithNoValidation()
+        .Restore()
         .RunAsync(cancellationToken);
       if (restoreExitCode != 0)
       {
@@ -82,9 +82,6 @@ public sealed class TestCommand : ICommand<Unit>
       string[] innerCommand = BuildInnerTestInvocation(repoRoot);
       string[] arguments =
       [
-        "tool",
-        "run",
-        "dotnet-coverage",
         "--",
         "collect",
         "--nologo",
@@ -99,10 +96,11 @@ public sealed class TestCommand : ICommand<Unit>
         .. innerCommand
       ];
 
-      int exitCode = await Shell.Builder("dotnet")
-        .WithArguments(arguments)
+      int exitCode = await DotNet.Tool()
         .WithWorkingDirectory(repoRoot)
         .WithNoValidation()
+        .Run("dotnet-coverage")
+        .WithArguments(arguments)
         .RunAsync(cancellationToken);
       if (exitCode != 0)
       {
@@ -150,8 +148,8 @@ public sealed class TestCommand : ICommand<Unit>
         cancellationToken.ThrowIfCancellationRequested();
         string fileName = Path.GetFileName(testFile);
         Terminal.WriteLine($"  Running {fileName}...");
-        int exitCode = await Shell.Builder("dotnet")
-          .WithArguments(testFile)
+        int exitCode = await DotNet.Run()
+          .WithFile(testFile)
           .WithWorkingDirectory(repoRoot)
           .WithNoValidation()
           .RunAsync(cancellationToken);

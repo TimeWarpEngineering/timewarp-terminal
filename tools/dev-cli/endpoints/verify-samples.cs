@@ -56,8 +56,9 @@ public sealed class VerifySamplesCommand : ICommand<Unit>
         Terminal.WriteLine($"\n  Verifying {fileName}...");
 
         // Run from samples directory so relative paths work
-        int exitCode = await Shell.Builder("dotnet")
-          .WithArguments("run", sampleFile, "--", "--help")
+        int exitCode = await DotNet.Run()
+          .WithFile(sampleFile)
+          .WithArguments("--help")
           .WithWorkingDirectory(samplesDir)
           .RunAsync();
 
