@@ -36,6 +36,7 @@ Acceptance criteria:
   workflow.release.cs). No suppression added. `source/Directory.Build.props` `<Version>` untouched.
 - Audit boy-scout: `vscode-window-icon` advisory (missing ignored `.vscode/settings.json`)
   fixed locally by `ganda repo audit --fix`; the file is git-ignored, so nothing to commit.
+- Implement oracle: implemented by implementer-claude (claude, vendor anthropic, model claude-opus-5-5), session not reported, max-turns 500, Done — 2026-11-18T19:43:33Z
 
 ## Results
 
