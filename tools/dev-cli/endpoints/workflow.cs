@@ -116,8 +116,8 @@ public sealed partial class WorkflowCommand : ICommand<Unit>
       Terminal.WriteLine("");
 
       Terminal.WriteLine("Step 1/4: Clean");
-      int exitCode = await Shell.Builder("dotnet")
-        .WithArguments("clean", Path.Combine(repoRoot, "timewarp-terminal.slnx"), "-v", "q")
+      int exitCode = await DotNet.Clean(Path.Combine(repoRoot, "timewarp-terminal.slnx"))
+        .WithVerbosity("q")
         .WithWorkingDirectory(repoRoot)
         .RunAsync(cancellationToken);
       if (exitCode != 0)
@@ -129,14 +129,9 @@ public sealed partial class WorkflowCommand : ICommand<Unit>
       ResetPackagesDirectory(repoRoot);
 
       Terminal.WriteLine("\nStep 2/4: Build");
-      exitCode = await Shell.Builder("dotnet")
-        .WithArguments
-        (
-          "build",
-          Path.Combine(repoRoot, "timewarp-terminal.slnx"),
-          "-c", "Release",
-          "-p:ContinuousIntegrationBuild=true"
-        )
+      exitCode = await DotNet.Build(Path.Combine(repoRoot, "timewarp-terminal.slnx"))
+        .WithConfiguration("Release")
+        .WithProperty("ContinuousIntegrationBuild", "true")
         .WithWorkingDirectory(repoRoot)
         .RunAsync(cancellationToken);
       if (exitCode != 0)
@@ -305,8 +300,9 @@ public sealed partial class WorkflowCommand : ICommand<Unit>
         cancellationToken.ThrowIfCancellationRequested();
         string fileName = Path.GetFileName(sampleFile);
         Terminal.WriteLine($"  Verifying {fileName}...");
-        int exitCode = await Shell.Builder("dotnet")
-          .WithArguments("run", sampleFile, "--", "--help")
+        int exitCode = await DotNet.Run()
+          .WithFile(sampleFile)
+          .WithArguments("--help")
           .WithWorkingDirectory(samplesDir)
           .RunAsync(cancellationToken);
         if (exitCode != 0)
