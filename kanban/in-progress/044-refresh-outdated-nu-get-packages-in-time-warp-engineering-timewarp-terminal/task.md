@@ -37,6 +37,12 @@ Acceptance criteria:
 - Audit boy-scout: `vscode-window-icon` advisory (missing ignored `.vscode/settings.json`)
   fixed locally by `ganda repo audit --fix`; the file is git-ignored, so nothing to commit.
 - Implement oracle: implemented by implementer-claude (claude, vendor anthropic, model claude-opus-5-5), session not reported, max-turns 500, Done — 2026-11-18T19:43:33Z
+- Reviewer: grok session 01a1f02f-b899-72c0-bb7a-1797503a962e (2026-11-19), effort 1, roster general, max-turns 80
+- Review oracle: review by reviewer-grok (grok, vendor xai, model grok-4.7, response model grok-4.7-build), session 01a1f02f-b899-72c0-bb7a-1797503a962e, max-turns 80, artifacts general.md, merged.md, disposition.md — 2026-11-18T19:51:19Z
+
+## Learnings
+
+- Misread: the restatement's acceptance line "Only `Directory.Packages.props` changes (plus this kitchen)" is narrower than the task. The task says "Edit Directory.Packages.props in this repo only" and "Do not change `<Version>`". Amuru 3.0.0-beta.10's AMURU0001 analyzer required in-repo dev-cli call-site edits so the bump would compile. Those edits stay in this repo and leave `<Version>` alone, which matches the task. The single-file acceptance line in the restatement does not.
 
 ## Results
 
@@ -72,3 +78,13 @@ dotnet run --file tests/terminal-static-01-basic.cs
 
 Expect: self-install succeeds with no AMURU0001 errors; build reports 0 warnings / 0 errors;
 verify-samples reports all 6 samples verified; the test file reports 10 passed.
+
+Review:
+- Round 1, effort 1, roster general (grok).
+- Counts: bug 0 open / 0 fixed / 0 wontfix; suggestion 0; nit 0. No issues raised.
+- Disposition: clean. No wontfix and no escalation.
+- Paths: `review/review-framework.md`, `review/round-1/general.md`, `review/round-1/merged.md`, `review/disposition.md`.
+
+## Review
+
+- Round 1: Done
